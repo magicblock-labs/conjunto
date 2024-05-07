@@ -1,5 +1,7 @@
 use paste::paste;
 
+use crate::consts::{BUFFER, COMMIT_RECORD, DELEGATION, STATE_DIFF};
+
 // -----------------
 // Seeds
 // -----------------
@@ -29,10 +31,32 @@ macro_rules! seeds {
     };
 }
 
-seeds! {delegation, b"delegation" }
-seeds! {buffer, b"buffer" }
-seeds! {state_diff, b"state-diff" }
-seeds! {commit_record, b"commit-state-record" }
+seeds! {delegation, DELEGATION }
+seeds! {buffer, BUFFER }
+seeds! {state_diff, STATE_DIFF }
+seeds! {commit_record, COMMIT_RECORD }
+
+// -----------------
+// PDAs
+// -----------------
+/*
+macro_rules! pdas {
+    ($prefix:ident) => {
+        paste! {
+            #[allow(clippy::needless_lifetimes)]
+            pub fn [<$prefix _pda>]<'a>(id: &'a [u8]) -> ::solana_sdk::pubkey::Pubkey {
+                let seeds = [<$prefix _seeds>](id);
+                ::solana_sdk::pubkey::Pubkey::find_program_address(
+                    &[&seeds, DELEGATION_PROGRAM_ID.as_ref(), id],
+                    &DELEGATION_PROGRAM_ID
+                ).0
+            }
+        }
+    };
+}
+*/
+
+// pdas! {delegation }
 
 #[cfg(test)]
 mod tests {
