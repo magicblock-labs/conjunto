@@ -17,4 +17,5 @@ license = "Apache-2.0"
 edition = "2021"
 
 [workspace.dependencies]
+conjunto_addresses = { path = "addresses" }
 solana-sdk = "1.18.12"
