@@ -45,4 +45,4 @@ jobs:
         shell: bash
 
       - name: List Conjunto Target Size
-        run: du -h -d1 rs/target
+        run: du -h -d1 target
