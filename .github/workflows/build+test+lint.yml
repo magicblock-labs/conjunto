@@ -2,7 +2,7 @@ name: Build+Test+Lint
 
 on:
   push:
-    branches: [master, feat/addresses-impl ]
+    branches: [master]
   pull_request:
     branches: [master]
 
