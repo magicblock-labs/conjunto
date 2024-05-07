@@ -466,6 +466,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "conjunto_lockbox"
+version = "0.0.0"
+dependencies = [
+ "conjunto_addresses",
+]
+
+[[package]]
 name = "console_error_panic_hook"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
