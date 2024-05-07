@@ -83,11 +83,10 @@ mod tests {
 
     use solana_sdk::pubkey::Pubkey;
 
+    use super::*;
     use crate::consts::{
         BUFFER, COMMIT_RECORD, DELEGATION, DELEGATION_PROGRAM_ID, STATE_DIFF,
     };
-
-    use super::*;
 
     // -----------------
     // Delegation Seeds
