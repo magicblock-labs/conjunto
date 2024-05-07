@@ -79,6 +79,8 @@ pda! { commit_record }
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use solana_sdk::pubkey::Pubkey;
 
     use crate::consts::{
@@ -310,4 +312,22 @@ mod tests {
     }
 
     // NOTE: left out remaining checks since they all are implemented via the same macro
+
+    // #[test] TODO: which one is the original address here?
+    fn test_known_buffer_delegation() {
+        let orig_addr = "CkieZJmrj6dLhwteG69LSutpWwRHiDJY9S8ua7xJ7CRW";
+        // let orig_addr = "Ec6jL2GVTzjfHz8RFP3mVyki9JRNmMu8E7YdNh45xNdk";
+        let orig_id = Pubkey::from_str(orig_addr).unwrap();
+
+        let delegated_addr = "8k2V7EzQtNg38Gi9HK5ZtQYp1YpGKNGrMcuGa737gZX4";
+        let delegated_id = Pubkey::from_str(delegated_addr).unwrap();
+        let buffer_addr = "E8NdkAGLLC3qnvphsXhqkjkXpRkdoiDpicSTTQJySVtG";
+        let buffer_id = Pubkey::from_str(buffer_addr).unwrap();
+
+        let buffer_pda = buffer_pda_from_pubkey(&orig_id);
+        let delegation_pda = delegation_pda_from_pubkey(&orig_id);
+
+        assert_eq!(buffer_pda, buffer_id);
+        assert_eq!(delegation_pda, delegated_id);
+    }
 }
