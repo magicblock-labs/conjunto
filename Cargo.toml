@@ -4,7 +4,7 @@ debug = true
 split-debuginfo = "packed"
 
 [workspace]
-members = []
+members = ["addresses"]
 
 resolver = "2"
 
@@ -17,3 +17,4 @@ license = "Apache-2.0"
 edition = "2021"
 
 [workspace.dependencies]
+solana-sdk = "1.18.12"
