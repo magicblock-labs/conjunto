@@ -4,7 +4,7 @@ debug = true
 split-debuginfo = "packed"
 
 [workspace]
-members = ["addresses", "core", "lockbox", "test-tools"]
+members = ["addresses", "core", "lockbox", "test-tools", "transwise"]
 
 resolver = "2"
 

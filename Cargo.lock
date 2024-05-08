@@ -705,6 +705,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "conjunto-transwise"
+version = "0.0.0"
+dependencies = [
+ "conjunto-core",
+ "conjunto-lockbox",
+ "solana-sdk",
+ "thiserror",
+]
+
+[[package]]
 name = "console"
 version = "0.15.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
