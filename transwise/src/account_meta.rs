@@ -1,8 +1,36 @@
 use crate::errors::TranswiseResult;
-use conjunto_core::AccountProvider;
+use conjunto_core::{AccountProvider, TransactionAccountsHolder};
 use conjunto_lockbox::{AccountLockState, AccountLockStateProvider};
 use solana_sdk::{pubkey::Pubkey, transaction::SanitizedTransaction};
 
+// -----------------
+// SanitizedTransactionAccountsHolder
+// -----------------
+pub struct SanitizedTransactionAccountsHolder {
+    writable: Vec<Pubkey>,
+    readonly: Vec<Pubkey>,
+}
+
+impl From<&SanitizedTransaction> for SanitizedTransactionAccountsHolder {
+    fn from(tx: &SanitizedTransaction) -> Self {
+        let loaded = tx.get_account_locks_unchecked();
+        let writable = loaded.writable.iter().map(|x| **x).collect();
+        let readonly = loaded.readonly.iter().map(|x| **x).collect();
+        Self { writable, readonly }
+    }
+}
+impl TransactionAccountsHolder for SanitizedTransactionAccountsHolder {
+    fn get_writable(&self) -> Vec<Pubkey> {
+        self.writable.clone()
+    }
+    fn get_readonly(&self) -> Vec<Pubkey> {
+        self.readonly.clone()
+    }
+}
+
+// -----------------
+// AccountMeta
+// -----------------
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AccountMeta {
     Writable {
@@ -27,18 +55,33 @@ impl AccountMeta {
         Ok(AccountMeta::Writable { pubkey, lockstate })
     }
 
-    pub async fn account_metas_from_transaction<T: AccountProvider>(
+    pub async fn account_metas_from_sanitized_transaction<
+        T: AccountProvider,
+    >(
         tx: &SanitizedTransaction,
         lockbox: &AccountLockStateProvider<T>,
     ) -> TranswiseResult<Vec<AccountMeta>> {
+        let tx_accounts = SanitizedTransactionAccountsHolder::from(tx);
+        let account_metas = Self::account_metas(&tx_accounts, lockbox).await?;
+        Ok(account_metas)
+    }
+
+    pub async fn account_metas<
+        T: AccountProvider,
+        U: TransactionAccountsHolder,
+    >(
+        tx: &U,
+        lockbox: &AccountLockStateProvider<T>,
+    ) -> TranswiseResult<Vec<AccountMeta>> {
         let mut account_metas = Vec::new();
-        let account_locks = tx.get_account_locks_unchecked();
-        for pubkey in account_locks.readonly {
-            account_metas.push(AccountMeta::readonly(*pubkey));
+        let readonly = tx.get_readonly();
+        let writable = tx.get_writable();
+        for pubkey in readonly.into_iter() {
+            account_metas.push(AccountMeta::readonly(pubkey));
         }
-        for pubkey in account_locks.writable {
+        for pubkey in writable.into_iter() {
             let account_meta =
-                AccountMeta::try_writable(*pubkey, lockbox).await?;
+                AccountMeta::try_writable(pubkey, lockbox).await?;
             account_metas.push(account_meta);
         }
 
@@ -48,34 +91,5 @@ impl AccountMeta {
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
-
-    use solana_sdk::message::{
-        v0::{LoadedAddresses, LoadedMessage},
-        Message, SanitizedMessage,
-    };
-
     use super::*;
-
-    fn create_sanitized_transactions(
-        readonly: Vec<Pubkey>,
-        writable: Vec<Pubkey>,
-    ) -> SanitizedTransaction {
-        let addresses = LoadedAddresses {
-            readonly,
-            writable,
-            ..Default::default()
-        };
-        let message = SanitizedMessage::V0(LoadedMessage {
-            loaded_addresses: Cow::Owned(addresses),
-            message: Cow::Owned(Default::default()),
-            is_writable_account_cache: Default::default(),
-        });
-        let tx = SanitizedTransaction {
-            message,
-            hash: Default::default(),
-            is_simple_vote_tx: Default::default(),
-            signatures: Default::default(),
-        };
-    }
 }

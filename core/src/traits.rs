@@ -12,3 +12,8 @@ pub trait AccountProvider {
         pubkeys: &[Pubkey],
     ) -> CoreResult<Vec<Option<Account>>>;
 }
+
+pub trait TransactionAccountsHolder {
+    fn get_writable(&self) -> Vec<Pubkey>;
+    fn get_readonly(&self) -> Vec<Pubkey>;
+}
