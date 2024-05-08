@@ -101,15 +101,7 @@ async fn test_delegate_not_found() {
         .await
         .unwrap();
 
-    assert_eq!(
-        state,
-        AccountLockState::Inconsistent {
-            delegated_id,
-            buffer_pda,
-            delegation_pda,
-            inconsistencies: vec![LockInconsistency::DelegateAccountNotFound]
-        }
-    );
+    assert_eq!(state, AccountLockState::NewAccount);
 }
 
 #[tokio::test]
