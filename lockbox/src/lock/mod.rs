@@ -62,6 +62,9 @@ impl<T: AccountProvider> AccountLockStateProvider<T> {
     ) -> LockboxResult<AccountLockState> {
         // NOTE: this could be perf optimized by using get_multiple_accounts in one request
         // instead: https://docs.rs/solana-rpc-client/1.18.12/solana_rpc_client/nonblocking/rpc_client/struct.RpcClient.html#method.get_multiple_accounts
+        // However that method returns one ClientResult, meaning if any account is not found it
+        // we don't know which ones were there and which ones weren't and thus couldn't provide as
+        // detailed information about the inconsistencies as we are now.
 
         let buffer_pda = pda::buffer_pda_from_pubkey(pubkey);
         let delegation_pda = pda::delegation_pda_from_pubkey(pubkey);

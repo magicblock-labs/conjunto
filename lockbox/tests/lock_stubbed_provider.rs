@@ -90,6 +90,32 @@ async fn test_delegate_unlocked() {
 }
 
 #[tokio::test]
+async fn test_delegate_not_found() {
+    let (delegated_id, buffer_pda, delegation_pda) = account_ids();
+    let lockstate_provider = setup(vec![
+        // The other accounts don't matter since we don't check them if delegated
+        // account is missing
+        (buffer_pda, account_owned_by_delegation_program()),
+        (delegation_pda, account_owned_by_delegation_program()),
+    ]);
+
+    let state = lockstate_provider
+        .try_lockstate_of_pubkey(&delegated_id)
+        .await
+        .unwrap();
+
+    assert_eq!(
+        state,
+        AccountLockState::Inconsistent {
+            delegated_id,
+            buffer_pda,
+            delegation_pda,
+            inconsistencies: vec![LockInconsistency::DelegateAccountNotFound]
+        }
+    );
+}
+
+#[tokio::test]
 async fn test_delegate_missing_buffer_account() {
     let (delegated_id, buffer_pda, delegation_pda) = account_ids();
 
