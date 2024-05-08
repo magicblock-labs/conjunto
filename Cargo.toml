@@ -17,7 +17,10 @@ license = "Apache-2.0"
 edition = "2021"
 
 [workspace.dependencies]
+async-trait = "0.1.80"
 conjunto_addresses = { path = "addresses" }
 conjunto_lockbox = { path = "lockbox" }
 paste = "1.0"
+solana-rpc-client = "1.18.12"
 solana-sdk = "1.18.12"
+thiserror = "1.0.60"
