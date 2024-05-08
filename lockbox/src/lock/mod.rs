@@ -94,7 +94,9 @@ impl<T: AccountProvider> AccountLockStateProvider<T> {
         }
 
         // 4. Verify the delegation account exists and is owned by the delegation program
-        if let Some(xs) = self.verify_delegation_account(pubkey).await? {
+        if let Some(xs) =
+            self.verify_delegation_account(&delegation_pda).await?
+        {
             inconsistencies.extend(xs);
         }
 
