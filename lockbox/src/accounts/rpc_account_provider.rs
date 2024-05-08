@@ -8,9 +8,8 @@ use solana_sdk::{
     pubkey::Pubkey,
 };
 
-use crate::errors::LockboxResult;
-
 use super::AccountProvider;
+use crate::errors::LockboxResult;
 
 #[derive(Default)]
 pub struct RpcAccountProviderConfig {
@@ -74,8 +73,9 @@ impl AccountProvider for RpcAccountProvider {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use solana_sdk::pubkey::Pubkey;
+
+    use super::*;
 
     #[tokio::test]
     async fn test_get_non_existing_account() {
