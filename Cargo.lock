@@ -671,11 +671,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "conjunto_core"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "solana-rpc-client-api",
+ "solana-sdk",
+ "thiserror",
+]
+
+[[package]]
 name = "conjunto_lockbox"
 version = "0.0.0"
 dependencies = [
  "async-trait",
  "conjunto_addresses",
+ "conjunto_core",
  "solana-rpc-client",
  "solana-rpc-client-api",
  "solana-sdk",

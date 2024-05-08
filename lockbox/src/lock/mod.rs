@@ -1,11 +1,11 @@
 use conjunto_addresses::pda;
+use conjunto_core::AccountProvider;
 use solana_sdk::pubkey::Pubkey;
 
 use crate::{
     accounts::{
         predicates::is_owned_by_delegation_program,
         rpc_account_provider::{RpcAccountProvider, RpcAccountProviderConfig},
-        AccountProvider,
     },
     errors::LockboxResult,
 };
