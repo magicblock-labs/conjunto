@@ -22,6 +22,11 @@ pub enum LockInconsistency {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AccountLockState {
     Unlocked,
+    // TODO(thlorenz): what about state diff and commit record
+    // - are they expected at the PDA addresses?
+    // - are they optional?
+    // - should we indicate if they were found?
+    // - if so what predicates do they need to match?
     Locked {
         delegated_id: Pubkey,
         buffer_pda: Pubkey,
