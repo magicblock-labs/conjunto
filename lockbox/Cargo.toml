@@ -1,5 +1,5 @@
 [package]
-name = "conjunto_lockbox"
+name = "conjunto-lockbox"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -9,8 +9,8 @@ edition.workspace = true
 
 [dependencies]
 async-trait = { workspace = true }
-conjunto_addresses = { workspace = true }
-conjunto_core = { workspace = true }
+conjunto-addresses = { workspace = true }
+conjunto-core = { workspace = true }
 solana-rpc-client = { workspace = true }
 solana-rpc-client-api = { workspace = true }
 solana-sdk = { workspace = true }

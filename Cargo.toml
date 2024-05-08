@@ -18,9 +18,9 @@ edition = "2021"
 
 [workspace.dependencies]
 async-trait = "0.1.80"
-conjunto_addresses = { path = "addresses" }
-conjunto_core = { path = "core" }
-conjunto_lockbox = { path = "lockbox" }
+conjunto-addresses = { path = "addresses" }
+conjunto-core = { path = "core" }
+conjunto-lockbox = { path = "lockbox" }
 paste = "1.0"
 solana-rpc-client = "1.18.12"
 solana-rpc-client-api = "1.18.12"

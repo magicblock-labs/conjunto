@@ -1,5 +1,5 @@
 [package]
-name = "conjunto_core"
+name = "conjunto-core"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true

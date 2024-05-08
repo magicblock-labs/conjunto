@@ -1,5 +1,5 @@
 [package]
-name = "conjunto_addresses"
+name = "conjunto-addresses"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
