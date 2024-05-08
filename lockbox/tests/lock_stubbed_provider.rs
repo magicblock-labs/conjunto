@@ -4,11 +4,8 @@ use conjunto_addresses::consts::DELEGATION_PROGRAM_ID;
 use conjunto_lockbox::{
     AccountLockState, AccountLockStateProvider, LockInconsistency,
 };
+use conjunto_test_tools::account_provider_stub::AccountProviderStub;
 use solana_sdk::{account::Account, pubkey::Pubkey, system_program};
-
-use crate::utils::AccountProviderStub;
-
-mod utils;
 
 fn account_owned_by_delegation_program() -> Account {
     Account {

@@ -687,11 +687,21 @@ dependencies = [
  "async-trait",
  "conjunto-addresses",
  "conjunto-core",
+ "conjunto-test-tools",
  "solana-rpc-client",
  "solana-rpc-client-api",
  "solana-sdk",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "conjunto-test-tools"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "conjunto-core",
+ "solana-sdk",
 ]
 
 [[package]]
