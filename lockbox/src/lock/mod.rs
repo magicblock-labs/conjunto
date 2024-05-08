@@ -2,10 +2,15 @@ use conjunto_addresses::pda;
 use solana_sdk::pubkey::Pubkey;
 
 use crate::{
-    accounts::{predicates::is_owned_by_delegation_program, AccountProvider},
+    accounts::{
+        predicates::is_owned_by_delegation_program,
+        rpc_account_provider::{RpcAccountProvider, RpcAccountProviderConfig},
+        AccountProvider,
+    },
     errors::LockboxResult,
 };
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum LockInconsistency {
     DelegateAccountNotFound,
     BufferAccountNotFound,
@@ -14,13 +19,16 @@ pub enum LockInconsistency {
     DelegationAccountInvalidOwner,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AccountLockState {
     Unlocked,
     Locked {
+        delegated_id: Pubkey,
         buffer_pda: Pubkey,
         delegation_pda: Pubkey,
     },
     Inconsistent {
+        delegated_id: Pubkey,
         buffer_pda: Pubkey,
         delegation_pda: Pubkey,
         inconsistencies: Vec<LockInconsistency>,
@@ -32,7 +40,14 @@ pub struct AccountLockStateProvider<T: AccountProvider> {
 }
 
 impl<T: AccountProvider> AccountLockStateProvider<T> {
-    pub fn new(account_provider: T) -> Self {
+    pub fn new(
+        config: RpcAccountProviderConfig,
+    ) -> AccountLockStateProvider<RpcAccountProvider> {
+        let rpc_account_provider = RpcAccountProvider::new(config);
+        AccountLockStateProvider::with_provider(rpc_account_provider)
+    }
+
+    pub fn with_provider(account_provider: T) -> Self {
         Self { account_provider }
     }
 
@@ -51,6 +66,7 @@ impl<T: AccountProvider> AccountLockStateProvider<T> {
             Some(acc) => acc,
             None => {
                 return Ok(AccountLockState::Inconsistent {
+                    delegated_id: *pubkey,
                     buffer_pda,
                     delegation_pda,
                     inconsistencies: vec![
@@ -79,11 +95,13 @@ impl<T: AccountProvider> AccountLockStateProvider<T> {
 
         if inconsistencies.is_empty() {
             Ok(AccountLockState::Locked {
+                delegated_id: *pubkey,
                 buffer_pda,
                 delegation_pda,
             })
         } else {
             Ok(AccountLockState::Inconsistent {
+                delegated_id: *pubkey,
                 buffer_pda,
                 delegation_pda,
                 inconsistencies,

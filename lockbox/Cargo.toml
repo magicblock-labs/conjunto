@@ -16,4 +16,5 @@ solana-sdk = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+assert_matches = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

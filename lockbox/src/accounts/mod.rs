@@ -5,6 +5,8 @@ use crate::errors::LockboxResult;
 pub(crate) mod predicates;
 pub(crate) mod rpc_account_provider;
 
+pub use rpc_account_provider::{RpcAccountProvider, RpcAccountProviderConfig};
+
 #[async_trait]
 pub trait AccountProvider {
     async fn get_account(

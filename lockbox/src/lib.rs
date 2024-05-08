@@ -1,7 +1,5 @@
-mod accounts;
+pub mod accounts;
 pub mod errors;
 mod lock;
 
-pub fn todo() -> usize {
-    todo!()
-}
+pub use lock::*;

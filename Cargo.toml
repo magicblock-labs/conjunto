@@ -17,6 +17,7 @@ license = "Apache-2.0"
 edition = "2021"
 
 [workspace.dependencies]
+assert_matches = "1.5.0"
 async-trait = "0.1.80"
 conjunto_addresses = { path = "addresses" }
 conjunto_lockbox = { path = "lockbox" }
