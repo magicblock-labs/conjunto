@@ -10,6 +10,10 @@ edition.workspace = true
 [dependencies]
 async-trait = { workspace = true }
 conjunto_addresses = { workspace = true }
-solana-rpc-client = { workpace = true }
+solana-rpc-client = { workspace = true }
+solana-rpc-client-api = { workspace = true }
 solana-sdk = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

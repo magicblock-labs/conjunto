@@ -3,6 +3,7 @@ use solana_sdk::{account::Account, pubkey::Pubkey};
 
 use crate::errors::LockboxResult;
 pub(crate) mod predicates;
+pub(crate) mod rpc_account_provider;
 
 #[async_trait]
 pub trait AccountProvider {
@@ -10,4 +11,8 @@ pub trait AccountProvider {
         &self,
         pubkey: &Pubkey,
     ) -> LockboxResult<Option<Account>>;
+    async fn get_multiple_accounts(
+        &self,
+        pubkeys: &[Pubkey],
+    ) -> LockboxResult<Vec<Option<Account>>>;
 }
