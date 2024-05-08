@@ -674,7 +674,6 @@ dependencies = [
 name = "conjunto_lockbox"
 version = "0.0.0"
 dependencies = [
- "assert_matches",
  "async-trait",
  "conjunto_addresses",
  "solana-rpc-client",
