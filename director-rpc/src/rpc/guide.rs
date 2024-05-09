@@ -1,12 +1,13 @@
-use async_trait::async_trait;
-use conjunto_lockbox::accounts::RpcAccountProviderConfig;
-use conjunto_transwise::Transwise;
-use jsonrpsee::{core::RpcResult, proc_macros::rpc};
+use jsonrpsee::{
+    core::{RegisterMethodError, RpcResult},
+    RpcModule,
+};
 use log::*;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_sdk::transaction::VersionedTransaction;
 use solana_transaction_status::UiTransactionEncoding;
 
+use super::DirectorRpc;
 use crate::{
     decoders::decode_and_deserialize,
     utils::{
@@ -14,34 +15,22 @@ use crate::{
     },
 };
 
-#[derive(Default)]
-pub struct DirectorConfig {
-    pub rpc_account_provider_config: RpcAccountProviderConfig,
+pub fn register_guide_methods(
+    module: &mut RpcModule<DirectorRpc>,
+) -> Result<(), RegisterMethodError> {
+    module.register_async_method(
+        "sendTransaction",
+        |params, _ctx| async move {
+            debug!("send_transaction rpc request received {:#?}", params);
+            RpcResult::Ok("send_transaction rpc request received".to_string())
+        },
+    )?;
+
+    Ok(())
 }
 
-#[rpc(server)]
-pub trait DirectorRpc {
-    #[method(name = "sendTransaction")]
-    async fn send_transaction(
-        &self,
-        tx: String,
-        send_transaction_config: Option<RpcSendTransactionConfig>,
-    ) -> RpcResult<String>;
-}
-
-pub struct DirectorRpcImpl {
-    transwise: Transwise,
-}
-
-impl DirectorRpcImpl {
-    pub fn new(config: DirectorConfig) -> Self {
-        let transwise = Transwise::new(config.rpc_account_provider_config);
-        Self { transwise }
-    }
-}
-
-#[async_trait]
-impl DirectorRpcServer for DirectorRpcImpl {
+impl DirectorRpc {
+    #[allow(unused)] // figure out how to parse params first
     async fn send_transaction(
         &self,
         data: String,

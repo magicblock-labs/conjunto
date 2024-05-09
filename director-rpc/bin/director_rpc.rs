@@ -1,8 +1,8 @@
-use log::*;
 use std::net::SocketAddr;
 
-use conjunto_director_rpc::rpc::{DirectorRpcImpl, DirectorRpcServer as _};
+use conjunto_director_rpc::rpc::create_rpc_module;
 use jsonrpsee::server::{Server, ServerHandle};
+use log::*;
 
 #[tokio::main]
 async fn main() {
@@ -20,8 +20,9 @@ async fn run_server() -> (SocketAddr, ServerHandle) {
         .await
         .expect("Failed to build Server");
 
+    let rpc_module = create_rpc_module(Default::default())
+        .expect("Failed to create rpc module");
     let addr = server.local_addr().expect("Failed to get local addr");
-    let handle =
-        server.start(DirectorRpcImpl::new(Default::default()).into_rpc());
+    let handle = server.start(rpc_module);
     (addr, handle)
 }
