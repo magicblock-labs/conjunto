@@ -39,8 +39,10 @@ async fn main() {
             Hash::default(),
         );
         let sanitized_tx = SanitizedTransaction::from_transaction_for_tests(tx);
-        let endpoint =
-            transwise.guide_transaction(&sanitized_tx).await.unwrap();
+        let endpoint = transwise
+            .guide_sanitized_transaction(&sanitized_tx)
+            .await
+            .unwrap();
         println!("{:#?}", endpoint);
         assert!(endpoint.is_ephemeral());
     }
@@ -54,8 +56,10 @@ async fn main() {
             Hash::default(),
         );
         let sanitized_tx = SanitizedTransaction::from_transaction_for_tests(tx);
-        let endpoint =
-            transwise.guide_transaction(&sanitized_tx).await.unwrap();
+        let endpoint = transwise
+            .guide_sanitized_transaction(&sanitized_tx)
+            .await
+            .unwrap();
         println!("{:#?}", endpoint);
         assert!(endpoint.is_chain());
     }
@@ -73,8 +77,10 @@ async fn main() {
             Hash::default(),
         );
         let sanitized_tx = SanitizedTransaction::from_transaction_for_tests(tx);
-        let endpoint =
-            transwise.guide_transaction(&sanitized_tx).await.unwrap();
+        let endpoint = transwise
+            .guide_sanitized_transaction(&sanitized_tx)
+            .await
+            .unwrap();
         println!("{:#?}", endpoint);
         assert!(endpoint.is_unroutable());
     }

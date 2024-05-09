@@ -1,11 +1,23 @@
 use async_trait::async_trait;
+use conjunto_lockbox::accounts::RpcAccountProviderConfig;
+use conjunto_transwise::Transwise;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use log::*;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_sdk::transaction::VersionedTransaction;
 use solana_transaction_status::UiTransactionEncoding;
 
-use crate::{decoders::decode_and_deserialize, utils::invalid_params};
+use crate::{
+    decoders::decode_and_deserialize,
+    utils::{
+        invalid_params, server_error, server_error_with_data, ServerErrorCode,
+    },
+};
+
+#[derive(Default)]
+pub struct DirectorConfig {
+    pub rpc_account_provider_config: RpcAccountProviderConfig,
+}
 
 #[rpc(server)]
 pub trait DirectorRpc {
@@ -17,7 +29,16 @@ pub trait DirectorRpc {
     ) -> RpcResult<String>;
 }
 
-pub struct DirectorRpcImpl;
+pub struct DirectorRpcImpl {
+    transwise: Transwise,
+}
+
+impl DirectorRpcImpl {
+    pub fn new(config: DirectorConfig) -> Self {
+        let transwise = Transwise::new(config.rpc_account_provider_config);
+        Self { transwise }
+    }
+}
 
 #[async_trait]
 impl DirectorRpcServer for DirectorRpcImpl {
@@ -27,6 +48,7 @@ impl DirectorRpcServer for DirectorRpcImpl {
         config: Option<RpcSendTransactionConfig>,
     ) -> RpcResult<String> {
         debug!("send_transaction rpc request received");
+        // 1. Deserialize Transaction
         let RpcSendTransactionConfig {
             skip_preflight: _,
             preflight_commitment: _,
@@ -42,12 +64,36 @@ impl DirectorRpcServer for DirectorRpcImpl {
                     "unsupported encoding: {tx_encoding}. Supported encodings: base58, base64"
                 ))
             })?;
-        let (_, unsanitized_tx) = decode_and_deserialize::<VersionedTransaction>(
+        let (_, versioned_tx) = decode_and_deserialize::<VersionedTransaction>(
             data,
             binary_encoding,
         )?;
 
-        info!("tx: {:#?}", unsanitized_tx);
+        // 2. Determine Endpoint to be used for this Transaction
+        let endpoint = match self
+            .transwise
+            .guide_versioned_transaction(&versioned_tx)
+            .await
+        {
+            Ok(endpoint) => endpoint,
+            Err(err) => {
+                return Err(server_error(
+                    format!("error: {err}"),
+                    ServerErrorCode::FailedToFetchEndpointInformation,
+                ));
+            }
+        };
+        if endpoint.is_unroutable() {
+            return Err(server_error_with_data(
+                "Transaction is unroutable".to_string(),
+                ServerErrorCode::TransactionUnroutable,
+                endpoint,
+            ));
+        }
+
+        // 3. Route transaction accordingly
+
+        info!("endpoint: {:#?}", endpoint);
 
         Ok("send_transaction".to_string())
     }

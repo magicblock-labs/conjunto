@@ -1,5 +1,6 @@
 use conjunto_addresses::pda;
 use conjunto_core::AccountProvider;
+use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 
 use crate::{
@@ -10,7 +11,7 @@ use crate::{
     errors::LockboxResult,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum LockInconsistency {
     BufferAccountNotFound,
     DelegationAccountNotFound,
@@ -18,7 +19,7 @@ pub enum LockInconsistency {
     DelegationAccountInvalidOwner,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AccountLockState {
     /// The account is not present on chain and thus not locked either
     /// In this case we assume that this is an account that temporarily exists

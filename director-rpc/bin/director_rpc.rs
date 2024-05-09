@@ -21,6 +21,7 @@ async fn run_server() -> (SocketAddr, ServerHandle) {
         .expect("Failed to build Server");
 
     let addr = server.local_addr().expect("Failed to get local addr");
-    let handle = server.start(DirectorRpcImpl.into_rpc());
+    let handle =
+        server.start(DirectorRpcImpl::new(Default::default()).into_rpc());
     (addr, handle)
 }

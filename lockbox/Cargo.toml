@@ -11,6 +11,7 @@ edition.workspace = true
 async-trait = { workspace = true }
 conjunto-addresses = { workspace = true }
 conjunto-core = { workspace = true }
+serde = { workspace = true }
 solana-rpc-client = { workspace = true }
 solana-rpc-client-api = { workspace = true }
 solana-sdk = { workspace = true }

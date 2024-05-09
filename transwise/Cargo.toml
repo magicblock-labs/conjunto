@@ -10,6 +10,7 @@ edition.workspace = true
 [dependencies]
 conjunto-core = { workspace = true }
 conjunto-lockbox = { workspace = true }
+serde = { workspace = true }
 solana-sdk = { workspace = true }
 thiserror = { workspace = true }
 
