@@ -1,0 +1,18 @@
+[package]
+name = "conjunto-director-rpc"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "director-rpc"
+path = "bin/director_rpc.rs"
+
+[dependencies]
+async-trait = { workspace = true }
+jsonrpsee = { workspace = true, features = ["macros", "server"] }
+solana-rpc-client-api = { workspace = true }
+tokio = { workspace = true }

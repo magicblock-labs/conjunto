@@ -4,7 +4,14 @@ debug = true
 split-debuginfo = "packed"
 
 [workspace]
-members = ["addresses", "core", "lockbox", "test-tools", "transwise"]
+members = [
+  "addresses",
+  "core",
+  "director-rpc",
+  "lockbox",
+  "test-tools",
+  "transwise",
+]
 
 resolver = "2"
 
@@ -22,6 +29,8 @@ conjunto-addresses = { path = "addresses" }
 conjunto-core = { path = "core" }
 conjunto-lockbox = { path = "lockbox" }
 conjunto-test-tools = { path = "test-tools" }
+conjunto-transwise = { path = "transwise" }
+jsonrpsee = "0.22.5"
 paste = "1.0"
 solana-rpc-client = "1.18.12"
 solana-rpc-client-api = "1.18.12"
