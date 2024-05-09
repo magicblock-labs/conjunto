@@ -153,6 +153,33 @@ async fn test_account_meta_one_new_writable() {
 }
 
 #[tokio::test]
+async fn test_account_meta_one_unlocked_writable_two_readonlys() {
+    let unlocked_writable_id = Pubkey::new_from_array([4u8; 32]);
+    let lockstate_provider = setup_lockstate_provider(vec![(
+        unlocked_writable_id,
+        account_owned_by_system_program(),
+    )]);
+    let readonly1 = Pubkey::new_from_array([4u8; 32]);
+    let readonly2 = Pubkey::new_from_array([5u8; 32]);
+
+    let acc_holder = TransactionAccountsHolderStub {
+        writable: vec![unlocked_writable_id],
+        readonly: vec![readonly1, readonly2],
+    };
+
+    let endpoint = TransAccountMetas::from_accounts_holder(
+        &acc_holder,
+        &lockstate_provider,
+    )
+    .await
+    .unwrap()
+    .into_endpoint();
+
+    eprintln!("{:#?}", endpoint);
+    assert!(endpoint.is_chain());
+}
+
+#[tokio::test]
 async fn test_account_meta_two_readonlys() {
     let lockstate_provider = setup_lockstate_provider(vec![]);
     let readonly1 = Pubkey::new_from_array([4u8; 32]);
