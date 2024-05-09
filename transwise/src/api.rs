@@ -11,6 +11,7 @@ use crate::{
 
 /// The API that allows us to guide a transaction given a cluster
 /// Guiding decisions are made by consulting the state of accounts on chain
+/// See [../examples/guiding_transactions.rs] for more info.
 pub struct Transwise {
     account_lock_state_provider: AccountLockStateProvider<RpcAccountProvider>,
 }
