@@ -119,7 +119,7 @@ impl Deref for TransAccountMetas {
 }
 
 impl TransAccountMetas {
-    pub async fn sanitized_transaction<T: AccountProvider>(
+    pub async fn from_sanitized_transaction<T: AccountProvider>(
         tx: &SanitizedTransaction,
         lockbox: &AccountLockStateProvider<T>,
     ) -> TranswiseResult<Self> {
