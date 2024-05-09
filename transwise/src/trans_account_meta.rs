@@ -101,6 +101,7 @@ pub enum UnroutableReason {
         locked_writables: Vec<Pubkey>,
         unlocked_writables: Vec<Pubkey>,
     },
+    NoWritableAccounts,
 }
 
 // -----------------
@@ -207,9 +208,16 @@ impl TransAccountMetas {
             //                 i.e. 'Ephemeral111111111111111' forces our validator, otherwise we go
             //                 to chain
             _ => {
-                // Assert that we at least got some writable account
-                debug_assert!(!self.new_writables().is_empty());
-                Ephemeral(self)
+                // Assert that we at least got some writable account since otherwise the
+                // transaction isn't valid and it makes no sense to rout it anywhere
+                if self.new_writables().is_empty() {
+                    Unroutable {
+                        account_metas: self,
+                        reason: NoWritableAccounts,
+                    }
+                } else {
+                    Ephemeral(self)
+                }
             }
         }
     }

@@ -1,6 +1,7 @@
 use conjunto_core::TransactionAccountsHolder;
 use solana_sdk::pubkey::Pubkey;
 
+#[derive(Default)]
 pub struct TransactionAccountsHolderStub {
     pub readonly: Vec<Pubkey>,
     pub writable: Vec<Pubkey>,
