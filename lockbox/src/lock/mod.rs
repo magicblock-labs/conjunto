@@ -50,6 +50,24 @@ pub enum AccountLockState {
     },
 }
 
+impl AccountLockState {
+    pub fn is_new(&self) -> bool {
+        matches!(self, AccountLockState::NewAccount)
+    }
+
+    pub fn is_locked(&self) -> bool {
+        matches!(self, AccountLockState::Locked { .. })
+    }
+
+    pub fn is_unlocked(&self) -> bool {
+        matches!(self, AccountLockState::Unlocked)
+    }
+
+    pub fn is_inconsistent(&self) -> bool {
+        matches!(self, AccountLockState::Inconsistent { .. })
+    }
+}
+
 pub struct AccountLockStateProvider<T: AccountProvider> {
     account_provider: T,
 }

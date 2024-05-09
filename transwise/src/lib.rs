@@ -1,2 +1,2 @@
-mod account_meta;
 pub mod errors;
+pub mod trans_account_meta;

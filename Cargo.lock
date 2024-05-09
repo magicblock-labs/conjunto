@@ -710,8 +710,10 @@ version = "0.0.0"
 dependencies = [
  "conjunto-core",
  "conjunto-lockbox",
+ "conjunto-test-tools",
  "solana-sdk",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]
