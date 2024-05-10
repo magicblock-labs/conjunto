@@ -1,8 +1,10 @@
 use jsonrpsee::{
-    core::{client::ClientT, RegisterMethodError},
+    core::{client::ClientT, ClientError, RegisterMethodError},
+    types::{ErrorObjectOwned, Params},
     RpcModule,
 };
 use log::*;
+use serde::de::DeserializeOwned;
 use solana_account_decoder::{parse_token::UiTokenAmount, UiAccount};
 use solana_rpc_client_api::response::{
     OptionalContext, Response as RpcResponse, RpcAccountBalance,
@@ -20,12 +22,11 @@ use solana_sdk::{
 };
 use solana_transaction_status::{TransactionStatus, UiConfirmedBlock};
 
+use super::DirectorRpc;
 use crate::{
     rpc::params::RawParams,
     utils::{server_error, ServerErrorCode},
 };
-
-use super::DirectorRpc;
 
 // -----------------
 // Solana Types
@@ -37,6 +38,29 @@ type BlockCommitmentArray = [u64; MAX_LOCKOUT_HISTORY + 1];
 // -----------------
 // register_passthrough_methods
 // -----------------
+async fn passthrough_impl<'a, R: DeserializeOwned>(
+    method: &'a str,
+    params: Params<'static>,
+    rpc: &DirectorRpc,
+) -> Result<R, ErrorObjectOwned> {
+    let params = RawParams(params);
+    match rpc
+        .rpc_chain_client
+        .request::<R, RawParams>(method, params)
+        .await
+    {
+        Ok(res) => Ok(res),
+        Err(err) => match err {
+            // Pass RPC JSON errors through directly
+            ClientError::Call(err) => Err(err),
+            _ => Err(server_error(
+                format!("Failed to forward to on-chain RPC: {err:?}"),
+                ServerErrorCode::RpcClientError,
+            )),
+        },
+    }
+}
+
 pub fn register_passthrough_methods(
     module: &mut RpcModule<DirectorRpc>,
 ) -> Result<(), RegisterMethodError> {
@@ -47,19 +71,8 @@ pub fn register_passthrough_methods(
                 |params, rpc| async move {
                     debug!("{}", $method);
                     trace!("{:#?}", params);
-
-                    let params = RawParams(params);
-                    match rpc
-                        .rpc_chain_client
-                        .request::<$return_type, RawParams>($method, params)
+                    passthrough_impl::<$return_type>($method, params, &rpc)
                         .await
-                    {
-                        Ok(res) => Ok(res),
-                        Err(err) => Err(server_error(
-                            format!("Failed to forward to on-chain RPC: {err:?}"),
-                            ServerErrorCode::RpcClientError,
-                        )),
-                    }
                 },
             )?;
         };
