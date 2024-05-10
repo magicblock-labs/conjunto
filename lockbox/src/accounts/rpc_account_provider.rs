@@ -24,6 +24,10 @@ impl RpcAccountProviderConfig {
         self.cluster.url()
     }
 
+    pub fn ws_url(&self) -> String {
+        self.cluster.ws_url()
+    }
+
     pub fn commitment(&self) -> CommitmentLevel {
         self.commitment
     }
