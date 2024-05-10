@@ -1,0 +1,95 @@
+[package]
+name = "solana-program"
+description = "Solana Program"
+documentation = "https://docs.rs/solana-program"
+readme = "README.md"
+version = "1.18.12"
+edition = "2021"
+
+[dependencies]
+bincode = { version = "1.3.3" }
+blake3 = { version = "1.5.0", features = ["digest", "traits-preview"] }
+borsh = { version = "1.2.1" }
+borsh0-10 = { package = "borsh", version = "0.10.3" }
+borsh0-9 = { package = "borsh", version = "0.9.3" }
+bs58 = { version = "0.4.0" }
+bv = { version = "0.11.1", features = ["serde"] }
+bytemuck = { version = "1.14.0", features = ["derive"] }
+itertools = { version = "0.10.5" }
+lazy_static = { version = "1.4.0" }
+log = { version = "0.4.20" }
+memoffset = { version = "0.9" }
+num-derive = { version = "0.4" }
+num-traits = { version = "0.2", features = ["i128"] }
+rustversion = { version = "1.0.14" }
+serde = { version = "1.0.195", features = ["derive"] }
+serde_bytes = { version = "0.11.14" }
+serde_derive = { version = "1.0.103" }
+serde_json = { version = "1.0.111" }
+sha2 = { version = "0.10.8" }
+sha3 = { version = "0.10.4" }
+solana-frozen-abi = { version = "1.18.12" }
+solana-frozen-abi-macro = { version = "1.18.12" }
+solana-sdk-macro = { version = "1.18.12" }
+thiserror = { version = "1.0.56" }
+
+# This is currently needed to build on-chain programs reliably.
+# Borsh 0.10 may pull in hashbrown 0.13, which uses ahash 0.8, which uses
+# getrandom 0.2 underneath. This explicit dependency allows for no-std if cargo
+# upgrades Borsh's dependency to hashbrown 0.13.
+# Remove this once borsh 0.11 or 1.0 is released, which correctly declares the
+# hashbrown dependency as optional.
+[target.'cfg(target_os = "solana")'.dependencies]
+getrandom = { version = "0.2.10", features = ["custom"] }
+
+[target.'cfg(not(target_os = "solana"))'.dependencies]
+ark-bn254 = { version = "0.4.0" }
+ark-ec = { version = "0.4.0" }
+ark-ff = { version = "0.4.0" }
+ark-serialize = { version = "0.4.0" }
+base64 = { version = "0.21.7", features = ["alloc", "std"] }
+bitflags = { version = "2.4.2", features = ["serde"] }
+curve25519-dalek = { version = "4.1.2", features = ["serde"] }
+itertools = { version = "0.10.5" }
+libc = { version = "0.2.152", features = ["extra_traits"] }
+libsecp256k1 = { version = "0.6.0" }
+light-poseidon = { version = "0.2.0" }
+num-bigint = { version = "0.4.4" }
+rand = { version = "0.8.5" }
+tiny-bip39 = { version = "0.8.2" }
+wasm-bindgen = { version = "0.2" }
+zeroize = { version = "1.7.0", features = ["default", "zeroize_derive"] }
+
+[target.'cfg(not(target_os = "solana"))'.dev-dependencies]
+solana-logger = { version = "1.18.12" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = { version = "0.1.7" }
+console_log = { version = "0.2.2" }
+getrandom = { version = "0.2.10", features = ["js", "wasm-bindgen"] }
+js-sys = { version = "0.3.67" }
+
+[target.'cfg(not(target_pointer_width = "64"))'.dependencies]
+parking_lot = { version = "0.12" }
+
+[dev-dependencies]
+anyhow = { version = "1.0.79" }
+array-bytes = { version = "=1.4.1" }
+assert_matches = { version = "1.5.0" }
+serde_json = { version = "1.0.111" }
+static_assertions = { version = "1.1.0" }
+
+[build-dependencies]
+rustc_version = { version = "0.4" }
+
+[target.'cfg(any(unix, windows))'.build-dependencies]
+cc = { version = "1.0.83", features = ["jobserver", "parallel"] }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
