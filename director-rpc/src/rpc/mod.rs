@@ -2,6 +2,7 @@ use conjunto_lockbox::accounts::RpcAccountProviderConfig;
 use conjunto_transwise::Transwise;
 use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},
+    ws_client::{WsClient, WsClientBuilder},
     RpcModule,
 };
 
@@ -23,19 +24,23 @@ pub struct DirectorConfig {
 pub struct DirectorRpc {
     pub(super) transwise: Transwise,
     pub(super) rpc_chain_client: HttpClient,
+    pub(super) pubsub_chain_client: WsClient,
 }
 
 pub fn create_rpc_module(
     config: DirectorConfig,
 ) -> DirectorRpcResult<RpcModule<DirectorRpc>> {
     let url = config.rpc_account_provider_config.url().to_string();
+    let ws_url = config.rpc_account_provider_config.ws_url();
     let transwise = Transwise::new(config.rpc_account_provider_config);
 
     let rpc_client = HttpClientBuilder::default().build(url)?;
+    let ws_client = WsClientBuilder::default().build(ws_url)?;
 
     let director = DirectorRpc {
         transwise,
         rpc_chain_client: rpc_client,
+        pubsub_chain_client: ws_client,
     };
 
     let mut module = RpcModule::new(director);
