@@ -1,10 +1,11 @@
 use conjunto_lockbox::accounts::RpcAccountProviderConfig;
 use conjunto_transwise::Transwise;
 use jsonrpsee::{
-    core::RegisterMethodError,
     http_client::{HttpClient, HttpClientBuilder},
     RpcModule,
 };
+
+use crate::errors::DirectorRpcResult;
 
 use self::{
     guide::register_guide_methods, passthrough::register_passthrough_methods,
@@ -26,14 +27,11 @@ pub struct DirectorRpc {
 
 pub fn create_rpc_module(
     config: DirectorConfig,
-) -> Result<RpcModule<DirectorRpc>, RegisterMethodError> {
+) -> DirectorRpcResult<RpcModule<DirectorRpc>> {
     let url = config.rpc_account_provider_config.url().to_string();
     let transwise = Transwise::new(config.rpc_account_provider_config);
 
-    let rpc_client = HttpClientBuilder::default()
-        .build(url)
-        // TODO(thlorenz): thiserror crate to provide more generic error here?
-        .expect("Failed to build HttpClient");
+    let rpc_client = HttpClientBuilder::default().build(url)?;
 
     let director = DirectorRpc {
         transwise,

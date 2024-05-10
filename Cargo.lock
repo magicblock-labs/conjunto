@@ -784,6 +784,7 @@ dependencies = [
  "solana-rpc-client-api",
  "solana-sdk",
  "solana-transaction-status",
+ "thiserror",
  "tokio",
 ]
 

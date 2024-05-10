@@ -27,4 +27,5 @@ solana-account-decoder = { workspace = true }
 solana-sdk = { workspace = true }
 solana-rpc-client-api = { workspace = true }
 solana-transaction-status = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true }
