@@ -9,6 +9,7 @@ pub fn invalid_params(msg: String) -> ErrorObjectOwned {
 pub enum ServerErrorCode {
     FailedToFetchEndpointInformation = 0,
     TransactionUnroutable = 1,
+    RpcClientError = 2,
 }
 
 pub fn server_error(msg: String, code: ServerErrorCode) -> ErrorObjectOwned {

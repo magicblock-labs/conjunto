@@ -34,10 +34,12 @@ conjunto-lockbox = { path = "lockbox" }
 conjunto-test-tools = { path = "test-tools" }
 conjunto-transwise = { path = "transwise" }
 env_logger = "0.11.3"
-jsonrpsee = "0.22.5"
+jsonrpsee = { version = "0.22.5", features = ["http-client"] }
 log = "0.4.21"
 paste = "1.0"
 serde = "1.0.201"
+serde_json = "1.0.117"
+solana-account-decoder = "1.18.12"
 solana-rpc-client = "1.18.12"
 solana-rpc-client-api = "1.18.12"
 solana-sdk = "1.18.12"

@@ -22,6 +22,8 @@ env_logger = { workspace = true }
 jsonrpsee = { workspace = true, features = ["macros", "server"] }
 log = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+solana-account-decoder = { workspace = true }
 solana-sdk = { workspace = true }
 solana-rpc-client-api = { workspace = true }
 solana-transaction-status = { workspace = true }

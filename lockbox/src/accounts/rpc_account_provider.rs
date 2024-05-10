@@ -15,6 +15,20 @@ pub struct RpcAccountProviderConfig {
     commitment: CommitmentLevel,
 }
 
+impl RpcAccountProviderConfig {
+    pub fn cluster(&self) -> &RpcCluster {
+        &self.cluster
+    }
+
+    pub fn url(&self) -> &str {
+        self.cluster.url()
+    }
+
+    pub fn commitment(&self) -> CommitmentLevel {
+        self.commitment
+    }
+}
+
 pub struct RpcAccountProvider {
     rpc_client: RpcClient,
 }
