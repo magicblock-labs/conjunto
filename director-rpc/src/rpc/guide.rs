@@ -3,6 +3,7 @@ use jsonrpsee::{
     RpcModule,
 };
 use log::*;
+use serde::Deserialize;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_sdk::transaction::VersionedTransaction;
 use solana_transaction_status::UiTransactionEncoding;
@@ -15,13 +16,23 @@ use crate::{
     },
 };
 
+#[derive(Debug, Deserialize)]
+struct SendTransactionParams(
+    String,
+    #[serde(default)] Option<RpcSendTransactionConfig>,
+);
+
 pub fn register_guide_methods(
     module: &mut RpcModule<DirectorRpc>,
 ) -> Result<(), RegisterMethodError> {
     module.register_async_method(
         "sendTransaction",
-        |params, _ctx| async move {
+        |params, rpc| async move {
             debug!("send_transaction rpc request received {:#?}", params);
+            let SendTransactionParams(data, config) =
+                params.parse::<SendTransactionParams>()?;
+
+            rpc.send_transaction(data, config).await?;
             RpcResult::Ok("send_transaction rpc request received".to_string())
         },
     )?;
@@ -30,7 +41,6 @@ pub fn register_guide_methods(
 }
 
 impl DirectorRpc {
-    #[allow(unused)] // figure out how to parse params first
     async fn send_transaction(
         &self,
         data: String,
