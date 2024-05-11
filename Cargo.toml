@@ -42,7 +42,7 @@ serde_json = "1.0.117"
 solana-account-decoder = "1.18.12"
 solana-rpc-client = "1.18.12"
 solana-rpc-client-api = "1.18.12"
-solana-sdk = "1.18.12"
+solana-sdk = { version = "1.18.12", default-features = false }
 solana-transaction-status = "1.18.12"
 thiserror = "1.0.60"
 tokio = "1.37.0"
