@@ -34,7 +34,15 @@ conjunto-lockbox = { path = "lockbox" }
 conjunto-test-tools = { path = "test-tools" }
 conjunto-transwise = { path = "transwise" }
 env_logger = "0.11.3"
-jsonrpsee = { version = "0.22.5", features = ["http-client"] }
+# We need to keep jsonrpsee at an older version in order to avoid a dependency conflict
+# with zeroize and related crates coming from the solana-sdk and solana-program crates.
+# The latest rustls version that does not depend on zeroize is 0.21.12.
+# https://crates.io/crates/rustls/0.21.12/dependencies
+
+# We walk up the stack to get that version down below:
+# rustls@0.21.12 <- tokio-rustls@0.24.1 <- jsonrpsee-client-transport@0.20.3 <-
+# jsonrpsee-ws-client@0.20.3 <- jsonrpsee@0.20.3
+jsonrpsee = { version = "^0.20.3", features = ["http-client", "ws-client"] }
 log = "0.4.21"
 paste = "1.0"
 serde = "1.0.201"
