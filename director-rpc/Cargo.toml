@@ -19,8 +19,9 @@ bs58 = { workspace = true }
 conjunto-lockbox = { workspace = true }
 conjunto-transwise = { workspace = true }
 env_logger = { workspace = true }
-jsonrpsee = { workspace = true, features = ["macros", "server"] }
+jsonrpsee = { workspace = true, features = ["server"] }
 jsonrpsee-ws-client = { workspace = true }
+jsonrpsee-core = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

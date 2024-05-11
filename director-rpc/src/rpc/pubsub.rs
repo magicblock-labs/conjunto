@@ -1,4 +1,5 @@
 use jsonrpsee::{core::RegisterMethodError, RpcModule};
+use jsonrpsee_core::client::SubscriptionClientT;
 use log::*;
 
 use super::{params::RawParams, DirectorRpc};
@@ -23,7 +24,7 @@ pub fn register_subscription_methods(
 impl DirectorRpc {
     async fn slotSubscribe(&self, params: RawParams) {
         self.pubsub_chain_client
-            .subscribe_("slotSubscribe", params)
+            .subscribe("slotSubscribe", params, "slotUnsubscribe")
             .await;
     }
 }

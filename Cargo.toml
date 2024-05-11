@@ -48,6 +48,7 @@ jsonrpsee = { version = "0.22.5", features = ["http-client"] }
 # rustls@0.21.12 <- tokio-rustls@0.24.1 <- jsonrpsee-client-transport@0.20.3 <-
 # jsonrpsee-ws-client@0.20.3 <- jsonrpsee@0.20.3
 jsonrpsee-ws-client = "0.20.3"
+jsonrpsee-core = "0.20.3"
 log = "0.4.21"
 paste = "1.0"
 serde = "1.0.201"

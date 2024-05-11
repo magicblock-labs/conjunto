@@ -786,6 +786,7 @@ dependencies = [
  "conjunto-transwise",
  "env_logger 0.11.3",
  "jsonrpsee",
+ "jsonrpsee-core 0.20.3",
  "jsonrpsee-ws-client",
  "log",
  "serde",
@@ -1439,12 +1440,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
 
 [[package]]
-name = "heck"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1724,11 +1719,9 @@ checksum = "cfdb12a2381ea5b2e68c3469ec604a007b367778cdb14d09612c8069ebd616ad"
 dependencies = [
  "jsonrpsee-core 0.22.5",
  "jsonrpsee-http-client",
- "jsonrpsee-proc-macros",
  "jsonrpsee-server",
  "jsonrpsee-types 0.22.5",
  "tokio",
- "tracing",
 ]
 
 [[package]]
@@ -1812,19 +1805,6 @@ dependencies = [
  "tower",
  "tracing",
  "url",
-]
-
-[[package]]
-name = "jsonrpsee-proc-macros"
-version = "0.22.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d0bb047e79a143b32ea03974a6bf59b62c2a4c5f5d42a381c907a8bbb3f75c0"
-dependencies = [
- "heck",
- "proc-macro-crate 3.1.0",
- "proc-macro2",
- "quote",
- "syn 2.0.61",
 ]
 
 [[package]]
