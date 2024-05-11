@@ -5,6 +5,7 @@ use jsonrpsee::{
     ws_client::{WsClient, WsClientBuilder},
     RpcModule,
 };
+use log::*;
 
 use crate::errors::DirectorRpcResult;
 
@@ -35,17 +36,20 @@ pub struct DirectorPubsub {
 pub async fn create_rpc_module(
     config: DirectorConfig,
 ) -> DirectorRpcResult<(RpcModule<DirectorRpc>, RpcModule<DirectorPubsub>)> {
-    let url = config.rpc_account_provider_config.url().to_string();
+    let rpc_url = config.rpc_account_provider_config.url().to_string();
     let ws_url = config.rpc_account_provider_config.ws_url().to_string();
-    let transwise = Transwise::new(config.rpc_account_provider_config);
+    debug!("RPC Client URL: {}", rpc_url);
+    debug!("Ws  Client URL: {}", ws_url);
 
-    let rpc_client = HttpClientBuilder::default().build(url)?;
+    let rpc_client = HttpClientBuilder::default().build(rpc_url)?;
+
     let ws_client = WsClientBuilder::default()
         .build(ws_url)
         .await
         // TODO: properly propagate
         .expect("Failed to build WsClient");
 
+    let transwise = Transwise::new(config.rpc_account_provider_config);
     let rpc_director = DirectorRpc {
         transwise,
         rpc_chain_client: rpc_client,
