@@ -1,4 +1,4 @@
-use jsonrpsee::types::{ErrorCode, ErrorObject, ErrorObjectOwned};
+use jsonrpsee::types::{error::ErrorCode, ErrorObject, ErrorObjectOwned};
 use serde::Serialize;
 
 pub fn invalid_params(msg: String) -> ErrorObjectOwned {

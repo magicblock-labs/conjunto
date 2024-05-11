@@ -1,5 +1,5 @@
 use jsonrpsee::{
-    core::{client::ClientT, ClientError, RegisterMethodError},
+    core::{client::ClientT, Error},
     types::{ErrorObjectOwned, Params},
     RpcModule,
 };
@@ -52,7 +52,7 @@ async fn passthrough_impl<'a, R: DeserializeOwned>(
         Ok(res) => Ok(res),
         Err(err) => match err {
             // Pass RPC JSON errors through directly
-            ClientError::Call(err) => Err(err),
+            Error::Call(err) => Err(err),
             _ => Err(server_error(
                 format!("Failed to forward to on-chain RPC: {err:?}"),
                 ServerErrorCode::RpcClientError,
@@ -63,7 +63,7 @@ async fn passthrough_impl<'a, R: DeserializeOwned>(
 
 pub fn register_passthrough_methods(
     module: &mut RpcModule<DirectorRpc>,
-) -> Result<(), RegisterMethodError> {
+) -> Result<(), Error> {
     macro_rules! passthrough {
         ($method:literal, $return_type:ty) => {
             module.register_async_method(

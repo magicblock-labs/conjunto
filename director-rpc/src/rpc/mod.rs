@@ -2,9 +2,9 @@ use conjunto_lockbox::accounts::RpcAccountProviderConfig;
 use conjunto_transwise::Transwise;
 use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},
+    ws_client::{WsClient, WsClientBuilder},
     RpcModule,
 };
-use jsonrpsee_ws_client::{WsClient, WsClientBuilder};
 
 use crate::errors::DirectorRpcResult;
 

@@ -1,6 +1,10 @@
-use jsonrpsee::{core::RegisterMethodError, RpcModule};
-use jsonrpsee_core::client::SubscriptionClientT;
+use jsonrpsee::core::client::Subscription;
+use jsonrpsee::core::{
+    client::SubscriptionClientT, error::Error as RegisterMethodError,
+};
+use jsonrpsee::RpcModule;
 use log::*;
+use solana_sdk::clock::Slot;
 
 use super::{params::RawParams, DirectorRpc};
 
@@ -11,10 +15,11 @@ pub fn register_subscription_methods(
         "slotSubscribe",
         "slotNotification",
         "slotUnsubscribe",
-        |params, pending, rpc| async move {
+        |params, _pending, rpc| async move {
             debug!("slotSubscribe");
             trace!("{:#?}", params);
             let params = RawParams(params);
+            rpc.slot_subscribe(params).await;
         },
     )?;
 
@@ -22,9 +27,11 @@ pub fn register_subscription_methods(
 }
 
 impl DirectorRpc {
-    async fn slotSubscribe(&self, params: RawParams) {
-        self.pubsub_chain_client
+    async fn slot_subscribe(&self, params: RawParams) {
+        let _sub: Subscription<Slot> = self
+            .pubsub_chain_client
             .subscribe("slotSubscribe", params, "slotUnsubscribe")
-            .await;
+            .await
+            .unwrap();
     }
 }
