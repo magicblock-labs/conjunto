@@ -50,10 +50,23 @@ impl DirectorPubsub {
             .subscribe("slotSubscribe", RawParams::new(None), "slotUnsubscribe")
             .await?;
 
+        // This solution kind of works, however a while after unsubscribing we get the following:
+        // [backend]: Failed to read message: Networking or low-level protocol error: WebSocket connection error: connection closed
+        // and when we then try to subscribe with the same connection again:
+        // Failed to accept subscription with connection id 0: JsonRpcRegisterMethodError(
+        //     RestartNeeded(
+        //         "Networking or low-level protocol error: WebSocket connection error: connection closed",
+        //     ),
+        // )
+        // This state does not resolve itself even after disconnecting the upstream client and
+        // reconnecting it.
         tokio::spawn(async move {
             loop {
                 tokio::select! {
                     _ = sink.closed() => {
+                        let _ = sub.unsubscribe().await.map_err(|err| {
+                            warn!("Failed to unsubscribe from slotSubscribe: {:#?}", err)
+                        });
                         break;
                     }
                     res = sub.next() => {
@@ -64,7 +77,10 @@ impl DirectorPubsub {
                                     sink.subscription_id(),
                                     &slot_info,
                                 ) {
-                                    Ok(notif) => sink.send(notif).await.unwrap(),
+                                    Ok(notif) => if (sink.send(notif).await).is_err() {
+                                        // This only happens if the sink was closed
+                                        break;
+                                    }
                                     Err(err) => warn!(
                                         "Got invalid slot notification: {:#?} from backend",
                                         err
