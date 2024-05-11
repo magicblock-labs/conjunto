@@ -3,7 +3,13 @@ use jsonrpsee::{
     types::Params,
 };
 
+#[derive(Clone, Debug)]
 pub struct RawParams(pub Params<'static>);
+impl RawParams {
+    pub fn new(params: Option<&'static str>) -> Self {
+        Self(Params::new(params))
+    }
+}
 
 impl ToRpcParams for RawParams {
     fn to_rpc_params(self) -> Result<Option<Box<JsonRawValue>>, Error> {

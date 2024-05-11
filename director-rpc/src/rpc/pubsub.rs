@@ -4,7 +4,7 @@ use jsonrpsee::core::{
 };
 use jsonrpsee::RpcModule;
 use log::*;
-use solana_sdk::clock::Slot;
+use solana_rpc_client_api::response::SlotInfo;
 
 use super::params::RawParams;
 use super::DirectorPubsub;
@@ -16,11 +16,9 @@ pub fn register_subscription_methods(
         "slotSubscribe",
         "slotNotification",
         "slotUnsubscribe",
-        |params, _pending, rpc| async move {
+        |_params, _pending, rpc| async move {
             debug!("slotSubscribe");
-            trace!("{:#?}", params);
-            let params = RawParams(params);
-            rpc.slot_subscribe(params).await;
+            rpc.slot_subscribe().await;
         },
     )?;
 
@@ -28,14 +26,40 @@ pub fn register_subscription_methods(
 }
 
 impl DirectorPubsub {
-    async fn slot_subscribe(&self, params: RawParams) {
-        let mut sub: Subscription<Slot> = self
+    async fn slot_subscribe(&self) {
+        let mut sub: Subscription<SlotInfo> = self
             .pubsub_chain_client
-            .subscribe("slotSubscribe", params, "slotUnsubscribe")
+            .subscribe("slotSubscribe", RawParams::new(None), "slotUnsubscribe")
             .await
+            .map_err(|e| error!("Failed to subscribe to slot: {:#?}", e))
             .unwrap();
+
         while let Some(slot) = sub.next().await {
             debug!("slotNotification: {:?}", slot);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use conjunto_test_tools::init_logger;
+    use jsonrpsee::ws_client::WsClientBuilder;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_slot_subscribe_devnet() {
+        init_logger!();
+        let ws_url = "wss://api.devnet.solana.com";
+
+        let ws_client = WsClientBuilder::default()
+            .build(ws_url)
+            .await
+            .expect("Failed to build WsClient");
+
+        let director_pubsub = DirectorPubsub {
+            pubsub_chain_client: ws_client,
+        };
+        director_pubsub.slot_subscribe().await;
     }
 }
