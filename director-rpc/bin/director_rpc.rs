@@ -21,6 +21,7 @@ async fn run_server() -> (SocketAddr, ServerHandle) {
         .expect("Failed to build Server");
 
     let rpc_module = create_rpc_module(Default::default())
+        .await
         .expect("Failed to create rpc module");
     let addr = server.local_addr().expect("Failed to get local addr");
     let handle = server.start(rpc_module);

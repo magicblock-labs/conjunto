@@ -2,9 +2,9 @@ use conjunto_lockbox::accounts::RpcAccountProviderConfig;
 use conjunto_transwise::Transwise;
 use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},
-    ws_client::{WsClient, WsClientBuilder},
     RpcModule,
 };
+use jsonrpsee_ws_client::{WsClient, WsClientBuilder};
 
 use crate::errors::DirectorRpcResult;
 
@@ -27,15 +27,19 @@ pub struct DirectorRpc {
     pub(super) pubsub_chain_client: WsClient,
 }
 
-pub fn create_rpc_module(
+pub async fn create_rpc_module(
     config: DirectorConfig,
 ) -> DirectorRpcResult<RpcModule<DirectorRpc>> {
     let url = config.rpc_account_provider_config.url().to_string();
-    let ws_url = config.rpc_account_provider_config.ws_url();
+    let ws_url = config.rpc_account_provider_config.ws_url().to_string();
     let transwise = Transwise::new(config.rpc_account_provider_config);
 
     let rpc_client = HttpClientBuilder::default().build(url)?;
-    let ws_client = WsClientBuilder::default().build(ws_url)?;
+    let ws_client = WsClientBuilder::default()
+        .build(ws_url)
+        .await
+        // TODO: properly propagate
+        .expect("Failed to build WsClient");
 
     let director = DirectorRpc {
         transwise,
