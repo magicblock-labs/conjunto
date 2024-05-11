@@ -15,6 +15,7 @@ use self::{
 pub mod guide;
 mod params;
 pub mod passthrough;
+pub mod pubsub;
 
 #[derive(Default)]
 pub struct DirectorConfig {

@@ -1,4 +1,5 @@
 use jsonrpsee::{core::RegisterMethodError, RpcModule};
+use log::*;
 
 use super::{params::RawParams, DirectorRpc};
 
@@ -10,6 +11,8 @@ pub fn register_subscription_methods(
         "slotNotification",
         "slotUnsubscribe",
         |params, pending, rpc| async move {
+            debug!("slotSubscribe");
+            trace!("{:#?}", params);
             let params = RawParams(params);
         },
     )?;
@@ -19,6 +22,8 @@ pub fn register_subscription_methods(
 
 impl DirectorRpc {
     async fn slotSubscribe(&self, params: RawParams) {
-        self.rpc_chain_client.subscribe("slotSubscribe", params)
+        self.pubsub_chain_client
+            .subscribe_("slotSubscribe", params)
+            .await;
     }
 }
