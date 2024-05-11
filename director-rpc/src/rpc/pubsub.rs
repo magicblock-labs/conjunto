@@ -6,10 +6,11 @@ use jsonrpsee::RpcModule;
 use log::*;
 use solana_sdk::clock::Slot;
 
-use super::{params::RawParams, DirectorRpc};
+use super::params::RawParams;
+use super::DirectorPubsub;
 
 pub fn register_subscription_methods(
-    module: &mut RpcModule<DirectorRpc>,
+    module: &mut RpcModule<DirectorPubsub>,
 ) -> Result<(), RegisterMethodError> {
     module.register_subscription(
         "slotSubscribe",
@@ -26,12 +27,15 @@ pub fn register_subscription_methods(
     Ok(())
 }
 
-impl DirectorRpc {
+impl DirectorPubsub {
     async fn slot_subscribe(&self, params: RawParams) {
-        let _sub: Subscription<Slot> = self
+        let mut sub: Subscription<Slot> = self
             .pubsub_chain_client
             .subscribe("slotSubscribe", params, "slotUnsubscribe")
             .await
             .unwrap();
+        while let Some(slot) = sub.next().await {
+            debug!("slotNotification: {:?}", slot);
+        }
     }
 }
