@@ -24,7 +24,7 @@ impl RpcAccountProviderConfig {
         self.cluster.url()
     }
 
-    pub fn ws_url(&self) -> &str {
+    pub fn ws_url(&self) -> String {
         self.cluster.ws_url()
     }
 

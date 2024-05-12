@@ -1,5 +1,7 @@
-use jsonrpsee::core::error::Error as RegisterMethodError;
-use jsonrpsee::{core::RpcResult, RpcModule};
+use jsonrpsee::{
+    core::{RegisterMethodError, RpcResult},
+    RpcModule,
+};
 use log::*;
 use serde::Deserialize;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;

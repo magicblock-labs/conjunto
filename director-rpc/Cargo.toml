@@ -19,7 +19,7 @@ bs58 = { workspace = true }
 conjunto-lockbox = { workspace = true }
 conjunto-transwise = { workspace = true }
 env_logger = { workspace = true }
-jsonrpsee = { workspace = true }
+jsonrpsee = { workspace = true, features = ["macros", "server"] }
 log = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -29,6 +29,3 @@ solana-rpc-client-api = { workspace = true }
 solana-transaction-status = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
-
-[dev-dependencies]
-conjunto-test-tools = { workspace = true }
