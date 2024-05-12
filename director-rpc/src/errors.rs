@@ -8,4 +8,6 @@ pub enum DirectorRpcError {
     JsonRpcRegisterMethodError(#[from] jsonrpsee::core::RegisterMethodError),
     #[error("JsonRpcClientError")]
     JsonRpcClientError(#[from] jsonrpsee::core::client::Error),
+    #[error("StdIoError")]
+    StdIoError(#[from] std::io::Error),
 }

@@ -7,6 +7,8 @@ split-debuginfo = "packed"
 members = [
   "addresses",
   "core",
+  "director",
+  "director-pubsub",
   "director-rpc",
   "lockbox",
   "test-tools",
@@ -31,6 +33,8 @@ bs58 = "0.5.1"
 conjunto-addresses = { path = "addresses" }
 conjunto-core = { path = "core" }
 conjunto-lockbox = { path = "lockbox" }
+conjunto-director-pubsub = { path = "director-pubsub" }
+conjunto-director-rpc = { path = "director-rpc" }
 conjunto-test-tools = { path = "test-tools" }
 conjunto-transwise = { path = "transwise" }
 env_logger = "0.11.3"
@@ -44,5 +48,6 @@ solana-rpc-client = "1.18.12"
 solana-rpc-client-api = "1.18.12"
 solana-sdk = "1.18.12"
 solana-transaction-status = "1.18.12"
+tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
 thiserror = "1.0.60"
 tokio = "1.37.0"

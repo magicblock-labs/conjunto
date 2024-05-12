@@ -766,6 +766,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "conjunto-director"
+version = "0.0.0"
+dependencies = [
+ "conjunto-director-rpc",
+ "env_logger 0.11.3",
+ "log",
+ "tokio",
+]
+
+[[package]]
+name = "conjunto-director-pubsub"
+version = "0.0.0"
+
+[[package]]
 name = "conjunto-director-rpc"
 version = "0.0.0"
 dependencies = [
@@ -775,7 +789,6 @@ dependencies = [
  "bs58 0.5.1",
  "conjunto-lockbox",
  "conjunto-transwise",
- "env_logger 0.11.3",
  "jsonrpsee",
  "log",
  "serde",
@@ -785,7 +798,6 @@ dependencies = [
  "solana-sdk",
  "solana-transaction-status",
  "thiserror",
- "tokio",
 ]
 
 [[package]]
