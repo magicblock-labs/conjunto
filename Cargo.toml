@@ -38,6 +38,7 @@ conjunto-director-rpc = { path = "director-rpc" }
 conjunto-test-tools = { path = "test-tools" }
 conjunto-transwise = { path = "transwise" }
 env_logger = "0.11.3"
+futures-util = "0.3.30"
 jsonrpsee = { version = "0.22.5", features = ["http-client"] }
 log = "0.4.21"
 paste = "1.0"
@@ -51,3 +52,4 @@ solana-transaction-status = "1.18.12"
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
 thiserror = "1.0.60"
 tokio = "1.37.0"
+url = "2.5.0"

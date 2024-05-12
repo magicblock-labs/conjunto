@@ -7,6 +7,11 @@ homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+conjunto-addresses = { workspace = true }
+log = { workspace = true }
+futures-util = { workspace = true }
+thiserror = { workspace = true }
+tokio-tungstenite = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }

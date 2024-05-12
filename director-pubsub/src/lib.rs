@@ -1,14 +1,53 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use log::*;
+use std::sync::Arc;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use director::{DirectorPubsub, DirectorPubsubConfig};
+use errors::DirectorPubsubResult;
+use tokio::{
+    net::{TcpListener, TcpStream},
+    task::JoinHandle,
+};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+mod accept_connection;
+mod director;
+pub mod errors;
+
+pub type BackendWebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
+
+pub const DEFAULT_DIRECTOR_PUBSUB_URL: &str = "127.0.0.1:9900";
+
+pub async fn start_pubsub_server(
+    config: DirectorPubsubConfig,
+    url: Option<&str>,
+) -> DirectorPubsubResult<(String, JoinHandle<()>)> {
+    let url = url.unwrap_or(DEFAULT_DIRECTOR_PUBSUB_URL);
+    let listener = TcpListener::bind(&url).await?;
+    let director = Arc::new(DirectorPubsub::new(config));
+    let pubsub_handle = tokio::spawn(async move {
+        while let Ok((stream, _)) = listener.accept().await {
+            let chain_client = match director.try_chain_client().await {
+                Err(err) => {
+                    error!("Failed to connect to chain client: {}", err);
+                    continue;
+                }
+                Ok(client) => client,
+            };
+            let ephem_client = match director.try_ephemeral_client().await {
+                Err(err) => {
+                    error!("Failed to connect to ephemeral client: {}", err);
+                    continue;
+                }
+                Ok(client) => client,
+            };
+            tokio::spawn(accept_connection::accept_connection(
+                director.clone(),
+                chain_client,
+                ephem_client,
+                stream,
+            ));
+        }
+    });
+
+    Ok((url.to_string(), pubsub_handle))
 }

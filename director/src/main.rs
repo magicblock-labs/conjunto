@@ -1,3 +1,4 @@
+use conjunto_director_pubsub::start_pubsub_server;
 use conjunto_director_rpc::start_rpc_server;
 use log::info;
 
@@ -7,7 +8,11 @@ async fn main() {
 
     let (rpc_addr, rpc_handle) =
         start_rpc_server(Default::default(), None).await.unwrap();
-    info!("RPC Server running on: {}", rpc_addr);
 
-    tokio::join!(rpc_handle.stopped());
+    let (pubsub_addr, pubsub_handle) =
+        start_pubsub_server(Default::default(), None).await.unwrap();
+    info!("RPC Server running on: {}", rpc_addr);
+    info!("Pubsub Server running on: {}", pubsub_addr);
+
+    tokio::join!(rpc_handle.stopped(), pubsub_handle);
 }
