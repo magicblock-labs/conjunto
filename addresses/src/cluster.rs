@@ -29,12 +29,12 @@ impl RpcCluster {
         }
     }
 
-    pub fn ws_url(&self) -> String {
+    pub fn ws_url(&self) -> &str {
         match self {
-            RpcCluster::Devnet => WS_DEVNET.to_string(),
-            RpcCluster::Mainnet => WS_MAINNET.to_string(),
-            RpcCluster::Testnet => WS_TESTNET.to_string(),
-            RpcCluster::Development => WS_DEVELOPMENT.to_string(),
+            RpcCluster::Devnet => WS_DEVNET,
+            RpcCluster::Mainnet => WS_MAINNET,
+            RpcCluster::Testnet => WS_TESTNET,
+            RpcCluster::Development => WS_DEVELOPMENT,
             RpcCluster::Custom(_, ws_url) => ws_url,
         }
     }
