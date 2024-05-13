@@ -46,13 +46,13 @@ pub fn guide_strategy_from_pubsub_msg(msg: &str) -> GuideStrategy {
         // Subscribe methods that are handled differently depending
         // on params that are part of the message
         AccountSubscribe { address } => {
-            GuideStrategy::TryEphemeralForAccount(address.to_string())
+            GuideStrategy::TryEphemeralForAccount(address.to_string(), true)
         }
         ProgramSubscribe { program_id } => {
-            GuideStrategy::TryEphemeralForProgram(program_id.to_string())
+            GuideStrategy::TryEphemeralForProgram(program_id.to_string(), true)
         }
         SignatureSubscribe { signature } => {
-            GuideStrategy::TryEphemeralForSignature(signature.to_string())
+            GuideStrategy::TryEphemeralForSignature(signature.to_string(), true)
         }
         LogsSubscribe { filter } => {
             use RpcTransactionLogsFilter::*;
@@ -61,7 +61,10 @@ pub fn guide_strategy_from_pubsub_msg(msg: &str) -> GuideStrategy {
                 AllWithVotes => GuideStrategy::Chain,
                 Mentions(sigs) => {
                     // NOTE: only one mentioned sig is supported
-                    GuideStrategy::TryEphemeralForSignature(sigs[0].to_string())
+                    GuideStrategy::TryEphemeralForSignature(
+                        sigs[0].to_string(),
+                        true,
+                    )
                 }
             }
         }
@@ -88,6 +91,7 @@ mod tests {
             }},
             &GuideStrategy::TryEphemeralForAccount(
                 "SoLXmnP9JvL6vJ7TN1VqtTxqsc2izmPfF9CsMDEuRzJ".to_string(),
+                true,
             ),
         );
     }
@@ -100,6 +104,7 @@ mod tests {
             }},
             &GuideStrategy::TryEphemeralForProgram(
                 "11111111111111111111111111111111".to_string(),
+                true,
             ),
         );
     }
@@ -116,6 +121,7 @@ mod tests {
             }},
             &GuideStrategy::TryEphemeralForSignature(
                 "2EBVM6cB8vAAD93Ktr6Vd8p67XPbQzCJX47MpReuiCXJAtcjaxpvWpcg9Ege1Nr5Tk3a2GFrByT7WPBjdsTycY9b".to_string(),
+                true,
             ),
         );
     }
@@ -132,6 +138,7 @@ mod tests {
             }},
             &GuideStrategy::TryEphemeralForSignature(
                 "2EBVM6cB8vAAD93Ktr6Vd8p67XPbQzCJX47MpReuiCXJAtcjaxpvWpcg9Ege1Nr5Tk3a2GFrByT7WPBjdsTycY9b".to_string(),
+                true,
             ),
         );
         guide_and_assert(

@@ -1,0 +1,16 @@
+[package]
+name = "conjunto-guidepoint"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+log = { workspace = true }
+conjunto-core = { workspace = true }
+
+[dev-dependencies]
+conjunto-test-tools = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

@@ -56,22 +56,19 @@ impl DirectorPubsub {
             Both => Some(RequestEndpoint::Both),
             // TODO: here we consult the accntwise crate to determine
             // the destination based on the strategy
-            TryEphemeralForAccount(address) => {
-                // TODO(thlorenz): implement correctly
+            TryEphemeralForAccount(address, _is_subscription) => {
+                // TODO(thlorenz): implement correctly (guidepoint)
                 debug!("TryEphemeralForAccount: {}", address);
                 Some(RequestEndpoint::Chain)
             }
-            TryEphemeralForProgram(program_id) => {
+            TryEphemeralForProgram(program_id, _is_subscription) => {
                 // TODO(thlorenz): implement correctly
                 debug!("TryEphemeralForProgram: {}", program_id);
                 Some(RequestEndpoint::Chain)
             }
-            TryEphemeralForSignature(signature) => {
+            TryEphemeralForSignature(signature, _is_subscription) => {
                 debug!("TryEphemeralForSignature: {}", signature);
-                // Since the subscription might come in before the transaction
-                // we cannot determine 100% where to route to.
-                // We could route this to just one if we do happen to find it,
-                // but this implementation works for now at the cost of an extra sub.
+                // TODO(thlorenz): implement correctly (guidepoint)
                 Some(RequestEndpoint::Both)
             }
         }

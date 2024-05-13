@@ -66,7 +66,7 @@ pub(crate) async fn accept_connection(
                                     write_chain.send(msg.clone()).await.unwrap();
                                     write_ephem.send(msg).await.unwrap();
                                 }
-                                Some(Unroutable) => todo!("Send unroutable error message to client?"),
+                                Some(Unroutable(_reason)) => todo!("Send unroutable error message to client?"),
                                 // If client sends a "close" message we return None as endpoint
                                 None => break
                             }

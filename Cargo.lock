@@ -815,6 +815,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "conjunto-guidepoint"
+version = "0.0.0"
+dependencies = [
+ "conjunto-core",
+ "conjunto-test-tools",
+ "log",
+ "tokio",
+]
+
+[[package]]
 name = "conjunto-lockbox"
 version = "0.0.0"
 dependencies = [

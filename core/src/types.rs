@@ -11,13 +11,22 @@ pub enum GuideStrategy {
     Both,
     /// Forward to ephemeral if that validator has the account of given address,
     /// otherwise forward to chain
-    TryEphemeralForAccount(String),
+    /// - *param.0*: address
+    /// - *param.1*: is_subscription
+    TryEphemeralForAccount(String, bool),
     /// Forward to ephemeral if that validator has the program of given address,
     /// otherwise forward to chain
-    TryEphemeralForProgram(String),
+    /// - *param.0*: program_id
+    /// - *param.1*: is_subscription
+    TryEphemeralForProgram(String, bool),
     /// Forward to ephemeral if that validator has the transaction signature,
-    /// otherwise forward to chain
-    TryEphemeralForSignature(String),
+    /// otherwise forward to both for subscriptions since the transaction may come
+    /// in after the request.
+    /// For single requests forward to ephemeral if the signature is found, otherwise
+    /// to chain
+    /// - *param.0*: signature
+    /// - *param.1*: is_subscription
+    TryEphemeralForSignature(String, bool),
 }
 
 // -----------------
@@ -31,5 +40,5 @@ pub enum RequestEndpoint {
     /// Forward to both chain and ephemeral
     Both,
     /// Request is unroutable which is an error case
-    Unroutable,
+    Unroutable(String),
 }

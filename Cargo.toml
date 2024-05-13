@@ -9,7 +9,7 @@ members = [
   "core",
   "director",
   "director-pubsub",
-  "director-rpc",
+  "director-rpc", "guidepoint",
   "lockbox",
   "test-tools",
   "transwise",
