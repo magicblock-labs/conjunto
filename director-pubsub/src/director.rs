@@ -1,16 +1,13 @@
 use conjunto_addresses::cluster::RpcCluster;
+use conjunto_core::{GuideStrategy, RequestEndpoint};
 use log::*;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
-use crate::{errors::DirectorPubsubResult, BackendWebSocket};
-
-// TODO: this needs to live a lot lower so at least accntwise can return it
-pub enum RequestEndpoint {
-    Chain,
-    Ephemeral,
-    Unroutable,
-}
+use crate::{
+    errors::DirectorPubsubResult,
+    guide_strategy::guide_strategy_from_pubsub_msg, BackendWebSocket,
+};
 
 pub struct DirectorPubsubConfig {
     pub chain_cluster: RpcCluster,
@@ -35,8 +32,10 @@ impl DirectorPubsub {
         Self { config }
     }
 
-    pub(super) fn guide_msg(&self, msg: &Message) -> Option<RequestEndpoint> {
-        debug!("Message: {:#?}", msg);
+    pub(super) async fn guide_msg(
+        &self,
+        msg: &Message,
+    ) -> Option<RequestEndpoint> {
         use Message::*;
         let msg = match msg {
             Text(txt) => txt,
@@ -44,13 +43,38 @@ impl DirectorPubsub {
                 debug!("Close client: {:?}", code);
                 return None;
             }
-            Binary(_) => todo!("Binary"),
-            Ping(_) => todo!("Ping"),
-            Pong(_) => todo!("Pong"),
-            Frame(_) => todo!("Frame"),
+            // If in doubt just pass on to chain
+            Binary(_) => return Some(RequestEndpoint::Chain),
+            Ping(_) => return Some(RequestEndpoint::Chain),
+            Pong(_) => return Some(RequestEndpoint::Chain),
+            Frame(_) => return Some(RequestEndpoint::Chain),
         };
-
-        Some(RequestEndpoint::Ephemeral)
+        use GuideStrategy::*;
+        match guide_strategy_from_pubsub_msg(msg.as_str()) {
+            Chain => Some(RequestEndpoint::Chain),
+            Ephemeral => Some(RequestEndpoint::Ephemeral),
+            Both => Some(RequestEndpoint::Both),
+            // TODO: here we consult the accntwise crate to determine
+            // the destination based on the strategy
+            TryEphemeralForAccount(address) => {
+                // TODO(thlorenz): implement correctly
+                debug!("TryEphemeralForAccount: {}", address);
+                Some(RequestEndpoint::Chain)
+            }
+            TryEphemeralForProgram(program_id) => {
+                // TODO(thlorenz): implement correctly
+                debug!("TryEphemeralForProgram: {}", program_id);
+                Some(RequestEndpoint::Chain)
+            }
+            TryEphemeralForSignature(signature) => {
+                debug!("TryEphemeralForSignature: {}", signature);
+                // Since the subscription might come in before the transaction
+                // we cannot determine 100% where to route to.
+                // We could route this to just one if we do happen to find it,
+                // but this implementation works for now at the cost of an extra sub.
+                Some(RequestEndpoint::Both)
+            }
+        }
     }
 
     pub async fn try_chain_client(

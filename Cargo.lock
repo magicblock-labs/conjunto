@@ -781,8 +781,12 @@ name = "conjunto-director-pubsub"
 version = "0.0.0"
 dependencies = [
  "conjunto-addresses",
+ "conjunto-core",
  "futures-util",
  "log",
+ "serde",
+ "serde_json",
+ "solana-rpc-client-api",
  "thiserror",
  "tokio",
  "tokio-tungstenite",

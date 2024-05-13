@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
-    director::{DirectorPubsub, RequestEndpoint},
-    errors::DirectorPubsubResult,
-    BackendWebSocket,
+    director::DirectorPubsub, errors::DirectorPubsubResult, BackendWebSocket,
 };
+use conjunto_core::RequestEndpoint;
 use futures_util::{SinkExt, StreamExt};
 use log::*;
 use tokio::net::TcpStream;
@@ -60,9 +59,13 @@ pub(crate) async fn accept_connection(
                         Some(Ok(msg)) => {
                             trace!("Client message: {:?}", msg);
                             use RequestEndpoint::*;
-                            match director.guide_msg(&msg) {
+                            match director.guide_msg(&msg).await {
                                 Some(Chain) => write_chain.send(msg).await.unwrap(),
                                 Some(Ephemeral) => write_ephem.send(msg).await.unwrap(),
+                                Some(Both) => {
+                                    write_chain.send(msg.clone()).await.unwrap();
+                                    write_ephem.send(msg).await.unwrap();
+                                }
                                 Some(Unroutable) => todo!("Send unroutable error message to client?"),
                                 // If client sends a "close" message we return None as endpoint
                                 None => break

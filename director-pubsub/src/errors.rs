@@ -10,4 +10,9 @@ pub enum DirectorPubsubError {
     WsError(#[from] tokio_tungstenite::tungstenite::Error),
     #[error("UrlParseError")]
     URLParseError(#[from] url::ParseError),
+    #[error("SerdeJSONError")]
+    SerdeJSONError(#[from] serde_json::Error),
+
+    #[error("ParseClientSubscription error: {0}")]
+    ParseClientSubscription(String),
 }

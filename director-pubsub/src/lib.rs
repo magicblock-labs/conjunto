@@ -12,6 +12,8 @@ use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 mod accept_connection;
 mod director;
 pub mod errors;
+mod guide_strategy;
+mod messages;
 
 pub type BackendWebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
