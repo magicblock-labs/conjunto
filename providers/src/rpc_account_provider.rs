@@ -12,10 +12,20 @@ use solana_sdk::{
 #[derive(Default)]
 pub struct RpcAccountProviderConfig {
     cluster: RpcCluster,
-    commitment: CommitmentLevel,
+    commitment: Option<CommitmentLevel>,
 }
 
 impl RpcAccountProviderConfig {
+    pub fn new(
+        cluster: RpcCluster,
+        commitment: Option<CommitmentLevel>,
+    ) -> Self {
+        Self {
+            cluster,
+            commitment,
+        }
+    }
+
     pub fn cluster(&self) -> &RpcCluster {
         &self.cluster
     }
@@ -28,7 +38,7 @@ impl RpcAccountProviderConfig {
         self.cluster.ws_url()
     }
 
-    pub fn commitment(&self) -> CommitmentLevel {
+    pub fn commitment(&self) -> Option<CommitmentLevel> {
         self.commitment
     }
 }
@@ -42,7 +52,7 @@ impl RpcAccountProvider {
         let rpc_client = RpcClient::new_with_commitment(
             config.cluster.url().to_string(),
             CommitmentConfig {
-                commitment: config.commitment,
+                commitment: config.commitment.unwrap_or_default(),
             },
         );
         Self { rpc_client }

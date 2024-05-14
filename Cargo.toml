@@ -9,8 +9,10 @@ members = [
   "core",
   "director",
   "director-pubsub",
-  "director-rpc", "guidepoint",
+  "director-rpc",
+  "guidepoint",
   "lockbox",
+  "providers",
   "test-tools",
   "transwise",
 ]
@@ -35,6 +37,8 @@ conjunto-core = { path = "core" }
 conjunto-lockbox = { path = "lockbox" }
 conjunto-director-pubsub = { path = "director-pubsub" }
 conjunto-director-rpc = { path = "director-rpc" }
+conjunto-guidepoint = { path = "guidepoint" }
+conjunto-providers = { path = "providers" }
 conjunto-test-tools = { path = "test-tools" }
 conjunto-transwise = { path = "transwise" }
 env_logger = "0.11.3"

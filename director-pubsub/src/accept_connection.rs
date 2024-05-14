@@ -3,13 +3,13 @@ use std::sync::Arc;
 use crate::{
     director::DirectorPubsub, errors::DirectorPubsubResult, BackendWebSocket,
 };
-use conjunto_core::RequestEndpoint;
+use conjunto_core::{AccountProvider, RequestEndpoint};
 use futures_util::{SinkExt, StreamExt};
 use log::*;
 use tokio::net::TcpStream;
 
-pub(crate) async fn accept_connection(
-    director: Arc<DirectorPubsub>,
+pub(crate) async fn accept_connection<T: AccountProvider>(
+    director: Arc<DirectorPubsub<T>>,
     chain_socket: BackendWebSocket,
     ephem_socket: BackendWebSocket,
     incoming_stream: TcpStream,
@@ -60,13 +60,19 @@ pub(crate) async fn accept_connection(
                             trace!("Client message: {:?}", msg);
                             use RequestEndpoint::*;
                             match director.guide_msg(&msg).await {
-                                Some(Chain) => write_chain.send(msg).await.unwrap(),
-                                Some(Ephemeral) => write_ephem.send(msg).await.unwrap(),
+                                Some(Chain) => {
+                                    trace!("Sending message to chain: {:?}", msg);
+                                    write_chain.send(msg).await.unwrap()
+                                },
+                                Some(Ephemeral) => {
+                                    trace!("Sending message to ephemeral: {:?}", msg);
+                                    write_ephem.send(msg).await.unwrap();
+                                }
                                 Some(Both) => {
+                                    trace!("Sending message to chain and ephemeral: {:?}", msg);
                                     write_chain.send(msg.clone()).await.unwrap();
                                     write_ephem.send(msg).await.unwrap();
                                 }
-                                Some(Unroutable(_reason)) => todo!("Send unroutable error message to client?"),
                                 // If client sends a "close" message we return None as endpoint
                                 None => break
                             }

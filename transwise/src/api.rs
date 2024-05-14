@@ -1,6 +1,6 @@
-use conjunto_lockbox::{
-    accounts::{RpcAccountProvider, RpcAccountProviderConfig},
-    AccountLockStateProvider,
+use conjunto_lockbox::AccountLockStateProvider;
+use conjunto_providers::rpc_account_provider::{
+    RpcAccountProvider, RpcAccountProviderConfig,
 };
 use solana_sdk::transaction::{SanitizedTransaction, VersionedTransaction};
 

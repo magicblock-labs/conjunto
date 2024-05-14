@@ -8,7 +8,7 @@ pub const WS_MAINNET: &str = "wss://api.mainnet-beta.solana.com/";
 pub const WS_TESTNET: &str = "wss://api.testnet.solana.com/";
 pub const WS_DEVELOPMENT: &str = "ws://localhost:8900";
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub enum RpcCluster {
     #[default]
     Devnet,

@@ -32,6 +32,7 @@ pub enum GuideStrategy {
 // -----------------
 // RequestEndpoint
 // -----------------
+#[derive(Debug, PartialEq, Eq)]
 pub enum RequestEndpoint {
     /// Forward to chain only
     Chain,
@@ -39,6 +40,4 @@ pub enum RequestEndpoint {
     Ephemeral,
     /// Forward to both chain and ephemeral
     Both,
-    /// Request is unroutable which is an error case
-    Unroutable(String),
 }

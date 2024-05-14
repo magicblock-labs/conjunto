@@ -1,4 +1,4 @@
-use conjunto_lockbox::accounts::RpcAccountProviderConfig;
+use conjunto_providers::rpc_account_provider::RpcAccountProviderConfig;
 use conjunto_transwise::Transwise;
 use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},

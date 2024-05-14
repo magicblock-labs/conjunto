@@ -1,5 +1,9 @@
 use conjunto_addresses::cluster::RpcCluster;
-use conjunto_core::{GuideStrategy, RequestEndpoint};
+use conjunto_core::{AccountProvider, RequestEndpoint};
+use conjunto_guidepoint::GuideStrategyResolver;
+use conjunto_providers::rpc_account_provider::{
+    RpcAccountProvider, RpcAccountProviderConfig,
+};
 use log::*;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
@@ -23,13 +27,34 @@ impl Default for DirectorPubsubConfig {
     }
 }
 
-pub struct DirectorPubsub {
+pub struct DirectorPubsub<T: AccountProvider> {
     config: DirectorPubsubConfig,
+    guide_strategy_resolver: GuideStrategyResolver<T>,
 }
 
-impl DirectorPubsub {
-    pub fn new(config: DirectorPubsubConfig) -> Self {
-        Self { config }
+impl<T: AccountProvider> DirectorPubsub<T> {
+    pub fn new(
+        config: DirectorPubsubConfig,
+    ) -> DirectorPubsub<RpcAccountProvider> {
+        let acc_provider_config = RpcAccountProviderConfig::new(
+            config.ephemeral_cluster.clone(),
+            None,
+        );
+        let ephemeral_account_provider =
+            RpcAccountProvider::new(acc_provider_config);
+        DirectorPubsub::with_providers(config, ephemeral_account_provider)
+    }
+
+    pub fn with_providers(
+        config: DirectorPubsubConfig,
+        ephemeral_account_provider: T,
+    ) -> Self {
+        let guide_strategy_resolver =
+            GuideStrategyResolver::new(ephemeral_account_provider);
+        Self {
+            config,
+            guide_strategy_resolver,
+        }
     }
 
     pub(super) async fn guide_msg(
@@ -49,29 +74,10 @@ impl DirectorPubsub {
             Pong(_) => return Some(RequestEndpoint::Chain),
             Frame(_) => return Some(RequestEndpoint::Chain),
         };
-        use GuideStrategy::*;
-        match guide_strategy_from_pubsub_msg(msg.as_str()) {
-            Chain => Some(RequestEndpoint::Chain),
-            Ephemeral => Some(RequestEndpoint::Ephemeral),
-            Both => Some(RequestEndpoint::Both),
-            // TODO: here we consult the accntwise crate to determine
-            // the destination based on the strategy
-            TryEphemeralForAccount(address, _is_subscription) => {
-                // TODO(thlorenz): implement correctly (guidepoint)
-                debug!("TryEphemeralForAccount: {}", address);
-                Some(RequestEndpoint::Chain)
-            }
-            TryEphemeralForProgram(program_id, _is_subscription) => {
-                // TODO(thlorenz): implement correctly
-                debug!("TryEphemeralForProgram: {}", program_id);
-                Some(RequestEndpoint::Chain)
-            }
-            TryEphemeralForSignature(signature, _is_subscription) => {
-                debug!("TryEphemeralForSignature: {}", signature);
-                // TODO(thlorenz): implement correctly (guidepoint)
-                Some(RequestEndpoint::Both)
-            }
-        }
+        let strategy = guide_strategy_from_pubsub_msg(msg.as_str());
+        let endpoint = self.guide_strategy_resolver.resolve(&strategy).await;
+        debug!("Guiding message to: {:?}", endpoint);
+        Some(endpoint)
     }
 
     pub async fn try_chain_client(

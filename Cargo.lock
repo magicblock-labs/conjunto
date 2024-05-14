@@ -771,6 +771,7 @@ version = "0.0.0"
 dependencies = [
  "conjunto-director-pubsub",
  "conjunto-director-rpc",
+ "conjunto-providers",
  "env_logger 0.11.3",
  "log",
  "tokio",
@@ -782,6 +783,8 @@ version = "0.0.0"
 dependencies = [
  "conjunto-addresses",
  "conjunto-core",
+ "conjunto-guidepoint",
+ "conjunto-providers",
  "futures-util",
  "log",
  "serde",
@@ -802,6 +805,7 @@ dependencies = [
  "bincode",
  "bs58 0.5.1",
  "conjunto-lockbox",
+ "conjunto-providers",
  "conjunto-transwise",
  "jsonrpsee",
  "log",
@@ -831,8 +835,23 @@ dependencies = [
  "async-trait",
  "conjunto-addresses",
  "conjunto-core",
+ "conjunto-providers",
  "conjunto-test-tools",
  "serde",
+ "solana-rpc-client",
+ "solana-rpc-client-api",
+ "solana-sdk",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "conjunto-providers"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "conjunto-addresses",
+ "conjunto-core",
  "solana-rpc-client",
  "solana-rpc-client-api",
  "solana-sdk",
@@ -857,6 +876,7 @@ version = "0.0.0"
 dependencies = [
  "conjunto-core",
  "conjunto-lockbox",
+ "conjunto-providers",
  "conjunto-test-tools",
  "serde",
  "solana-sdk",

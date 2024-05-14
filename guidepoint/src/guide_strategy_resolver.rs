@@ -2,12 +2,14 @@ use conjunto_core::{AccountProvider, GuideStrategy, RequestEndpoint};
 use log::*;
 
 pub struct GuideStrategyResolver<T: AccountProvider> {
-    pub account_provider: T,
+    pub ephemeral_account_provider: T,
 }
 
 impl<T: AccountProvider> GuideStrategyResolver<T> {
-    pub fn new(account_provider: T) -> Self {
-        Self { account_provider }
+    pub fn new(ephemeral_account_provider: T) -> Self {
+        Self {
+            ephemeral_account_provider,
+        }
     }
 
     pub async fn resolve(&self, strategy: &GuideStrategy) -> RequestEndpoint {
@@ -48,20 +50,21 @@ impl<T: AccountProvider> GuideStrategyResolver<T> {
             Ok(pubkey) => pubkey,
             Err(_) => return RequestEndpoint::Chain,
         };
-        let account = match self.account_provider.get_account(&pubkey).await {
-            Ok(Some(acc)) => acc,
-            // If the ephemeral validator does not have he account then we go to chain for
-            // single requests and to both for subscriptions (since the account may be created
-            // after the subscription)
-            Ok(None) if is_subscription => return RequestEndpoint::Both,
-            Ok(None) => return RequestEndpoint::Chain,
-            Err(err) => {
-                warn!("Error while fetching account: {:?}", err);
-                // In case of an error the account does not exist or the RPC client
-                // ran into an issue. In both cases we default to chain
-                return RequestEndpoint::Chain;
-            }
-        };
+        let account =
+            match self.ephemeral_account_provider.get_account(&pubkey).await {
+                Ok(Some(acc)) => acc,
+                // If the ephemeral validator does not have he account then we go to chain for
+                // single requests and to both for subscriptions (since the account may be created
+                // after the subscription)
+                Ok(None) if is_subscription => return RequestEndpoint::Both,
+                Ok(None) => return RequestEndpoint::Chain,
+                Err(err) => {
+                    warn!("Error while fetching account: {:?}", err);
+                    // In case of an error the account does not exist or the RPC client
+                    // ran into an issue. In both cases we default to chain
+                    return RequestEndpoint::Chain;
+                }
+            };
         if is_program && !account.executable {
             RequestEndpoint::Chain
         } else {

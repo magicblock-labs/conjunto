@@ -10,6 +10,7 @@ edition.workspace = true
 [dependencies]
 conjunto-director-pubsub = { workspace = true }
 conjunto-director-rpc = { workspace = true }
+conjunto-providers = { workspace = true }
 env_logger = { workspace = true }
 log = { workspace = true }
 tokio = { workspace = true }

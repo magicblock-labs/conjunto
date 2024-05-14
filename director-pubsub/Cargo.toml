@@ -10,6 +10,8 @@ edition.workspace = true
 [dependencies]
 conjunto-addresses = { workspace = true }
 conjunto-core = { workspace = true }
+conjunto-guidepoint = { workspace = true }
+conjunto-providers = { workspace = true }
 log = { workspace = true }
 futures-util = { workspace = true }
 serde = { workspace = true }

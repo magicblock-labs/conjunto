@@ -1,14 +1,13 @@
 use conjunto_addresses::pda;
 use conjunto_core::AccountProvider;
+use conjunto_providers::rpc_account_provider::{
+    RpcAccountProvider, RpcAccountProviderConfig,
+};
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 
 use crate::{
-    accounts::{
-        predicates::is_owned_by_delegation_program,
-        rpc_account_provider::{RpcAccountProvider, RpcAccountProviderConfig},
-    },
-    errors::LockboxResult,
+    accounts::predicates::is_owned_by_delegation_program, errors::LockboxResult,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

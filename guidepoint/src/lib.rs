@@ -1,2 +1,2 @@
-///! Resolves a GuideStrategy to a RequestEndpoint
 mod guide_strategy_resolver;
+pub use guide_strategy_resolver::GuideStrategyResolver;

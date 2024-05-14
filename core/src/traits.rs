@@ -4,7 +4,9 @@ use solana_sdk::{account::Account, pubkey::Pubkey};
 use crate::errors::CoreResult;
 
 #[async_trait]
-pub trait AccountProvider {
+pub trait AccountProvider:
+    std::marker::Sync + std::marker::Send + 'static
+{
     async fn get_account(&self, pubkey: &Pubkey)
         -> CoreResult<Option<Account>>;
     async fn get_multiple_accounts(

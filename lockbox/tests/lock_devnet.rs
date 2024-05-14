@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
-use conjunto_lockbox::{
-    accounts::{RpcAccountProvider, RpcAccountProviderConfig},
-    AccountLockState, AccountLockStateProvider,
+use conjunto_lockbox::{AccountLockState, AccountLockStateProvider};
+use conjunto_providers::rpc_account_provider::{
+    RpcAccountProvider, RpcAccountProviderConfig,
 };
 use solana_sdk::{pubkey::Pubkey, system_program};
 

@@ -13,6 +13,7 @@ base64 = { workspace = true }
 bincode = { workspace = true }
 bs58 = { workspace = true }
 conjunto-lockbox = { workspace = true }
+conjunto-providers = { workspace = true }
 conjunto-transwise = { workspace = true }
 jsonrpsee = { workspace = true, features = ["macros", "server"] }
 log = { workspace = true }

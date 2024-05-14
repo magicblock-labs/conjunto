@@ -1,3 +1,4 @@
+use conjunto_core::AccountProvider;
 use log::*;
 use std::sync::Arc;
 
@@ -19,13 +20,13 @@ pub type BackendWebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
 pub const DEFAULT_DIRECTOR_PUBSUB_URL: &str = "127.0.0.1:9900";
 
-pub async fn start_pubsub_server(
+pub async fn start_pubsub_server<T: AccountProvider>(
     config: DirectorPubsubConfig,
     url: Option<&str>,
 ) -> DirectorPubsubResult<(String, JoinHandle<()>)> {
     let url = url.unwrap_or(DEFAULT_DIRECTOR_PUBSUB_URL);
     let listener = TcpListener::bind(&url).await?;
-    let director = Arc::new(DirectorPubsub::new(config));
+    let director = Arc::new(DirectorPubsub::<T>::new(config));
     let pubsub_handle = tokio::spawn(async move {
         while let Ok((stream, _)) = listener.accept().await {
             let chain_client = match director.try_chain_client().await {
