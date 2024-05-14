@@ -15,6 +15,8 @@ pub struct ClientSubMethodMessage {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ClientSubMethod {
+    Ping,
+    Pong,
     AccountSubscribe,
     AccountUnsubscribe,
     BlockSubscribe,
@@ -109,6 +111,11 @@ impl TryFrom<&str> for ClientSubWithParams {
 // -----------------
 #[derive(Debug, PartialEq, Eq)]
 pub enum ParsedClientMessage {
+    // The web3js client sends `{ 'method': 'ping' }` messages instead of sending
+    // a proper websocket Message::Ping
+    Ping,
+    Pong,
+
     AccountSubscribe { address: String },
     AccountUnsubscribe,
 
@@ -142,6 +149,8 @@ impl TryFrom<&str> for ParsedClientMessage {
         let method = ClientSubMethod::try_from(msg)?;
         use ClientSubMethod::*;
         match method {
+            Ping => Ok(Self::Ping),
+            Pong => Ok(Self::Pong),
             AccountSubscribe => {
                 let params = ClientSubWithParams::try_from(msg)?;
                 match params {

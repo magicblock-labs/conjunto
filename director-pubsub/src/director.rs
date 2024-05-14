@@ -79,6 +79,7 @@ impl<T: AccountProvider> DirectorPubsub<T> {
         };
         let strategy = guide_strategy_from_pubsub_msg(msg.as_str());
         let endpoint = self.guide_strategy_resolver.resolve(&strategy).await;
+        trace!("Message '{}", msg);
         debug!("Guiding message to: {:?}", endpoint);
         Some(endpoint)
     }

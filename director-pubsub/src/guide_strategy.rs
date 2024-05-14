@@ -9,12 +9,15 @@ pub fn guide_strategy_from_pubsub_msg(msg: &str) -> GuideStrategy {
         Err(err) => {
             // If we cannot identify the method then we default to just
             // forward to chain
-            warn!("Failed to parse message: {}", err);
+            warn!("Failed to parse message: {} ({:?})", msg, err);
             return GuideStrategy::Chain;
         }
     };
     use ParsedClientMessage::*;
     match parsed {
+        // We don't know who the Ping/Pong is responding to so we forward to both
+        Ping | Pong => GuideStrategy::Both,
+
         // Unsubscribe methods have to go to both chain and ephemeral
         // since we don't track subscription ids
         // This results in invalid unsub requests, but for now this is fine
