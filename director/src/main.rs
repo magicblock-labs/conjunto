@@ -1,7 +1,7 @@
 use conjunto_director_pubsub::start_pubsub_server;
 use conjunto_director_rpc::start_rpc_server;
 use conjunto_providers::rpc_account_provider::RpcAccountProvider;
-use log::info;
+use log::*;
 
 #[tokio::main]
 async fn main() {
@@ -17,5 +17,8 @@ async fn main() {
     info!("RPC Server running on: {}", rpc_addr);
     info!("Pubsub Server running on: {}", pubsub_addr);
 
-    tokio::join!(rpc_handle.stopped(), pubsub_handle);
+    let (_, res) = tokio::join!(rpc_handle.stopped(), pubsub_handle);
+    if let Err(err) = res {
+        error!("Error: {:?}", err);
+    }
 }
