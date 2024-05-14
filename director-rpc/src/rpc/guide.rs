@@ -28,8 +28,7 @@ pub fn register_guide_methods(
             let SendTransactionParams(data, config) =
                 params.parse::<SendTransactionParams>()?;
 
-            rpc.send_transaction(data, config).await?;
-            RpcResult::Ok("send_transaction rpc request received".to_string())
+            rpc.send_transaction(data, config).await
         },
     )?;
 
