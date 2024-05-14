@@ -24,31 +24,54 @@ pub(crate) async fn accept_connection<T: AccountProvider>(
     let (mut write_chain, mut read_chain) = chain_socket.split();
     let (mut write_ephem, mut read_ephem) = ephem_socket.split();
 
+    let mut chain_is_alive = true;
+    let mut ephem_is_alive = true;
     tokio::spawn(async move {
         loop {
             tokio::select! {
                 // We pipe both chain and ephemeral messages to the client
                 next = read_chain.next() => {
                     match next {
-                        Some(msg) => {
+                        Some(Ok(msg)) => {
                             trace!("Chain message: {:?}", msg);
-                            write_client.send(msg.unwrap()).await.unwrap();
+                            write_client.send(msg).await.unwrap();
+                        }
+                        Some(Err(msg)) => {
+                            // We get a Protocol(ResetWithoutClosingHandshake) right before
+                            // the chain stream gets interrupted for subscriptions
+                            trace!("Error reading chain message: {:?}", msg);
                         }
                         None => {
-                            debug!("Chain stream ended");
-                            break;
+                            // TODO(thlorenz): we waste cycles since we hit this branch over
+                            // and over after disconnect.
+                            // However I could not figure out how to setup select conditionally
+                            if chain_is_alive {
+                                debug!("Chain stream ended");
+                                chain_is_alive = false;
+                            }
+                            if !ephem_is_alive {
+                                break;
+                            }
                         }
                     }
                 }
                 next = read_ephem.next() => {
                     match next {
-                        Some(msg) => {
+                        Some(Ok(msg)) => {
                             trace!("Ephem message: {:?}", msg);
-                            write_client.send(msg.unwrap()).await.unwrap();
+                            write_client.send(msg).await.unwrap();
+                        }
+                        Some(Err(msg)) => {
+                            trace!("Error reading ephem message: {:?}", msg);
                         }
                         None => {
-                            debug!("Ephem stream ended");
-                            break;
+                            if ephem_is_alive {
+                                debug!("Ephem stream ended");
+                                ephem_is_alive = false;
+                            }
+                            if !chain_is_alive {
+                                break;
+                            }
                         }
                     }
                 }
