@@ -64,9 +64,11 @@ impl<T: AccountProvider> DirectorPubsub<T> {
         use Message::*;
         let msg = match msg {
             Text(txt) => txt,
+            // When client is trying to close the connection we attempt to do this
+            // for both endpoints to get the proper response from at last one
             Close(code) => {
                 debug!("Close client: {:?}", code);
-                return None;
+                return Some(RequestEndpoint::Both);
             }
             // We don't know which chain the ping/pong msg is responding to
             // at this point, so we send to both
