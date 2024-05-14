@@ -109,17 +109,6 @@ pub(crate) async fn accept_connection<T: AccountProvider>(
                         }
                     }
                 },
-                // Send `Message::Ping` each 10s to prevent connection from being closed
-                () = sleep(Duration::from_secs(10)) => {
-                    // NOTE: here we force the connection to stay open even if the
-                    // client itself doesn't send the ping
-                    // However the client should actually just do that and we should
-                    // consider removing this code.
-                    // Alternative we should shut things down if we don't get a ping from
-                    // the client for a long time
-                    write_chain.send(Message::Ping(Vec::new())).await.unwrap();
-                    write_ephem.send(Message::Ping(Vec::new())).await.unwrap();
-                },
             };
         }
     });
