@@ -87,9 +87,18 @@ pub fn register_passthrough_methods(
     // In the future we may optimize this by implementing our own way of forwarding the request
     // and somehow passing the result back raw.
 
-    // TODO: guide
+    // Some of those need to be guided and we will use one of the following strategies:
+    // - TryEphem: try to get a result from ephemeral and if that fails or returns None
+    //             try the chain
+    // - Ephem: get the result from ephemeral
+    // - Chain: get the result from chain (which is basically the passthrough option selected for
+    //          most)
+    // - Both:  for requests that return an array of results first fill from ephem and try the
+    //          remaining ones from chain
+
+    // TODO: guide TryEphem
     passthrough!("getAccountInfo", RpcResponse<Option<UiAccount>>);
-    // TODO: guide
+    // TODO: guide TryEphem
     passthrough!("getBalance", RpcResponse<u64>);
     passthrough!("getBlock", Option<UiConfirmedBlock>);
     passthrough!(
@@ -114,30 +123,30 @@ pub fn register_passthrough_methods(
     passthrough!("getInflationRate", RpcInflationRate);
     passthrough!("getInflationReward", Vec<Option<RpcInflationReward>>);
     passthrough!("getLargestAccounts", RpcResponse<Vec<RpcAccountBalance>>);
-    // TODO: guide
+    // TODO: guide Ephem (ephemeral validator should match the on chain blockhash)
     passthrough!("getLatestBlockhash", RpcResponse<RpcBlockhash>);
     passthrough!("getLeaderSchedule", Option<RpcLeaderSchedule>);
     passthrough!("getMaxRetransmitSlot", Slot);
     passthrough!("getMaxShredInsertSlot", Slot);
     passthrough!("getMinimumBalanceForRentExemption", u64);
-    // TODO: guide
+    // TODO: guide TryEphem (if any account is missing get ALL from chain)
     passthrough!("getMultipleAccounts", RpcResponse<Vec<Option<UiAccount>>>);
-    // TODO: guide
+    // TODO: guide TryEphem (go to chain if program is not found on ephem)
     passthrough!("getProgramAccounts", OptionalContext<Vec<RpcKeyedAccount>>);
-    // TODO: guide
+    // TODO: guide Ephem
     passthrough!("getRecentPerformanceSamples", Vec<RpcPerfSample>);
     passthrough!("getRecentPrioritizationFees", Vec<RpcPrioritizationFee>);
-    // TODO: guide
+    // TODO: guide TryEphem
     passthrough!(
         "getSignatureStatuses",
         RpcResponse<Vec<Option<TransactionStatus>>>
     );
-    // TODO: guide
+    // TODO: guide Both
     passthrough!(
         "getSignaturesForAddress",
         Vec<RpcConfirmedTransactionStatusWithSignature>
     );
-    // TODO: guide
+    // TODO: guide Ephem
     passthrough!("getSlot", Slot);
     passthrough!("getSlotLeader", String);
     passthrough!("getSlotLeaders", Vec<String>);
@@ -155,20 +164,22 @@ pub fn register_passthrough_methods(
         RpcResponse<Vec<RpcTokenAccountBalance>>
     );
     passthrough!("getTokenSupply", RpcResponse<UiTokenAmount>);
-    // TODO: guide
+    // TODO: guide TryEphem
     // Also causes problems since some trait of the response is missing, we'll deal with that
     // once we move it to the guide module
     // passthrough!( "getTransaction", Option<EncodedConfirmedTransactionWithStatusMeta>);
+    // TODO: guide Ephem
     passthrough!("getTransactionCount", u64);
-    // TODO: guide
+    // TODO: guide Ephem
     passthrough!("getVersion", RpcVersionInfo);
     passthrough!("getVoteAccounts", RpcVoteAccountStatus);
-    // TODO: guide
+    // TODO: guide Ephem (blockhash should match chain)
     passthrough!("isBlockhashValid", RpcResponse<bool>);
     passthrough!("minimumLedgerSlot", Slot);
-    // TODO: guide
+    // This always goes to chain for now since we don't allow creating new accounts in the ephemeral
+    // validator, only copying locked ones.
     passthrough!("requestAirdrop", String);
-    // TODO: guide
+    // TODO: guide Ephem
     passthrough!(
         "simulateTransaction",
         RpcResponse<RpcSimulateTransactionResult>
