@@ -804,6 +804,7 @@ dependencies = [
  "base64 0.22.1",
  "bincode",
  "bs58 0.5.1",
+ "conjunto-addresses",
  "conjunto-lockbox",
  "conjunto-providers",
  "conjunto-transwise",

@@ -1,3 +1,4 @@
+use conjunto_addresses::cluster::RpcCluster;
 use conjunto_providers::rpc_account_provider::RpcAccountProviderConfig;
 use conjunto_transwise::Transwise;
 use jsonrpsee::{
@@ -17,25 +18,30 @@ pub mod passthrough;
 
 #[derive(Default)]
 pub struct DirectorConfig {
-    pub rpc_account_provider_config: RpcAccountProviderConfig,
+    pub ephem_account_provider_config: RpcAccountProviderConfig,
+    pub chain_cluster: RpcCluster,
 }
 
 pub struct DirectorRpc {
     pub(super) transwise: Transwise,
     pub(super) rpc_chain_client: HttpClient,
+    pub(super) rpc_ephem_client: HttpClient,
 }
 
 pub fn create_rpc_module(
     config: DirectorConfig,
 ) -> DirectorRpcResult<RpcModule<DirectorRpc>> {
-    let url = config.rpc_account_provider_config.url().to_string();
-    let transwise = Transwise::new(config.rpc_account_provider_config);
+    let ephem_url = config.ephem_account_provider_config.url().to_string();
+    let transwise = Transwise::new(config.ephem_account_provider_config);
 
-    let rpc_client = HttpClientBuilder::default().build(url)?;
+    let rpc_ephem_client = HttpClientBuilder::default().build(ephem_url)?;
+    let rpc_chain_client =
+        HttpClientBuilder::default().build(config.chain_cluster.url())?;
 
     let director = DirectorRpc {
         transwise,
-        rpc_chain_client: rpc_client,
+        rpc_ephem_client,
+        rpc_chain_client,
     };
 
     let mut module = RpcModule::new(director);

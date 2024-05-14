@@ -91,7 +91,6 @@ impl DirectorRpc {
         }
 
         // 3. Route transaction accordingly
-
         info!("endpoint: {:#?}", endpoint);
 
         Ok("send_transaction".to_string())

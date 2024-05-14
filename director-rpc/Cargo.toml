@@ -12,6 +12,7 @@ async-trait = { workspace = true }
 base64 = { workspace = true }
 bincode = { workspace = true }
 bs58 = { workspace = true }
+conjunto-addresses = { workspace = true }
 conjunto-lockbox = { workspace = true }
 conjunto-providers = { workspace = true }
 conjunto-transwise = { workspace = true }
