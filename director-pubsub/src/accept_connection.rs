@@ -1,12 +1,14 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use crate::{
     director::DirectorPubsub, errors::DirectorPubsubResult, BackendWebSocket,
+    BackendWebSocketWriter,
 };
 use conjunto_core::{AccountProvider, RequestEndpoint};
 use futures_util::{SinkExt, StreamExt};
 use log::*;
-use tokio::net::TcpStream;
+use tokio::{net::TcpStream, time::sleep};
+use tokio_tungstenite::tungstenite::Message;
 
 pub(crate) async fn accept_connection<T: AccountProvider>(
     director: Arc<DirectorPubsub<T>>,
@@ -24,8 +26,6 @@ pub(crate) async fn accept_connection<T: AccountProvider>(
     let (mut write_chain, mut read_chain) = chain_socket.split();
     let (mut write_ephem, mut read_ephem) = ephem_socket.split();
 
-    let mut chain_is_alive = true;
-    let mut ephem_is_alive = true;
     tokio::spawn(async move {
         loop {
             tokio::select! {
@@ -34,7 +34,13 @@ pub(crate) async fn accept_connection<T: AccountProvider>(
                     match next {
                         Some(Ok(msg)) => {
                             trace!("Chain message: {:?}", msg);
-                            write_client.send(msg).await.unwrap();
+                            let res = handle_downstream_msg(&mut write_chain, &msg).await;
+                            if res.fwd_to_client {
+                                write_client.send(msg).await.unwrap();
+                            }
+                            if res.done {
+                                break;
+                            }
                         }
                         Some(Err(msg)) => {
                             // We get a Protocol(ResetWithoutClosingHandshake) right before
@@ -42,16 +48,9 @@ pub(crate) async fn accept_connection<T: AccountProvider>(
                             trace!("Error reading chain message: {:?}", msg);
                         }
                         None => {
-                            // TODO(thlorenz): we waste cycles since we hit this branch over
-                            // and over after disconnect.
-                            // However I could not figure out how to setup select conditionally
-                            if chain_is_alive {
-                                debug!("Chain stream ended");
-                                chain_is_alive = false;
-                            }
-                            if !ephem_is_alive {
-                                break;
-                            }
+                            // If either downstream disconnects we need to make the client
+                            // aware and thus disconnect ourselves as well
+                            break;
                         }
                     }
                 }
@@ -59,19 +58,19 @@ pub(crate) async fn accept_connection<T: AccountProvider>(
                     match next {
                         Some(Ok(msg)) => {
                             trace!("Ephem message: {:?}", msg);
-                            write_client.send(msg).await.unwrap();
+                            let res = handle_downstream_msg(&mut write_ephem, &msg).await;
+                            if res.fwd_to_client {
+                                write_client.send(msg).await.unwrap();
+                            }
+                            if res.done {
+                                break;
+                            }
                         }
                         Some(Err(msg)) => {
                             trace!("Error reading ephem message: {:?}", msg);
                         }
                         None => {
-                            if ephem_is_alive {
-                                debug!("Ephem stream ended");
-                                ephem_is_alive = false;
-                            }
-                            if !chain_is_alive {
-                                break;
-                            }
+                            break;
                         }
                     }
                 }
@@ -109,9 +108,66 @@ pub(crate) async fn accept_connection<T: AccountProvider>(
                             break;
                         }
                     }
-                }
+                },
+                // Send `Message::Ping` each 10s to prevent connection from being closed
+                () = sleep(Duration::from_secs(10)) => {
+                    // NOTE: here we force the connection to stay open even if the
+                    // client itself doesn't send the ping
+                    // However the client should actually just do that and we should
+                    // consider removing this code.
+                    // Alternative we should shut things down if we don't get a ping from
+                    // the client for a long time
+                    write_chain.send(Message::Ping(Vec::new())).await.unwrap();
+                    write_ephem.send(Message::Ping(Vec::new())).await.unwrap();
+                },
             };
         }
     });
     Ok(())
+}
+
+struct HandleDownstreamMsgResult {
+    done: bool,
+    fwd_to_client: bool,
+}
+impl HandleDownstreamMsgResult {
+    fn not_done_fwd() -> Self {
+        Self {
+            done: false,
+            fwd_to_client: true,
+        }
+    }
+    fn not_done_no_fwd() -> Self {
+        Self {
+            done: false,
+            fwd_to_client: false,
+        }
+    }
+    fn done_fwd() -> Self {
+        Self {
+            done: true,
+            fwd_to_client: true,
+        }
+    }
+}
+async fn handle_downstream_msg(
+    ws: &mut BackendWebSocketWriter,
+    msg: &Message,
+) -> HandleDownstreamMsgResult {
+    match msg {
+        Message::Text(_) => HandleDownstreamMsgResult::not_done_fwd(),
+        Message::Binary(_data) => HandleDownstreamMsgResult::not_done_fwd(),
+        Message::Ping(data) => {
+            // Need to respond in order to keep the socket connection open, otherwise
+            // the downstream (mainnet/devnet) may close the connection
+            // See https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_servers#pings_and_pongs_the_heartbeat_of_websockets
+            if let Err(err) = ws.send(Message::Pong(data.clone())).await {
+                trace!("Failed to send pong: {:?}", err);
+            }
+            HandleDownstreamMsgResult::not_done_no_fwd()
+        }
+        Message::Pong(_data) => HandleDownstreamMsgResult::not_done_fwd(),
+        Message::Close(_frame) => HandleDownstreamMsgResult::done_fwd(),
+        Message::Frame(_frame) => HandleDownstreamMsgResult::not_done_fwd(),
+    }
 }

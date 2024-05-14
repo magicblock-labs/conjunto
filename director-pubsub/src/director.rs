@@ -68,10 +68,13 @@ impl<T: AccountProvider> DirectorPubsub<T> {
                 debug!("Close client: {:?}", code);
                 return None;
             }
+            // We don't know which chain the ping/pong msg is responding to
+            // at this point, so we send to both
+            Ping(_) => return Some(RequestEndpoint::Both),
+            Pong(_) => return Some(RequestEndpoint::Both),
+
             // If in doubt just pass on to chain
             Binary(_) => return Some(RequestEndpoint::Chain),
-            Ping(_) => return Some(RequestEndpoint::Chain),
-            Pong(_) => return Some(RequestEndpoint::Chain),
             Frame(_) => return Some(RequestEndpoint::Chain),
         };
         let strategy = guide_strategy_from_pubsub_msg(msg.as_str());

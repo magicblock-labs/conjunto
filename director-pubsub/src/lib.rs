@@ -1,4 +1,5 @@
 use conjunto_core::AccountProvider;
+use futures_util::stream::SplitSink;
 use log::*;
 use std::sync::Arc;
 
@@ -8,7 +9,9 @@ use tokio::{
     net::{TcpListener, TcpStream},
     task::JoinHandle,
 };
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{
+    tungstenite::Message, MaybeTlsStream, WebSocketStream,
+};
 
 mod accept_connection;
 mod director;
@@ -17,6 +20,8 @@ mod guide_strategy;
 mod messages;
 
 pub type BackendWebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
+pub type BackendWebSocketWriter =
+    SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
 
 pub const DEFAULT_DIRECTOR_PUBSUB_URL: &str = "127.0.0.1:9900";
 
