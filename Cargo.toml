@@ -43,6 +43,8 @@ conjunto-test-tools = { path = "test-tools" }
 conjunto-transwise = { path = "transwise" }
 env_logger = "0.11.3"
 futures-util = "0.3.30"
+# Needed for (not yet working CORS)
+hyper = "1.3.1"
 jsonrpsee = { version = "0.22.5", features = ["http-client"] }
 log = "0.4.21"
 paste = "1.0"
@@ -56,4 +58,8 @@ solana-transaction-status = "1.18.12"
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
 thiserror = "1.0.60"
 tokio = { version = "1.37.0", features = ["macros", "io-util"] }
+# Needed for (not yet working CORS)
+tower = { version = "0.4.13" }
+# Needed for (not yet working CORS)
+tower-http = { version = "0.5.2", features = ["cors"] }
 url = "2.5.0"
