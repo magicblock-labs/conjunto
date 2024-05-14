@@ -1,14 +1,24 @@
-use conjunto_core::{AccountProvider, GuideStrategy, RequestEndpoint};
+use conjunto_core::{
+    AccountProvider, GuideStrategy, RequestEndpoint, SignatureStatusProvider,
+};
 use log::*;
 
-pub struct GuideStrategyResolver<T: AccountProvider> {
+pub struct GuideStrategyResolver<T: AccountProvider, U: SignatureStatusProvider>
+{
     pub ephemeral_account_provider: T,
+    pub ephemeral_signature_status_provider: U,
 }
 
-impl<T: AccountProvider> GuideStrategyResolver<T> {
-    pub fn new(ephemeral_account_provider: T) -> Self {
+impl<T: AccountProvider, U: SignatureStatusProvider>
+    GuideStrategyResolver<T, U>
+{
+    pub fn new(
+        ephemeral_account_provider: T,
+        ephemeral_signature_status_provider: U,
+    ) -> Self {
         Self {
             ephemeral_account_provider,
+            ephemeral_signature_status_provider,
         }
     }
 
@@ -27,13 +37,36 @@ impl<T: AccountProvider> GuideStrategyResolver<T> {
                 self.guide_by_address(program_id, true, *is_subscription)
                     .await
             }
-            TryEphemeralForSignature(_signature, _is_subscription) => {
-                // TODO(thlorenz)
-                // 1. Try to find in ephemeral and route there if found
-                // 2. Otherwise find on chain and route there if found (may skip if that is too
-                //    slow)
-                // 3. Route to both for subscriptions and to chain for single requests
-                RequestEndpoint::Both
+            TryEphemeralForSignature(signature, is_subscription) => {
+                self.guide_by_signature(signature.as_str(), *is_subscription)
+                    .await
+            }
+        }
+    }
+
+    async fn guide_by_signature(
+        &self,
+        signature: &str,
+        is_subscription: bool,
+    ) -> RequestEndpoint {
+        let signature = match signature.parse() {
+            Ok(signature) => signature,
+            Err(_) => return RequestEndpoint::Chain,
+        };
+        match self
+            .ephemeral_signature_status_provider
+            .get_signature_status(&signature)
+            .await
+        {
+            Ok(Some(_)) => RequestEndpoint::Ephemeral,
+            // Wait for any of the backends to see an update to the signature
+            Ok(None) if is_subscription => RequestEndpoint::Both,
+            Ok(None) => RequestEndpoint::Chain,
+            Err(err) => {
+                warn!("Error while fetching signature status: {:?}", err);
+                // In case of an error the signature does not exist or the RPC client
+                // ran into an issue. In both cases we default to chain
+                RequestEndpoint::Chain
             }
         }
     }

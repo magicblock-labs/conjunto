@@ -1,5 +1,5 @@
 use conjunto_addresses::cluster::RpcCluster;
-use conjunto_providers::rpc_account_provider::RpcAccountProviderConfig;
+use conjunto_providers::rpc_provider_config::RpcProviderConfig;
 use conjunto_transwise::Transwise;
 use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},
@@ -18,7 +18,7 @@ pub mod passthrough;
 
 #[derive(Default)]
 pub struct DirectorConfig {
-    pub ephem_account_provider_config: RpcAccountProviderConfig,
+    pub ephem_account_provider_config: RpcProviderConfig,
     pub chain_cluster: RpcCluster,
 }
 

@@ -1,8 +1,12 @@
 use conjunto_addresses::cluster::RpcCluster;
-use conjunto_core::{AccountProvider, RequestEndpoint};
+use conjunto_core::{
+    AccountProvider, RequestEndpoint, SignatureStatusProvider,
+};
 use conjunto_guidepoint::GuideStrategyResolver;
-use conjunto_providers::rpc_account_provider::{
-    RpcAccountProvider, RpcAccountProviderConfig,
+use conjunto_providers::{
+    rpc_account_provider::RpcAccountProvider,
+    rpc_provider_config::RpcProviderConfig,
+    rpc_signature_status_provider::RpcSignatureStatusProvider,
 };
 use log::*;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
@@ -27,30 +31,37 @@ impl Default for DirectorPubsubConfig {
     }
 }
 
-pub struct DirectorPubsub<T: AccountProvider> {
+pub struct DirectorPubsub<T: AccountProvider, U: SignatureStatusProvider> {
     config: DirectorPubsubConfig,
-    guide_strategy_resolver: GuideStrategyResolver<T>,
+    guide_strategy_resolver: GuideStrategyResolver<T, U>,
 }
 
-impl<T: AccountProvider> DirectorPubsub<T> {
+impl<T: AccountProvider, U: SignatureStatusProvider> DirectorPubsub<T, U> {
     pub fn new(
         config: DirectorPubsubConfig,
-    ) -> DirectorPubsub<RpcAccountProvider> {
-        let acc_provider_config = RpcAccountProviderConfig::new(
-            config.ephemeral_cluster.clone(),
-            None,
-        );
+    ) -> DirectorPubsub<RpcAccountProvider, RpcSignatureStatusProvider> {
+        let rpc_provider_config =
+            RpcProviderConfig::new(config.ephemeral_cluster.clone(), None);
         let ephemeral_account_provider =
-            RpcAccountProvider::new(acc_provider_config);
-        DirectorPubsub::with_providers(config, ephemeral_account_provider)
+            RpcAccountProvider::new(rpc_provider_config.clone());
+        let ephemeral_signature_status_provider =
+            RpcSignatureStatusProvider::new(rpc_provider_config);
+        DirectorPubsub::with_providers(
+            config,
+            ephemeral_account_provider,
+            ephemeral_signature_status_provider,
+        )
     }
 
     pub fn with_providers(
         config: DirectorPubsubConfig,
         ephemeral_account_provider: T,
+        ephemeral_signature_status_provider: U,
     ) -> Self {
-        let guide_strategy_resolver =
-            GuideStrategyResolver::new(ephemeral_account_provider);
+        let guide_strategy_resolver = GuideStrategyResolver::new(
+            ephemeral_account_provider,
+            ephemeral_signature_status_provider,
+        );
         Self {
             config,
             guide_strategy_resolver,

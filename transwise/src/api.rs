@@ -1,6 +1,7 @@
 use conjunto_lockbox::AccountLockStateProvider;
-use conjunto_providers::rpc_account_provider::{
-    RpcAccountProvider, RpcAccountProviderConfig,
+use conjunto_providers::{
+    rpc_account_provider::RpcAccountProvider,
+    rpc_provider_config::RpcProviderConfig,
 };
 use solana_sdk::transaction::{SanitizedTransaction, VersionedTransaction};
 
@@ -17,7 +18,7 @@ pub struct Transwise {
 }
 
 impl Transwise {
-    pub fn new(config: RpcAccountProviderConfig) -> Self {
+    pub fn new(config: RpcProviderConfig) -> Self {
         let account_lock_state_provider =
             AccountLockStateProvider::<RpcAccountProvider>::new(config);
         Self {

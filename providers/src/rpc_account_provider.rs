@@ -1,58 +1,23 @@
 use async_trait::async_trait;
-use conjunto_addresses::cluster::RpcCluster;
 use conjunto_core::{errors::CoreResult, AccountProvider};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::{client_error::ErrorKind, request::RpcError};
 use solana_sdk::{
-    account::Account,
-    commitment_config::{CommitmentConfig, CommitmentLevel},
-    pubkey::Pubkey,
+    account::Account, commitment_config::CommitmentConfig, pubkey::Pubkey,
 };
 
-#[derive(Default)]
-pub struct RpcAccountProviderConfig {
-    cluster: RpcCluster,
-    commitment: Option<CommitmentLevel>,
-}
-
-impl RpcAccountProviderConfig {
-    pub fn new(
-        cluster: RpcCluster,
-        commitment: Option<CommitmentLevel>,
-    ) -> Self {
-        Self {
-            cluster,
-            commitment,
-        }
-    }
-
-    pub fn cluster(&self) -> &RpcCluster {
-        &self.cluster
-    }
-
-    pub fn url(&self) -> &str {
-        self.cluster.url()
-    }
-
-    pub fn ws_url(&self) -> &str {
-        self.cluster.ws_url()
-    }
-
-    pub fn commitment(&self) -> Option<CommitmentLevel> {
-        self.commitment
-    }
-}
+use crate::rpc_provider_config::RpcProviderConfig;
 
 pub struct RpcAccountProvider {
     rpc_client: RpcClient,
 }
 
 impl RpcAccountProvider {
-    pub fn new(config: RpcAccountProviderConfig) -> Self {
+    pub fn new(config: RpcProviderConfig) -> Self {
         let rpc_client = RpcClient::new_with_commitment(
-            config.cluster.url().to_string(),
+            config.cluster().url().to_string(),
             CommitmentConfig {
-                commitment: config.commitment.unwrap_or_default(),
+                commitment: config.commitment().unwrap_or_default(),
             },
         );
         Self { rpc_client }
@@ -61,7 +26,7 @@ impl RpcAccountProvider {
 
 impl Default for RpcAccountProvider {
     fn default() -> Self {
-        Self::new(RpcAccountProviderConfig::default())
+        Self::new(RpcProviderConfig::default())
     }
 }
 
