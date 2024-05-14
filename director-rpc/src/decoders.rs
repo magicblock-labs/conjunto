@@ -13,7 +13,7 @@ use crate::utils::invalid_params;
 const MAX_BASE58_SIZE: usize = 1683; // Depends on PACKET_DATA_SIZE
 const MAX_BASE64_SIZE: usize = 1644; // Depends on PACKET_DATA_SIZE
 pub(crate) fn decode_and_deserialize<T>(
-    encoded: String,
+    encoded: &str,
     encoding: TransactionBinaryEncoding,
 ) -> RpcResult<(Vec<u8>, T)>
 where

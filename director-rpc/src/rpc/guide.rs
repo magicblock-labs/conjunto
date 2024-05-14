@@ -1,9 +1,10 @@
+use conjunto_transwise::trans_account_meta::Endpoint;
 use jsonrpsee::{
-    core::{RegisterMethodError, RpcResult},
+    core::RpcResult,
+    core::{client::ClientT, RegisterMethodError},
     RpcModule,
 };
 use log::*;
-use serde::Deserialize;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_sdk::transaction::VersionedTransaction;
 use solana_transaction_status::UiTransactionEncoding;
@@ -11,16 +12,11 @@ use solana_transaction_status::UiTransactionEncoding;
 use super::DirectorRpc;
 use crate::{
     decoders::decode_and_deserialize,
+    rpc::params::SendTransactionParams,
     utils::{
         invalid_params, server_error, server_error_with_data, ServerErrorCode,
     },
 };
-
-#[derive(Debug, Deserialize)]
-struct SendTransactionParams(
-    String,
-    #[serde(default)] Option<RpcSendTransactionConfig>,
-);
 
 pub fn register_guide_methods(
     module: &mut RpcModule<DirectorRpc>,
@@ -64,7 +60,7 @@ impl DirectorRpc {
                 ))
             })?;
         let (_, versioned_tx) = decode_and_deserialize::<VersionedTransaction>(
-            data,
+            &data,
             binary_encoding,
         )?;
 
@@ -82,17 +78,41 @@ impl DirectorRpc {
                 ));
             }
         };
-        if endpoint.is_unroutable() {
-            return Err(server_error_with_data(
-                "Transaction is unroutable".to_string(),
-                ServerErrorCode::TransactionUnroutable,
-                endpoint,
-            ));
-        }
-
         // 3. Route transaction accordingly
         info!("endpoint: {:#?}", endpoint);
 
-        Ok("send_transaction".to_string())
+        use Endpoint::*;
+        match &endpoint {
+            Chain(_) => Ok(self
+                .rpc_chain_client
+                .request("sendTransaction", SendTransactionParams(data, config))
+                .await
+                .map_err(|err| {
+                    server_error_with_data(
+                        format!("Failed to forward to on-chain RPC: {err:?}"),
+                        ServerErrorCode::RpcClientError,
+                        endpoint,
+                    )
+                })?),
+            Ephemeral(_) => Ok(self
+                .rpc_ephem_client
+                .request("sendTransaction", SendTransactionParams(data, config))
+                .await
+                .map_err(|err| {
+                    server_error_with_data(
+                        format!("Failed to forward to ephemeral RPC: {err:?}"),
+                        ServerErrorCode::RpcClientError,
+                        endpoint,
+                    )
+                })?),
+            Unroutable {
+                account_metas: _,
+                reason: _,
+            } => Err(server_error_with_data(
+                "Transaction is unroutable".to_string(),
+                ServerErrorCode::TransactionUnroutable,
+                endpoint,
+            )),
+        }
     }
 }
