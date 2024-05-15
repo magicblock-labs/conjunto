@@ -21,3 +21,7 @@ thiserror = { workspace = true }
 tokio-tungstenite = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+
+[dev-dependencies]
+conjunto-test-tools = { workspace = true }
+solana-sdk = { workspace = true }

@@ -113,3 +113,102 @@ impl<T: AccountProvider, U: SignatureStatusProvider> DirectorPubsub<T, U> {
         Ok(socket)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr as _;
+
+    use conjunto_test_tools::{
+        account_provider_stub::AccountProviderStub,
+        signature_status_provider_stub::SignatureStatusProviderStub,
+    };
+    use serde_json::Value;
+    use solana_sdk::signature::Signature;
+
+    use super::*;
+
+    async fn guide_and_assert(
+        director: &DirectorPubsub<
+            AccountProviderStub,
+            SignatureStatusProviderStub,
+        >,
+        msg_val: Value,
+        expected: &RequestEndpoint,
+    ) {
+        let msg = Message::Text(msg_val.to_string());
+        let actual = director.guide_msg(&msg).await.unwrap();
+        assert_eq!(&actual, expected);
+    }
+
+    // -----------------
+    // subscribeSignature
+    // -----------------
+    fn subscribe_signature() -> Value {
+        serde_json::json! {{
+            "method": "signatureSubscribe",
+            "params": [
+                "2EBVM6cB8vAAD93Ktr6Vd8p67XPbQzCJX47MpReuiCXJAtcjaxpvWpcg9Ege1Nr5Tk3a2GFrByT7WPBjdsTycY9b", {
+                "commitment": "finalized",
+                "enableReceivedNotification": false
+            }]
+        }}
+    }
+
+    fn signature() -> Signature {
+        Signature::from_str("2EBVM6cB8vAAD93Ktr6Vd8p67XPbQzCJX47MpReuiCXJAtcjaxpvWpcg9Ege1Nr5Tk3a2GFrByT7WPBjdsTycY9b").unwrap()
+    }
+
+    #[tokio::test]
+    async fn test_guide_subscribe_signature_found_in_ephemeral() {
+        let mut signature_status_provider =
+            SignatureStatusProviderStub::default();
+        signature_status_provider.add_ok(signature());
+
+        let director = DirectorPubsub::with_providers(
+            DirectorPubsubConfig::default(),
+            AccountProviderStub::default(),
+            signature_status_provider,
+        );
+        guide_and_assert(
+            &director,
+            subscribe_signature(),
+            &RequestEndpoint::Ephemeral,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_guide_subscribe_signature_not_found_in_ephemeral() {
+        let signature_status_provider = SignatureStatusProviderStub::default();
+
+        let director = DirectorPubsub::with_providers(
+            DirectorPubsubConfig::default(),
+            AccountProviderStub::default(),
+            signature_status_provider,
+        );
+        guide_and_assert(
+            &director,
+            subscribe_signature(),
+            &RequestEndpoint::Both,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_guide_subscribe_signature_invalid_signature() {
+        let signature_status_provider = SignatureStatusProviderStub::default();
+
+        let director = DirectorPubsub::with_providers(
+            DirectorPubsubConfig::default(),
+            AccountProviderStub::default(),
+            signature_status_provider,
+        );
+        let subscribe = serde_json::json! {{
+            "method": "signatureSubscribe",
+            "params": [ "<not a valid signature>"]
+        }};
+        guide_and_assert(&director, subscribe, &RequestEndpoint::Chain).await;
+    }
+
+    // TODO(thlorenz): Add more tests for other pubsub messages
+}

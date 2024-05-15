@@ -17,6 +17,10 @@ impl SignatureStatusProviderStub {
     ) {
         self.signature_status.insert(signature, status);
     }
+    pub fn add_ok(&mut self, signature: Signature) {
+        self.signature_status
+            .insert(signature, transaction::Result::Ok(()));
+    }
 }
 
 #[async_trait]
