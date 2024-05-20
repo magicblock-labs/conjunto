@@ -23,6 +23,9 @@ pub enum AccountLockState {
     /// The account is not present on chain and thus not locked either
     /// In this case we assume that this is an account that temporarily exists
     /// on the ephemeral validator and will not have to be undelegated.
+    /// However in the short term we don't allow new accounts to be created inside
+    /// the validator which means that we reject any transactions that attempt to do
+    /// that
     NewAccount,
     /// The account was found on chain and is not locked and therefore should
     /// not be used as writable on the ephemeral validator
