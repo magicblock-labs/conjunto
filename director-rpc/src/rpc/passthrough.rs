@@ -1,3 +1,5 @@
+use super::account_decoder_types::{UiAccount, UiTokenAmount};
+use super::transaction_status_types::{TransactionStatus, UiConfirmedBlock};
 use jsonrpsee::{
     core::{client::ClientT, ClientError, RegisterMethodError},
     types::{ErrorObjectOwned, Params},
@@ -5,7 +7,6 @@ use jsonrpsee::{
 };
 use log::*;
 use serde::de::DeserializeOwned;
-use solana_account_decoder::{parse_token::UiTokenAmount, UiAccount};
 use solana_rpc_client_api::response::{
     OptionalContext, Response as RpcResponse, RpcAccountBalance,
     RpcBlockCommitment, RpcBlockProduction, RpcBlockhash,
@@ -20,7 +21,6 @@ use solana_sdk::{
     epoch_info::EpochInfo,
     epoch_schedule::EpochSchedule,
 };
-use solana_transaction_status::{TransactionStatus, UiConfirmedBlock};
 
 use super::DirectorRpc;
 use crate::{
