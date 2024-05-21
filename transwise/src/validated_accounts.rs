@@ -67,11 +67,10 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
 mod tests {
     use conjunto_lockbox::AccountLockState;
 
+    use super::*;
     use crate::{
         errors::TranswiseResult, trans_account_meta::TransAccountMeta,
     };
-
-    use super::*;
 
     fn config_no_new_accounts() -> ValidateAccountsConfig {
         ValidateAccountsConfig {
