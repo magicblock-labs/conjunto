@@ -881,6 +881,7 @@ dependencies = [
 name = "conjunto-transwise"
 version = "0.0.0"
 dependencies = [
+ "async-trait",
  "conjunto-core",
  "conjunto-lockbox",
  "conjunto-providers",

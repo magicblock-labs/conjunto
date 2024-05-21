@@ -14,8 +14,8 @@ use crate::errors::TranswiseResult;
 // SanitizedTransactionAccountsHolder
 // -----------------
 pub struct TransactionAccountsHolder {
-    writable: Vec<Pubkey>,
-    readonly: Vec<Pubkey>,
+    pub writable: Vec<Pubkey>,
+    pub readonly: Vec<Pubkey>,
 }
 
 impl From<&SanitizedTransaction> for TransactionAccountsHolder {
