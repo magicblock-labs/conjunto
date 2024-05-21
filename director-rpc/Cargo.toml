@@ -22,8 +22,10 @@ log = { workspace = true }
 hyper = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+solana-account-decoder = { workspace = true }
 solana-sdk = { workspace = true }
 solana-rpc-client-api = { workspace = true }
+solana-transaction-status = { workspace = true }
 thiserror = { workspace = true }
 # Needed for (not yet working CORS)
 tower = { workspace = true }

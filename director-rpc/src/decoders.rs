@@ -6,16 +6,14 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 use bincode::Options;
 use jsonrpsee::core::RpcResult;
 use solana_sdk::packet::PACKET_DATA_SIZE;
+use solana_transaction_status::TransactionBinaryEncoding;
 
-use crate::{
-    rpc::transaction_status_types::TransactionBinaryEncoding,
-    utils::invalid_params,
-};
+use crate::utils::invalid_params;
 
 const MAX_BASE58_SIZE: usize = 1683; // Depends on PACKET_DATA_SIZE
 const MAX_BASE64_SIZE: usize = 1644; // Depends on PACKET_DATA_SIZE
 pub(crate) fn decode_and_deserialize<T>(
-    encoded: String,
+    encoded: &str,
     encoding: TransactionBinaryEncoding,
 ) -> RpcResult<(Vec<u8>, T)>
 where
