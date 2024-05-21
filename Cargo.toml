@@ -54,7 +54,6 @@ solana-account-decoder = "1.18.12"
 solana-rpc-client = "1.18.12"
 solana-rpc-client-api = "1.18.12"
 solana-sdk = "1.18.12"
-solana-transaction-status = "1.18.12"
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
 thiserror = "1.0.60"
 tokio = { version = "1.37.0", features = ["macros", "io-util"] }
