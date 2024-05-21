@@ -86,13 +86,6 @@ pub enum EncodedTransaction {
     Accounts(UiAccountsList),
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, Hash, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub enum TransactionBinaryEncoding {
-    Base58,
-    Base64,
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiTransaction {
@@ -131,14 +124,6 @@ pub struct ParsedAccount {
 pub enum ParsedAccountSource {
     Transaction,
     LookupTable,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UiAddressTableLookup {
-    pub account_key: String,
-    pub writable_indexes: Vec<u8>,
-    pub readonly_indexes: Vec<u8>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

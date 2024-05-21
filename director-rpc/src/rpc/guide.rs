@@ -6,7 +6,6 @@ use jsonrpsee::{
 use log::*;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_sdk::transaction::VersionedTransaction;
-use solana_transaction_status::UiTransactionEncoding;
 
 use super::DirectorRpc;
 use crate::{

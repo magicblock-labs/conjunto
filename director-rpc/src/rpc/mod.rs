@@ -15,7 +15,7 @@ mod account_decoder_types;
 pub mod guide;
 mod params;
 pub mod passthrough;
-mod transaction_status_types;
+pub(crate) mod transaction_status_types;
 
 #[derive(Default)]
 pub struct DirectorConfig {
