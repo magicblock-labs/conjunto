@@ -89,6 +89,7 @@ mod tests {
         AccountLockState::Locked {
             delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
+            config: Default::default(),
         }
     }
 

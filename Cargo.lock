@@ -760,6 +760,7 @@ name = "conjunto-core"
 version = "0.0.0"
 dependencies = [
  "async-trait",
+ "serde",
  "solana-rpc-client-api",
  "solana-sdk",
  "thiserror",

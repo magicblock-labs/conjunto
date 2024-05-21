@@ -1,4 +1,4 @@
-use conjunto_lockbox::AccountLockStateProvider;
+use conjunto_lockbox::{AccountLockStateProvider, DelegationRecordParserImpl};
 use conjunto_providers::{
     rpc_account_provider::RpcAccountProvider,
     rpc_provider_config::RpcProviderConfig,
@@ -15,13 +15,18 @@ use crate::{
 /// Guiding decisions are made by consulting the state of accounts on chain
 /// See [../examples/guiding_transactions.rs] for more info.
 pub struct Transwise {
-    account_lock_state_provider: AccountLockStateProvider<RpcAccountProvider>,
+    account_lock_state_provider: AccountLockStateProvider<
+        RpcAccountProvider,
+        DelegationRecordParserImpl,
+    >,
 }
 
 impl Transwise {
     pub fn new(config: RpcProviderConfig) -> Self {
-        let account_lock_state_provider =
-            AccountLockStateProvider::<RpcAccountProvider>::new(config);
+        let account_lock_state_provider = AccountLockStateProvider::<
+            RpcAccountProvider,
+            DelegationRecordParserImpl,
+        >::new(config);
         Self {
             account_lock_state_provider,
         }
