@@ -6,7 +6,6 @@ pub mod validated_accounts;
 pub use api::{
     TransactionAccountsExtractor, Transwise, ValidatedAccountsProvider,
 };
-
 pub use conjunto_providers::{
     rpc_provider_config::RpcProviderConfig, RpcCluster,
 };
