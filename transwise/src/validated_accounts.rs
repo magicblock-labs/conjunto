@@ -17,9 +17,20 @@ impl Default for ValidateAccountsConfig {
     }
 }
 
+pub struct ValidatedReadonlyAccount {
+    pub pubkey: Pubkey,
+    pub is_program: Option<bool>,
+}
+
 pub struct ValidatedAccounts {
-    pub readonly: Vec<Pubkey>,
+    pub readonly: Vec<ValidatedReadonlyAccount>,
     pub writable: Vec<Pubkey>,
+}
+
+impl ValidatedAccounts {
+    pub fn readonly_pubkeys(&self) -> Vec<Pubkey> {
+        self.readonly.iter().map(|x| x.pubkey).collect()
+    }
 }
 
 impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
@@ -152,7 +163,7 @@ mod tests {
             .try_into()
             .unwrap();
 
-        assert_eq!(vas.readonly, vec![readonly_id1, readonly_id2]);
+        assert_eq!(vas.readonly_pubkeys(), vec![readonly_id1, readonly_id2]);
         assert_eq!(vas.writable, vec![writable_id]);
     }
 
@@ -228,7 +239,7 @@ mod tests {
             .try_into()
             .unwrap();
 
-        assert_eq!(vas.readonly, vec![readonly_id1]);
+        assert_eq!(vas.readonly_pubkeys(), vec![readonly_id1]);
         assert_eq!(vas.writable, vec![locked_writable_id, new_writable_id]);
     }
 }

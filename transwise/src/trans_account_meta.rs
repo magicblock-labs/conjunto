@@ -8,7 +8,9 @@ use solana_sdk::{
     transaction::{SanitizedTransaction, VersionedTransaction},
 };
 
-use crate::errors::TranswiseResult;
+use crate::{
+    errors::TranswiseResult, validated_accounts::ValidatedReadonlyAccount,
+};
 
 // -----------------
 // SanitizedTransactionAccountsHolder
@@ -318,10 +320,17 @@ impl TransAccountMetas {
         }
     }
 
-    pub fn readable_pubkeys(&self) -> Vec<Pubkey> {
+    pub fn readable_pubkeys(&self) -> Vec<ValidatedReadonlyAccount> {
         self.iter()
-            .filter(|x| matches!(x, TransAccountMeta::Readonly { .. }))
-            .map(|x| *x.pubkey())
+            .flat_map(|x| match x {
+                TransAccountMeta::Readonly { pubkey, is_program } => {
+                    Some(ValidatedReadonlyAccount {
+                        pubkey: *pubkey,
+                        is_program: *is_program,
+                    })
+                }
+                _ => None,
+            })
             .collect()
     }
 
