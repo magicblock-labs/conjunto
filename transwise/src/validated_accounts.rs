@@ -93,7 +93,7 @@ mod tests {
     }
 
     fn unlocked() -> AccountLockState {
-        AccountLockState::Unlocked
+        AccountLockState::Unlocked { is_program: false }
     }
 
     fn new_account() -> AccountLockState {
@@ -114,8 +114,14 @@ mod tests {
         let readonly_id2 = Pubkey::new_unique();
         let writable_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::readonly(readonly_id1);
-        let meta2 = TransAccountMeta::readonly(readonly_id2);
+        let meta1 = TransAccountMeta::Readonly {
+            pubkey: readonly_id1,
+            is_program: None,
+        };
+        let meta2 = TransAccountMeta::Readonly {
+            pubkey: readonly_id2,
+            is_program: None,
+        };
         let meta3 = TransAccountMeta::Writable {
             pubkey: writable_id,
             lockstate: locked(),
@@ -137,7 +143,10 @@ mod tests {
         let readonly_id = Pubkey::new_unique();
         let writable_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::readonly(readonly_id);
+        let meta1 = TransAccountMeta::Readonly {
+            pubkey: readonly_id,
+            is_program: None,
+        };
         let meta2 = TransAccountMeta::Writable {
             pubkey: writable_id,
             lockstate: unlocked(),
@@ -157,7 +166,10 @@ mod tests {
         let readonly_id = Pubkey::new_unique();
         let writable_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::readonly(readonly_id);
+        let meta1 = TransAccountMeta::Readonly {
+            pubkey: readonly_id,
+            is_program: None,
+        };
         let meta2 = TransAccountMeta::Writable {
             pubkey: writable_id,
             lockstate: inconsistent(),
@@ -178,7 +190,10 @@ mod tests {
         let new_writable_id = Pubkey::new_unique();
         let locked_writable_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::readonly(readonly_id1);
+        let meta1 = TransAccountMeta::Readonly {
+            pubkey: readonly_id1,
+            is_program: None,
+        };
         let meta2 = TransAccountMeta::Writable {
             pubkey: new_writable_id,
             lockstate: new_account(),
