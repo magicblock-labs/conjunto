@@ -2,9 +2,19 @@ use solana_sdk::pubkey::Pubkey;
 
 use crate::{errors::TranswiseError, trans_account_meta::TransAccountMetas};
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct ValidateAccountsConfig {
     pub allow_new_accounts: bool,
+    pub require_delegation: bool,
+}
+
+impl Default for ValidateAccountsConfig {
+    fn default() -> Self {
+        Self {
+            allow_new_accounts: false,
+            require_delegation: true,
+        }
+    }
 }
 
 pub struct ValidatedAccounts {
@@ -21,7 +31,13 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         (meta, config): (&TransAccountMetas, &ValidateAccountsConfig),
     ) -> Result<Self, Self::Error> {
         let unlocked = meta.unlocked_writables();
-        if !unlocked.is_empty() {
+        // NOTE: when we don't require delegation then we still query the account states to
+        // get the lockstate of each writable. This causes some unnecessary overhead which we
+        // could avoid if we make the lockbox aware of this, i.e. by adding an LockstateUnknown
+        // variant and returning that instead of checking it.
+        // However this is only the case when developing locally and thus we may not optimize for
+        // it.
+        if config.require_delegation && !unlocked.is_empty() {
             return Err(TranswiseError::NotAllWritablesLocked {
                 locked: meta
                     .locked_writables()
@@ -58,7 +74,7 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         }
         Ok(ValidatedAccounts {
             readonly: meta.readable_pubkeys(),
-            writable: meta.writable_pubkeys(),
+            writable: meta.writable_pubkeys(!config.require_delegation),
         })
     }
 }
@@ -75,12 +91,14 @@ mod tests {
     fn config_no_new_accounts() -> ValidateAccountsConfig {
         ValidateAccountsConfig {
             allow_new_accounts: false,
+            require_delegation: true,
         }
     }
 
     fn config_allow_new_accounts() -> ValidateAccountsConfig {
         ValidateAccountsConfig {
             allow_new_accounts: true,
+            require_delegation: true,
         }
     }
 

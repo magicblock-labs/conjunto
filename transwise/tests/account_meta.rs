@@ -286,5 +286,5 @@ async fn test_account_meta_two_readonlys_one_program_and_one_writable() {
         transaction_metas.readable_program_pubkeys(),
         vec![readonly2]
     );
-    assert_eq!(transaction_metas.writable_pubkeys(), vec![writable]);
+    assert_eq!(transaction_metas.writable_pubkeys(false), vec![writable]);
 }

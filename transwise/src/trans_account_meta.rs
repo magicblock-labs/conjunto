@@ -256,6 +256,9 @@ impl TransAccountMetas {
         match (has_locked_accounts, has_unlocked_accounts) {
             // If we write to both locked and unlocked accounts that exist on chain
             // then we cannot route it either to the chain or the ephemeral validator
+            // NOTE: this doens't consider the special case in which we allow cloning
+            // non-delegated writable accounts, however that should never be the case
+            // when the director determines an endpoint
             (true, true) => {
                 let locked_pubkeys = locked_writeables
                     .iter()
@@ -298,12 +301,21 @@ impl TransAccountMetas {
         }
     }
 
-    pub fn writable_pubkeys(&self) -> Vec<Pubkey> {
-        self.locked_writables()
+    pub fn writable_pubkeys(&self, include_unlocked: bool) -> Vec<Pubkey> {
+        let writables = self
+            .locked_writables()
             .iter()
             .chain(self.new_writables().iter())
             .map(|x| *x.pubkey())
-            .collect()
+            .collect::<Vec<_>>();
+        if include_unlocked {
+            writables
+                .into_iter()
+                .chain(self.unlocked_writables().iter().map(|x| *x.pubkey()))
+                .collect()
+        } else {
+            writables
+        }
     }
 
     pub fn readable_pubkeys(&self) -> Vec<Pubkey> {
