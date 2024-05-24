@@ -300,6 +300,8 @@ impl TransAccountMetas {
         let has_non_payer_unlocked_accounts =
             !non_payer_unlocked_accounts.is_empty();
 
+        let has_payer_unlocked_accounts = !payer_unlocked_accounts.is_empty();
+
         match (has_locked_accounts, has_non_payer_unlocked_accounts) {
             // If we write to both locked and unlocked accounts that exist on chain
             // then we cannot route it either to the chain or the ephemeral validator
@@ -332,6 +334,13 @@ impl TransAccountMetas {
             (true, false) => Ephemeral(self),
             // If all writables are unlocked we route to the chain
             (false, true) => Chain(self),
+            _ if has_payer_unlocked_accounts => {
+                // If we write to payer unlocked accounts we default to routing
+                // to the chain.
+                // See transwise/tests/account_meta.rs
+                // test_account_meta_one_unlocked_writable_that_is_payer for more info
+                Chain(self)
+            }
             // If we write to only new accounts we default to routing to the ephemeral
             // for now.
             // TODO(thlorenz): this edge case could be made configurable by having the user include

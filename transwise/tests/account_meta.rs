@@ -205,6 +205,10 @@ async fn test_account_meta_one_new_writable() {
 
 #[tokio::test]
 async fn test_account_meta_one_unlocked_writable_that_is_payer() {
+    // NOTE: it is very rare to encounter a transaction which would only have
+    //       write to one account (same as payer) and we don't expect a
+    //       transaction like this to make sense inside the ephemeral validator.
+    //       That is the main reason we send it to chain
     let unlocked_writable_id = Pubkey::new_from_array([4u8; 32]);
     let lockstate_provider = setup_lockstate_provider(
         vec![(unlocked_writable_id, account_owned_by_system_program())],
@@ -294,6 +298,7 @@ async fn test_account_meta_one_unlocked_writable_that_is_payer_and_unlocked_writ
     .unwrap()
     .into_endpoint();
 
+    eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_chain());
 
     let metas = endpoint.into_account_metas();
