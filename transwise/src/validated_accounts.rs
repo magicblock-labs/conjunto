@@ -92,7 +92,8 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
 
 #[cfg(test)]
 mod tests {
-    use conjunto_lockbox::AccountLockState;
+    use conjunto_core::CommitFrequency;
+    use conjunto_lockbox::{AccountLockState, LockConfig};
 
     use super::*;
     use crate::{
@@ -117,7 +118,10 @@ mod tests {
         AccountLockState::Locked {
             delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
-            config: Default::default(),
+            config: LockConfig {
+                commit_frequency: CommitFrequency::Millis(1_000),
+                owner: Pubkey::new_unique(),
+            },
         }
     }
 
