@@ -22,7 +22,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: conjunto
 
-      - name: Checkout Delegate Program
+      - name: Checkout Delegation Program
         uses: actions/checkout@v4
         with:
           repository: magicblock-labs/delegation-program
@@ -34,16 +34,12 @@ jobs:
           shared-key: 'conjunto-build_test_lint-cache-bust-000'
           workspaces: |
             conjunto -> target
-            delegation-program -> target
           cache-targets: true
           cache-all-crates: true
           cache-on-failure: true
 
       - name: Prebuild Conjunto Target Size
         run: du -h -d1 conjunto/target || true
-
-      - name: Prebuild Delegate Program Target Size
-        run: du -h -d1 delegation-program/target || true
 
       - name: Cargo Build
         run: make ci-build
@@ -62,6 +58,3 @@ jobs:
 
       - name: Postbuild Conjunto Target Size
         run: du -h -d1 conjunto/target
-
-      - name: Postbuild Delegate Program Target Size
-        run: du -h -d1 delegation-program/target
