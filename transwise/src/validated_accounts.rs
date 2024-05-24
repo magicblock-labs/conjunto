@@ -29,6 +29,10 @@ pub struct ValidatedWritableAccount {
     /// Here we include the original owner of the account before delegation.
     /// This info is provided via the delegation record.
     pub owner: Option<Pubkey>,
+
+    /// Indicates if this account was a payer in the transaction from which
+    /// it was extracted.
+    pub is_payer: bool,
 }
 
 pub struct ValidatedAccounts {
@@ -170,6 +174,7 @@ mod tests {
         let meta3 = TransAccountMeta::Writable {
             pubkey: writable_id,
             lockstate: locked(),
+            is_payer: false,
         };
 
         let vas: ValidatedAccounts = (
@@ -195,6 +200,7 @@ mod tests {
         let meta2 = TransAccountMeta::Writable {
             pubkey: writable_id,
             lockstate: unlocked(),
+            is_payer: false,
         };
 
         let res: TranswiseResult<ValidatedAccounts> = (
@@ -218,6 +224,7 @@ mod tests {
         let meta2 = TransAccountMeta::Writable {
             pubkey: writable_id,
             lockstate: inconsistent(),
+            is_payer: false,
         };
 
         let res: TranswiseResult<ValidatedAccounts> = (
@@ -242,10 +249,12 @@ mod tests {
         let meta2 = TransAccountMeta::Writable {
             pubkey: new_writable_id,
             lockstate: new_account(),
+            is_payer: false,
         };
         let meta3 = TransAccountMeta::Writable {
             pubkey: locked_writable_id,
             lockstate: locked(),
+            is_payer: false,
         };
 
         let vas: ValidatedAccounts = (
