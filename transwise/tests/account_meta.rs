@@ -283,12 +283,19 @@ async fn test_account_meta_two_readonlys_one_program_and_one_writable() {
     let transaction_metas = endpoint.into_account_metas();
     assert_eq!(transaction_metas.len(), 3);
     assert_eq!(
-        transaction_metas.readable_non_program_pubkeys(),
+        transaction_metas.readonly_non_program_pubkeys(),
         vec![readonly1]
     );
     assert_eq!(
-        transaction_metas.readable_program_pubkeys(),
+        transaction_metas.readonly_program_pubkeys(),
         vec![readonly2]
     );
-    assert_eq!(transaction_metas.writable_pubkeys(false), vec![writable]);
+    assert_eq!(
+        transaction_metas
+            .writable_accounts(false)
+            .into_iter()
+            .map(|x| x.pubkey)
+            .collect::<Vec<_>>(),
+        vec![writable]
+    );
 }
