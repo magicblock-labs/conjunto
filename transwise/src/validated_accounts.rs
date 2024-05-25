@@ -17,11 +17,13 @@ impl Default for ValidateAccountsConfig {
     }
 }
 
+#[derive(Debug)]
 pub struct ValidatedReadonlyAccount {
     pub pubkey: Pubkey,
     pub is_program: Option<bool>,
 }
 
+#[derive(Debug)]
 pub struct ValidatedWritableAccount {
     pub pubkey: Pubkey,
     /// The current owner of delegated/locked accounts is the delegation
@@ -35,6 +37,7 @@ pub struct ValidatedWritableAccount {
     pub is_payer: bool,
 }
 
+#[derive(Debug)]
 pub struct ValidatedAccounts {
     pub readonly: Vec<ValidatedReadonlyAccount>,
     pub writable: Vec<ValidatedWritableAccount>,
@@ -213,6 +216,32 @@ mod tests {
             .try_into();
 
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_unlocked_writable_payer_one_readonly() {
+        let readonly_id = Pubkey::new_unique();
+        let writable_id = Pubkey::new_unique();
+
+        let meta1 = TransAccountMeta::Readonly {
+            pubkey: readonly_id,
+            is_program: None,
+        };
+        let meta2 = TransAccountMeta::Writable {
+            pubkey: writable_id,
+            lockstate: unlocked(),
+            is_payer: true,
+        };
+
+        let vas: ValidatedAccounts = (
+            &TransAccountMetas(vec![meta1, meta2]),
+            &config_no_new_accounts(),
+        )
+            .try_into()
+            .unwrap();
+
+        assert_eq!(vas.readonly_pubkeys(), vec![readonly_id]);
+        assert_eq!(vas.writable_pubkeys(), vec![writable_id]);
     }
 
     #[test]
