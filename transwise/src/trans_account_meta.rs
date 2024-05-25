@@ -372,12 +372,17 @@ impl TransAccountMetas {
             .chain(self.new_writables())
             .collect::<Vec<_>>();
         if include_unlocked {
+            // Either we include all unlocked accounts
             writables
                 .into_iter()
                 .chain(self.unlocked_writables())
                 .collect()
         } else {
+            // Or only the ones that are also payers since we make a special case for them
             writables
+                .into_iter()
+                .chain(self.unlocked_writable_payers())
+                .collect()
         }
     }
 
@@ -425,6 +430,7 @@ impl TransAccountMetas {
             .collect()
     }
 
+    /// All locked writable accounts.
     pub(crate) fn locked_writables(&self) -> Vec<ValidatedWritableAccount> {
         self.iter()
             .flat_map(|x| match x {
@@ -441,12 +447,36 @@ impl TransAccountMetas {
             .collect()
     }
 
+    /// All unlocked writable accounts.
     pub(crate) fn unlocked_writables(&self) -> Vec<ValidatedWritableAccount> {
         self.iter()
             .flat_map(|x| match x {
                 TransAccountMeta::Writable { lockstate, .. }
                     if lockstate.is_unlocked() =>
                 {
+                    Some(ValidatedWritableAccount {
+                        pubkey: *x.pubkey(),
+                        is_payer: x.is_payer(),
+                        owner: None,
+                    })
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Unlocked writable accounts that are also payers of the transaction they
+    /// were extracted from.
+    pub(crate) fn unlocked_writable_payers(
+        &self,
+    ) -> Vec<ValidatedWritableAccount> {
+        self.iter()
+            .flat_map(|x| match x {
+                TransAccountMeta::Writable {
+                    lockstate,
+                    is_payer: true,
+                    ..
+                } if lockstate.is_unlocked() => {
                     Some(ValidatedWritableAccount {
                         pubkey: *x.pubkey(),
                         is_payer: x.is_payer(),

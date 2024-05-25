@@ -64,7 +64,10 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         // variant and returning that instead of checking it.
         // However this is only the case when developing locally and thus we may not optimize for
         // it.
-        if config.require_delegation && !unlocked.is_empty() {
+        // We also make an exception for payers of a transaction as those we don't require to be
+        // locked, but instead create and fund them.
+        let has_non_payer_unlocked = unlocked.iter().any(|x| !x.is_payer);
+        if config.require_delegation && has_non_payer_unlocked {
             return Err(TranswiseError::NotAllWritablesLocked {
                 locked: meta
                     .locked_writables()

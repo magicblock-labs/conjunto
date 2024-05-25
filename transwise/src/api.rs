@@ -183,7 +183,7 @@ impl ValidatedAccountsProvider for Transwise {
         config: &ValidateAccountsConfig,
     ) -> TranswiseResult<ValidatedAccounts> {
         let account_metas = self.account_metas(transaction_accounts).await?;
-        (&account_metas, config).try_into()
+        ValidatedAccounts::try_from((&account_metas, config))
     }
 }
 
