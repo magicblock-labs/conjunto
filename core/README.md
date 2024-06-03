@@ -17,7 +17,7 @@ Doesn't contain any logic directly.
   - `CommitFrequency` frequency at which the account's state is commited to chain
 
 - `AccountsHolder` trait
-  - Writable/Readonly/Payer store for Pubkeys
+  - Writable/Readonly/Payer store for Pubkeys (those accounts are pull out of the transaction)
 
 - `AccountProvider` trait
   - get_account(Pubkey) -> Account
