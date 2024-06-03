@@ -1,7 +1,7 @@
 
 # Summary
 
-Implements account and signature fetching traits using fetching on a RPC client
+Implements account and signature fetching traits using the RPC client
 
 # Details
 
