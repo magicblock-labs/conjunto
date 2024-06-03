@@ -25,6 +25,6 @@ Exploration notes for file:
 
 # Notes
 
-Important dependencies:
+*Important dependencies:*
 
  - ??: [providers](../providers/README.md)

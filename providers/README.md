@@ -1,12 +1,23 @@
 
 # Summary
 
-[High level, one or two sentence, role of the crate]
+Implements account and signature fetching traits using fetching on a RPC client
 
 # Details
 
-[Low level, technical information about the inner workings of the crate]
+*Important symbols:*
+
+- `RpcAccountProvider` struct
+  - contains a `RpcClient`
+  - implements `AccountProvider` from core
+
+- `RpcSignatureStatusProvider` struct
+  - contains a `RpcClient`
+  - implements `SignatureStatusProvider` from core
+  
 
 # Notes
 
-[Notes to keep in mind for the future. Known issues, planned future changes and relevant links]
+*Important dependencies:*
+
+- Provides `AccountProvider` and `SignatureStatusProvider`: [core](../core/README.md) 

@@ -1,10 +1,8 @@
 
 # Summary
 
-This crate provides a few important capabilities
-
-- Provides conversions between account information types
-- Can compute an `Endpoint` from any account information types
+Provides conversions between account information types
+Can compute an `Endpoint` from any account information types
 
 # Details
 
@@ -41,20 +39,20 @@ This crate provides a few important capabilities
   - contains a `AccountLockStateProvider`
 
 
-*Important processes:*
+*Important conversions:*
 
 - Solana transactions can be converted to `TransAccountMetas`
 - Solana transactions can be converted to `TransactionAccountsHolder`
+- Solana transactions can be converted to `Endpoint`
+
+- `TransAccountMetas` can be converted to `ValidatedAccounts`
+- `TransAccountMetas` can be used to decide on an `Endpoint`
 
 - Solana transactions can be converted to `ValidatedAccounts`
 - `TransactionAccountsHolder` can be converted to `ValidatedAccounts`
-- `TransAccountMetas` can be converted to `ValidatedAccounts`
-
-- Solana transactions can be converted to `Endpoint`
-- `TransAccountMetas` can be used to decide on an `Endpoint`
 
 # Notes
 
-Important dependencies:
+*Important dependencies:*
 
 - Provides `AccountLockStateProvider`: [lockbox](../lockbox/README.md) 

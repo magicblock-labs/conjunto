@@ -1,7 +1,7 @@
 
 # Summary
 
-This crate is responsible for initializing and instantiating both the RPC and PUBSUB service.
+Responsible for initializing and instantiating both the RPC and PUBSUB service.
 
 # Details
 
@@ -10,7 +10,7 @@ This crate is just a wrapper that initialize both services.
 
 # Notes
 
-Important dependencies:
+*Important dependencies:*
 
  - Actual PUBSUB implementation: [director-pubsub](../director-pubsub/README.md)
  - Actual RPC implementation: [director-rpc](../director-rpc/README.md)

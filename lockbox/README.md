@@ -1,7 +1,7 @@
 
 # Summary
 
-This crate implements logic for reading and parsing accounts into `AccountLockState`
+Implements logic for reading and parsing accounts into `AccountLockState`
 Accounts are read from a `Pubkey` using `AccountProvider`
 
 # Details
@@ -25,6 +25,6 @@ Accounts are read from a `Pubkey` using `AccountProvider`
 
 # Notes
 
-Important dependencies:
+*Important dependencies:*
 
 - Provides `AccountProvider` and `DelegationRecord`: [core](../core/README.md) 

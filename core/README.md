@@ -22,7 +22,10 @@ Doesn't contain any logic directly.
 - `AccountProvider` trait
   - get_account(Pubkey) -> Account
 
+- `SignatureStatusProvider` trait
+  - get_signature_status(Signature) -> Result
 
 # Notes
 
-N/A
+This crate is supposed to be importable from everywhere.
+It is not supposed to have any dependency
