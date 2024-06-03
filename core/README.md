@@ -10,11 +10,11 @@ Doesn't contain any logic directly.
 
 - `GuideStrategy`/`RequestEndpoint` enums
   - Which endpoint to propagate a request to
-  - can be Chain/Ephemeral/Both/Others
+  - can be Chain/Ephemeral/Both
 
 - `DelegationRecord` struct
   - Account owner's pubkey
-  - `CommitFrequency` of the delegation's dump interval
+  - `CommitFrequency` frequency at which the account's state is commited to chain
 
 - `AccountsHolder` trait
   - Writable/Readonly/Payer store for Pubkeys
@@ -28,4 +28,7 @@ Doesn't contain any logic directly.
 # Notes
 
 This crate is supposed to be importable from everywhere.
-It is not supposed to have any dependency
+It is not supposed to have any dependency.
+
+This crate does not provide concrete implementation for any of the traits,
+so that they can also be stubbed in unit tests without using the production implementation.

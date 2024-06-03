@@ -8,15 +8,16 @@ Implements account and signature fetching traits using fetching on a RPC client
 *Important symbols:*
 
 - `RpcAccountProvider` struct
-  - contains a `RpcClient`
+  - depends on a `RpcClient`
   - implements `AccountProvider` from core
 
 - `RpcSignatureStatusProvider` struct
-  - contains a `RpcClient`
+  - depends on a `RpcClient`
   - implements `SignatureStatusProvider` from core
   
 
 # Notes
+
 
 *Important dependencies:*
 

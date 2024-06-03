@@ -8,8 +8,8 @@ Implements logic to figure out the desired final endpoint for a given request's 
 *Important symbols:*
 
 - `GuideStrategyResolver`
-  - contains a `AccountProvider`
-  - contains a `SignatureStatusProvider`
+  - depends on an `AccountProvider`
+  - depends on a `SignatureStatusProvider`
   - Allow resolving a `GuideStrategy` into a `RequestEndpoint`
   - Allow resolving a signature into a `RequestEndpoint`
   - Allow resolving an address into a `RequestEndpoint`

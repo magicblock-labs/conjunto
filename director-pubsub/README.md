@@ -1,22 +1,22 @@
 
 # Summary
 
-Start a TCP PUBSUB service on 127.0.0.1:9900.
-Dynamically route requests either to the validator or the L1.
+Start a TCP PubSub service on 127.0.0.1:9900.
+Dynamically route requests either to the Chain PubSub or the Ephemeral PubSub.
 Requests are routed transparently based on their content and context.
 
 # Details
 
-Uses websocket implemented using tokio_tungstenite.
+Uses websocket implemented using `tokio_tungstenite` open source crate.
 
 Any request from the client is conditionally routed to either:
-- the websocket of the "chain" (L1 Solana)
+- the websocket of the "chain" (Solana)
 - the websocket of the "ephem" (Validator)
 - Sometimes both
 
 This routing is done using some "guide" logic implemented in this crate.
 
-Any request from "chain" or "ephem" is sent back to the client
+Any response from "chain" or "ephem" is sent directly back to the client
 
 *Important symbols:*
 
@@ -27,7 +27,7 @@ Any request from "chain" or "ephem" is sent back to the client
   - Uses the `DirectorPubsub` for routing requests and simple forward for responses
 
 - `DirectorPubsub` struct
-  - contains a `GuideStrategyResolver`
+  - depends on a `GuideStrategyResolver`
   - can convert `Message` -> `GuideStrategy` -> `RequestEndpoint`
   - using `guide_strategy_from_pubsub_msg`
 

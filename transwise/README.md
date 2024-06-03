@@ -1,10 +1,12 @@
 
 # Summary
 
-Provides conversions between account information types
-Can compute an `Endpoint` from any account information types
+The main purpose is to process a transaction and pull out information for each account used in it.
 
 # Details
+
+It is used by the validator to fetch information for if/how to clone accounts via `ValidatedAccounts`.
+Help the director route a transaction properly by computing an `Endpoint`.
 
 *Important symbols:*
 
@@ -15,8 +17,6 @@ Can compute an `Endpoint` from any account information types
   - allow conversion from solana transactions to `TransactionAccountsHolder`
 
 - `ValidatedAccounts` struct
-  - vec of `ValidatedReadonlyAccount`
-  - vec of `ValidatedWritableAccount`
   - classified accounts with meta info and delegation state
 
 - `ValidatedAccountsProvider` trait
@@ -36,20 +36,7 @@ Can compute an `Endpoint` from any account information types
 - `Transwise` struct
   - implements `TransactionAccountsExtractor`
   - implements `ValidatedAccountsProvider`
-  - contains a `AccountLockStateProvider`
-
-
-*Important conversions:*
-
-- Solana transactions can be converted to `TransAccountMetas`
-- Solana transactions can be converted to `TransactionAccountsHolder`
-- Solana transactions can be converted to `Endpoint`
-
-- `TransAccountMetas` can be converted to `ValidatedAccounts`
-- `TransAccountMetas` can be used to decide on an `Endpoint`
-
-- Solana transactions can be converted to `ValidatedAccounts`
-- `TransactionAccountsHolder` can be converted to `ValidatedAccounts`
+  - depends on an `AccountLockStateProvider`
 
 # Notes
 
