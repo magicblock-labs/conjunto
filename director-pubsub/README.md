@@ -34,7 +34,7 @@ Any response from "chain" or "ephem" is sent directly back to the client
 - `ParsedClientMessage` enum
   - Parsed representation of a raw websocket message
   - Can be parsed from a raw message string
-  - Uses serde to read the JSON
+  - Uses serde to parse the JSON messages
 
 - `guide_strategy_from_pubsub_msg` function
   - Takes in parameter a message, parses it to a `ParsedClientMessage`
