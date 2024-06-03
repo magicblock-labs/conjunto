@@ -1,7 +1,8 @@
 
 # Summary
 
-[High level, one or two sentence, role of the crate]
+This crate implements logic for reading and parsing accounts into `AccountLockState`
+Accounts are read from a `Pubkey` using `AccountProvider`
 
 # Details
 
@@ -9,7 +10,21 @@
 
 - `DelegationAccount` enum
   - can be Valid or Invalid
+  - contains `DelegationRecord` (from core) if valid
+
+- `DelegationRecordParser` trait
+  - allows parsing a blob into a `DelegationRecord`
+
+- `AccountLockState` enum
+  - can be NewAccount / Unlocked / Locked / Inconsistent
+  
+- `AccountLockStateProvider` struct
+  - contains a `AccountProvider`
+  - contains a `DelegationRecordParser`
+  - can read a `Pubkey` -> `DelegationAccount` -> `AccountLockState`
 
 # Notes
 
-[Notes to keep in mind for the future. Known issues, planned future changes and relevant links]
+Important dependencies:
+
+- Provides `AccountProvider` and `DelegationRecord`: [core](../core/README.md) 
