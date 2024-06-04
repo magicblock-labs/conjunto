@@ -10,6 +10,7 @@ Requests are routed transparently based on their content and context.
 Uses websocket implemented using `tokio_tungstenite` open source crate.
 
 Any request from the client is conditionally routed to either:
+
 - the websocket of the "chain" (Solana)
 - the websocket of the "ephem" (Validator)
 - Sometimes both
@@ -39,7 +40,6 @@ Any response from "chain" or "ephem" is sent directly back to the client
 - `guide_strategy_from_pubsub_msg` function
   - Takes in parameter a message, parses it to a `ParsedClientMessage`
   - Compute the expected `GuideStrategy` based off of the message content
-
 
 # Notes
 
