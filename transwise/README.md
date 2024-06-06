@@ -2,6 +2,7 @@
 # Summary
 
 The main purpose is to process a transaction and pull out information for each account used in it.
+Also provides account validation implementation.
 
 # Details
 

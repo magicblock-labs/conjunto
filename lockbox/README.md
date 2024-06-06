@@ -1,7 +1,7 @@
 
 # Summary
 
-Implements logic for reading and parsing accounts into `AccountLockState`
+Implements logic for checking accounts delegated (locked) state into `AccountLockState`
 Accounts are read from a `Pubkey` using `AccountProvider`
 
 # Details

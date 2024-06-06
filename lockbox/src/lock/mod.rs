@@ -200,6 +200,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         }
     }
 
+    // TODO(vbrunet) - we should probably not expose this directly? This feels like an abstraction leak
     pub fn account_provider(&self) -> &T {
         &self.account_provider
     }

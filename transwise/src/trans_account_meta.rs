@@ -248,6 +248,7 @@ impl TransAccountMetas {
         let mut account_metas = Vec::new();
         let readonly = holder.get_readonly();
         let writable = holder.get_writable();
+        // TODO(vbrunet) - THIS IS INTERESTING (should this be split by delegation status instead??)
         for pubkey in readonly.into_iter() {
             account_metas.push(
                 TransAccountMeta::try_readonly(
