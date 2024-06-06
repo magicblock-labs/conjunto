@@ -27,4 +27,4 @@ Accounts are read from a `Pubkey` using `AccountProvider`
 
 *Important dependencies:*
 
-- Provides `AccountProvider` and `DelegationRecord`: [core](../core/README.md) 
+- Provides `AccountProvider` and `DelegationRecord`: [core](../core/README.md)
