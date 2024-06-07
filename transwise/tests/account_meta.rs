@@ -154,7 +154,8 @@ async fn test_account_meta_one_locked_writable_with_invalid_delegation_record_an
 }
 
 #[tokio::test]
-async fn test_account_meta_one_properly_locked_writable_and_one_new_writable() {
+async fn test_account_meta_one_properly_writable_delegated_and_one_writable_new_account(
+) {
     let (delegated_id, delegation_pda) = delegated_account_ids();
     let lockstate_provider = setup_lockstate_provider(
         vec![
@@ -180,11 +181,11 @@ async fn test_account_meta_one_properly_locked_writable_and_one_new_writable() {
     );
 
     eprintln!("{:#?}", endpoint);
-    assert!(endpoint.is_ephemeral());
+    assert!(endpoint.is_unroutable());
 }
 
 #[tokio::test]
-async fn test_account_meta_one_new_writable() {
+async fn test_account_meta_one_writable_new_account() {
     let lockstate_provider = setup_lockstate_provider(
         vec![],
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
@@ -206,7 +207,7 @@ async fn test_account_meta_one_new_writable() {
     );
 
     eprintln!("{:#?}", endpoint);
-    assert!(endpoint.is_ephemeral());
+    assert!(endpoint.is_chain());
 }
 
 #[tokio::test]
@@ -350,6 +351,7 @@ async fn test_account_meta_two_readonlys() {
         vec![],
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
     );
+
     let readonly1 = Pubkey::new_from_array([4u8; 32]);
     let readonly2 = Pubkey::new_from_array([5u8; 32]);
 
@@ -368,11 +370,12 @@ async fn test_account_meta_two_readonlys() {
     );
 
     eprintln!("{:#?}", endpoint);
-    assert!(endpoint.is_unroutable());
+    assert!(endpoint.is_chain());
 }
 
 #[tokio::test]
-async fn test_account_meta_two_readonlys_one_program_and_one_writable() {
+async fn test_account_meta_two_readonlys_one_program_and_one_writable_undelegated(
+) {
     let readonly1 = Pubkey::new_from_array([4u8; 32]);
     let readonly2 = Pubkey::new_from_array([5u8; 32]);
     let writable = Pubkey::new_from_array([6u8; 32]);
@@ -398,24 +401,11 @@ async fn test_account_meta_two_readonlys_one_program_and_one_writable() {
         .await
         .unwrap(),
     );
-    assert!(endpoint.is_ephemeral());
+    assert!(endpoint.is_chain());
 
     let transaction_metas = endpoint.into_account_metas();
     assert_eq!(transaction_metas.len(), 3);
-    assert_eq!(
-        transaction_metas.readonly_non_program_pubkeys(),
-        vec![readonly1]
-    );
-    assert_eq!(
-        transaction_metas.readonly_program_pubkeys(),
-        vec![readonly2]
-    );
-    assert_eq!(
-        transaction_metas
-            .writable_accounts(false)
-            .into_iter()
-            .map(|x| x.pubkey)
-            .collect::<Vec<_>>(),
-        vec![writable]
-    );
+    assert_eq!(*transaction_metas[0].pubkey(), readonly1);
+    assert_eq!(*transaction_metas[1].pubkey(), readonly2);
+    assert_eq!(*transaction_metas[2].pubkey(), writable);
 }
