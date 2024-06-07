@@ -162,12 +162,10 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         }
 
         // Generate the validated account structs
-        let validated_readonly_accounts = meta
-            .iter()
-            .flat_map(|x| ValidatedReadonlyAccount::try_from(x));
-        let validated_writable_accounts = meta
-            .iter()
-            .flat_map(|x| ValidatedWritableAccount::try_from(x));
+        let validated_readonly_accounts =
+            meta.iter().flat_map(ValidatedReadonlyAccount::try_from);
+        let validated_writable_accounts =
+            meta.iter().flat_map(ValidatedWritableAccount::try_from);
 
         // Done
         Ok(ValidatedAccounts {

@@ -167,7 +167,7 @@ impl TransAccountMetas {
                     is_payer: false,
                     lockstate,
                     ..
-                } if !lockstate.is_delegated() => true,
+                } => !lockstate.is_delegated(),
                 _ => false,
             })
             .map(|x| *x.pubkey())
