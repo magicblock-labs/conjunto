@@ -1,0 +1,91 @@
+use serde::{Deserialize, Serialize};
+use solana_sdk::pubkey::Pubkey;
+
+use crate::trans_account_meta::TransAccountMetas;
+
+#[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum UnroutableReason {
+    WritablesIncludeInconsistentAccounts {
+        writable_inconsistent_pubkeys: Vec<Pubkey>,
+    },
+    ContainsWritableDelegatedAndWritableUndelegated {
+        writable_delegated_pubkeys: Vec<Pubkey>,
+        writable_undelegated_non_payer_pubkeys: Vec<Pubkey>,
+    },
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub enum Endpoint {
+    Chain(TransAccountMetas),
+    Ephemeral(TransAccountMetas),
+    Unroutable {
+        account_metas: TransAccountMetas,
+        reason: UnroutableReason,
+    },
+}
+
+impl Endpoint {
+    pub fn is_ephemeral(&self) -> bool {
+        matches!(self, Endpoint::Ephemeral(_))
+    }
+    pub fn is_chain(&self) -> bool {
+        matches!(self, Endpoint::Chain(_))
+    }
+    pub fn is_unroutable(&self) -> bool {
+        matches!(self, Endpoint::Unroutable { .. })
+    }
+    pub fn into_account_metas(self) -> TransAccountMetas {
+        use Endpoint::*;
+        match self {
+            Chain(account_metas)
+            | Ephemeral(account_metas)
+            | Unroutable { account_metas, .. } => account_metas,
+        }
+    }
+}
+
+impl Endpoint {
+    pub fn from(metas: TransAccountMetas) -> Endpoint {
+        // If any account is in a bugged delegation state, we can't do anything
+        let writable_inconsistent_pubkeys =
+            metas.writable_inconsistent_pubkeys();
+        if !writable_inconsistent_pubkeys.is_empty() {
+            return Endpoint::Unroutable {
+                account_metas: metas,
+                reason:
+                    UnroutableReason::WritablesIncludeInconsistentAccounts {
+                        writable_inconsistent_pubkeys,
+                    },
+            };
+        }
+
+        // If there are no writable delegated account in the transaction, we can route to chain
+        let writable_delegated_pubkeys = metas.writable_delegated_pubkeys();
+        if writable_delegated_pubkeys.is_empty() {
+            return Endpoint::Chain(metas);
+        }
+
+        let writable_undelegated_non_payer_pubkeys =
+            metas.writable_undelegated_non_payer_pubkeys();
+
+        // If we got here, we are planning to route to ephemeral,
+        // so there cannot be any writable undelegated except the payer
+        // If there are, we cannot route this transaction
+        let has_writable_undelegated_non_payer =
+            !writable_undelegated_non_payer_pubkeys.is_empty();
+        if has_writable_undelegated_non_payer {
+            return Endpoint::Unroutable {
+                account_metas: metas,
+                reason: UnroutableReason::ContainsWritableDelegatedAndWritableUndelegated {
+                    writable_delegated_pubkeys,
+                    writable_undelegated_non_payer_pubkeys,
+                },
+            };
+        }
+
+        // If we got here, we only have delegated writables
+        // or payers that are writable
+        // So we can route to ephemeral
+        Endpoint::Ephemeral(metas)
+    }
+}

@@ -1,19 +1,10 @@
-use std::ops::Deref;
-
-use conjunto_core::{AccountProvider, AccountsHolder, DelegationRecordParser};
-use conjunto_lockbox::{AccountLockState, AccountLockStateProvider};
-use serde::{Deserialize, Serialize};
+use conjunto_core::AccountsHolder;
 use solana_sdk::{
     pubkey::Pubkey,
     transaction::{SanitizedTransaction, VersionedTransaction},
 };
 
-use crate::{
-    errors::{TranswiseError, TranswiseResult},
-    validated_accounts::{
-        ValidatedDelegatedAccount, ValidatedUndelegatedAccount,
-    },
-};
+use crate::errors::{TranswiseError, TranswiseResult};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TransactionAccountsHolder {

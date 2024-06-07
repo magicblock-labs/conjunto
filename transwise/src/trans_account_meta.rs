@@ -4,19 +4,16 @@ use conjunto_core::{AccountProvider, AccountsHolder, DelegationRecordParser};
 use conjunto_lockbox::{AccountLockState, AccountLockStateProvider};
 use serde::{Deserialize, Serialize};
 use solana_sdk::{
-    pubkey::{self, Pubkey},
+    pubkey::Pubkey,
     transaction::{SanitizedTransaction, VersionedTransaction},
 };
 
 use crate::{
     errors::TranswiseResult,
     transaction_accounts_holder::TransactionAccountsHolder,
-    validated_accounts::{
-        ValidatedDelegatedAccount, ValidatedUndelegatedAccount,
-    },
 };
 
-// TODO(vbrunet) - this abbreviation is a bit confusing, TransactionAccountMeta
+// TODO(vbrunet) - this abbreviation is a bit confusing, TransactionAccountMeta would be clearer?
 // -----------------
 // TransAccountMeta
 // -----------------
@@ -86,50 +83,6 @@ impl TransAccountMeta {
 }
 
 // -----------------
-// Endpoint
-// -----------------
-#[derive(Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub enum Endpoint {
-    Chain(TransAccountMetas),
-    Ephemeral(TransAccountMetas),
-    Unroutable {
-        account_metas: TransAccountMetas,
-        reason: UnroutableReason,
-    },
-}
-
-impl Endpoint {
-    pub fn is_ephemeral(&self) -> bool {
-        matches!(self, Endpoint::Ephemeral(_))
-    }
-    pub fn is_chain(&self) -> bool {
-        matches!(self, Endpoint::Chain(_))
-    }
-    pub fn is_unroutable(&self) -> bool {
-        matches!(self, Endpoint::Unroutable { .. })
-    }
-    pub fn into_account_metas(self) -> TransAccountMetas {
-        use Endpoint::*;
-        match self {
-            Chain(account_metas)
-            | Ephemeral(account_metas)
-            | Unroutable { account_metas, .. } => account_metas,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum UnroutableReason {
-    InconsistentLocksEncountered {
-        inconsistent_pubkeys: Vec<Pubkey>,
-    },
-    BothLockedAndUnlocked {
-        writable_delegated_pubkeys: Vec<Pubkey>,
-        writable_undelegated_non_payer_pubkeys: Vec<Pubkey>,
-    },
-}
-
-// -----------------
 // TransAccountMetas
 // -----------------
 #[derive(Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
@@ -193,100 +146,13 @@ impl TransAccountMetas {
         Ok(Self(account_metas))
     }
 
-    pub fn into_endpoint(self) -> Endpoint {
-        use Endpoint::*;
-        use UnroutableReason::*;
-
-        // If any account is in a bugged delegation state, we can't do anything
-        let inconsistent_pubkeys = self.inconsistent_pubkeys();
-        if !inconsistent_pubkeys.is_empty() {
-            return Unroutable {
-                account_metas: self,
-                reason: InconsistentLocksEncountered {
-                    inconsistent_pubkeys,
-                },
-            };
-        }
-
-        // If there are no writable delegated account in the transaction, we can route to chain
-        let writable_delegated_pubkeys = self.writable_delegated_pubkeys();
-        if writable_delegated_pubkeys.is_empty() {
-            return Chain(self);
-        }
-
-        let writable_undelegated_non_payer_pubkeys =
-            self.writable_undelegated_non_payer_pubkeys();
-
-        // If we got here, we are planning to route to ephemeral,
-        // so there cannot be any writable undelegated except the payer
-        // If there are, we cannot route this transaction
-        let has_writable_undelegated_non_payer =
-            !writable_undelegated_non_payer_pubkeys.is_empty();
-        if has_writable_undelegated_non_payer {
-            return Unroutable {
-                account_metas: self,
-                reason: BothLockedAndUnlocked {
-                    writable_delegated_pubkeys,
-                    writable_undelegated_non_payer_pubkeys,
-                },
-            };
-        }
-
-        // If we got here, we only have delegated writables
-        // or payers that are writable
-        // So we can route to ephemeral
-        Ephemeral(self)
-    }
-
-    pub fn undelegated_accounts(&self) -> Vec<ValidatedUndelegatedAccount> {
-        self.iter()
-            .flat_map(|x| match x.lockstate() {
-                AccountLockState::NewAccount {} => {
-                    Some(ValidatedUndelegatedAccount {
-                        pubkey: *x.pubkey(),
-                        is_program: false,
-                        is_new: true,
-                    })
-                }
-                AccountLockState::Unlocked { is_program } => {
-                    Some(ValidatedUndelegatedAccount {
-                        pubkey: *x.pubkey(),
-                        is_program: *is_program,
-                        is_new: false,
-                    })
-                }
-                _ => None,
-            })
-            .collect()
-    }
-
-    pub fn delegated_accounts(&self) -> Vec<ValidatedDelegatedAccount> {
-        self.iter()
-            .flat_map(|x| match x.lockstate() {
-                AccountLockState::Locked { config, .. } => {
-                    Some(ValidatedDelegatedAccount {
-                        pubkey: *x.pubkey(),
-                        lock_config: config.clone(),
-                    })
-                }
-                _ => None,
-            })
-            .collect()
-    }
-
-    pub fn payer_pubkey(&self) -> Pubkey {
-        self.iter().find(|x| x.is_payer()).map(f) // TODO(vbrunet) - finish this
-    }
-
-    pub fn inconsistent_pubkeys(&self) -> Vec<Pubkey> {
+    pub fn writable_inconsistent_pubkeys(&self) -> Vec<Pubkey> {
         self.iter()
             .filter(|x| match x {
                 TransAccountMeta::Writable { lockstate, .. } => {
                     lockstate.is_inconsistent()
                 }
-                TransAccountMeta::Readonly { lockstate, .. } => {
-                    lockstate.is_inconsistent()
-                }
+                _ => false,
             })
             .map(|x| *x.pubkey())
             .collect()
@@ -312,6 +178,18 @@ impl TransAccountMetas {
                     lockstate,
                     ..
                 } if !lockstate.is_locked() => true,
+                _ => false,
+            })
+            .map(|x| *x.pubkey())
+            .collect()
+    }
+
+    pub fn writable_new_pubkeys(&self) -> Vec<Pubkey> {
+        self.iter()
+            .filter(|x| match x {
+                TransAccountMeta::Writable { lockstate, .. } => {
+                    lockstate.is_new()
+                }
                 _ => false,
             })
             .map(|x| *x.pubkey())

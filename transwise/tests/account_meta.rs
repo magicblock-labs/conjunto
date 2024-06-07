@@ -51,7 +51,7 @@ async fn test_account_meta_one_properly_locked_writable_and_one_readonly() {
     )
     .await
     .unwrap();
-    let endpoint = account_metas.into_endpoint();
+    let endpoint = Endpoint::from(account_metas);
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_ephemeral());
@@ -82,7 +82,7 @@ async fn test_account_meta_one_properly_locked_writable_and_one_unlocked_writabl
     )
     .await
     .unwrap();
-    let endpoint = account_metas.into_endpoint();
+    let endpoint = Endpoint::from(account_metas);
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_unroutable());
@@ -106,13 +106,14 @@ async fn test_account_meta_one_improperly_locked_writable_and_one_readonly() {
         payer: Pubkey::new_unique(),
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_unroutable());
@@ -137,13 +138,14 @@ async fn test_account_meta_one_locked_writable_with_invalid_delegation_record_an
         payer: Pubkey::new_unique(),
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_unroutable());
@@ -166,13 +168,14 @@ async fn test_account_meta_one_properly_locked_writable_and_one_new_writable() {
         ..Default::default()
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_ephemeral());
@@ -191,13 +194,14 @@ async fn test_account_meta_one_new_writable() {
         ..Default::default()
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_ephemeral());
@@ -221,13 +225,14 @@ async fn test_account_meta_one_unlocked_writable_that_is_payer() {
         ..Default::default()
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     assert!(endpoint.is_chain());
 
@@ -256,13 +261,14 @@ async fn test_account_meta_one_unlocked_writable_that_is_payer_and_locked_writab
         ..Default::default()
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     assert!(endpoint.is_ephemeral());
 
@@ -290,13 +296,14 @@ async fn test_account_meta_one_unlocked_writable_that_is_payer_and_unlocked_writ
         ..Default::default()
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_chain());
@@ -322,13 +329,14 @@ async fn test_account_meta_one_unlocked_writable_two_readonlys() {
         payer: Pubkey::new_unique(),
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_chain());
@@ -348,13 +356,14 @@ async fn test_account_meta_two_readonlys() {
         ..Default::default()
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_unroutable());
@@ -379,13 +388,14 @@ async fn test_account_meta_two_readonlys_one_program_and_one_writable() {
         payer: Pubkey::new_unique(),
     };
 
-    let endpoint = TransAccountMetas::from_accounts_holder(
-        &acc_holder,
-        &lockstate_provider,
-    )
-    .await
-    .unwrap()
-    .into_endpoint();
+    let endpoint = Endpoint::from(
+        TransAccountMetas::from_accounts_holder(
+            &acc_holder,
+            &lockstate_provider,
+        )
+        .await
+        .unwrap(),
+    );
     assert!(endpoint.is_ephemeral());
 
     let transaction_metas = endpoint.into_account_metas();

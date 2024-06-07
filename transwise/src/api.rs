@@ -7,8 +7,9 @@ use conjunto_providers::{
 use solana_sdk::transaction::{SanitizedTransaction, VersionedTransaction};
 
 use crate::{
+    endpoint::Endpoint,
     errors::TranswiseResult,
-    trans_account_meta::{Endpoint, TransAccountMetas},
+    trans_account_meta::TransAccountMetas,
     transaction_accounts_holder::TransactionAccountsHolder,
     validated_accounts::{ValidateAccountsConfig, ValidatedAccounts},
 };
@@ -111,10 +112,9 @@ impl Transwise {
         &self,
         tx: &VersionedTransaction,
     ) -> TranswiseResult<Endpoint> {
-        Ok(self
-            .account_metas_from_versioned_transaction(tx)
-            .await?
-            .into_endpoint())
+        Ok(Endpoint::from(
+            self.account_metas_from_versioned_transaction(tx).await?,
+        ))
     }
 
     /// Extracts information of all accounts involved in the transaction,
@@ -123,10 +123,9 @@ impl Transwise {
         &self,
         tx: &SanitizedTransaction,
     ) -> TranswiseResult<Endpoint> {
-        Ok(self
-            .account_metas_from_sanitized_transaction(tx)
-            .await?
-            .into_endpoint())
+        Ok(Endpoint::from(
+            self.account_metas_from_sanitized_transaction(tx).await?,
+        ))
     }
 }
 
