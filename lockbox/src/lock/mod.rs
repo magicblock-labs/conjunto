@@ -43,6 +43,7 @@ pub enum LockInconsistency {
     DelegationRecordAccountDataInvalid(String),
 }
 
+// TODO(vbrunet) - will this contains account data and be renamed to AccountChainState when we include the account's data?
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum AccountLockState {
     /// The account is not present on chain and thus not locked either
@@ -155,9 +156,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         // we don't know which ones were there and which ones weren't and thus couldn't provide as
         // detailed information about the inconsistencies as we are now.
 
-        let delegation_pda = pda::delegation_pda_from_pubkey(pubkey);
-
-        // 1. Make sure the delegate account exists at all
+        // 1. Make sure the delegated account exists at all
         let account = match self.account_provider.get_account(pubkey).await? {
             Some(acc) => acc,
             None => {
@@ -173,6 +172,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         }
 
         // 3. Verify the delegation account exists and is owned by the delegation program
+        let delegation_pda = pda::delegation_pda_from_pubkey(pubkey);
         use DelegationAccount::*;
         match DelegationAccount::try_from_pda_pubkey(
             &delegation_pda,
@@ -198,10 +198,5 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                 inconsistencies,
             }),
         }
-    }
-
-    // TODO(vbrunet) - we should probably not expose this directly? This feels like an abstraction leak
-    pub fn account_provider(&self) -> &T {
-        &self.account_provider
     }
 }

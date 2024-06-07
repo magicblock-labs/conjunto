@@ -17,7 +17,7 @@ Accounts are read from a `Pubkey` using `AccountProvider`
 
 - `AccountLockState` enum
   - can be NewAccount / Unlocked / Locked / Inconsistent
-  
+
 - `AccountLockStateProvider` struct
   - depends on an `AccountProvider`
   - depends on a `DelegationRecordParser`
