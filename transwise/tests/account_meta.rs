@@ -9,7 +9,9 @@ use conjunto_test_tools::{
     delegation_record_parser_stub::DelegationRecordParserStub,
     transaction_accounts_holder_stub::TransactionAccountsHolderStub,
 };
-use conjunto_transwise::trans_account_meta::TransAccountMetas;
+use conjunto_transwise::{
+    endpoint::Endpoint, trans_account_meta::TransAccountMetas,
+};
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
 fn setup_lockstate_provider(

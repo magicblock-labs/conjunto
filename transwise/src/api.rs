@@ -18,8 +18,8 @@ use crate::{
 pub trait ValidatedAccountsProvider {
     /// Extracts information of the provided accounts, validates
     /// them and returns the result containing writable and readonly accounts.
-    /// The checks make sure that all writable accounts are either locked or conform
-    /// to what's specified in the config.
+    /// The checks make sure that all writable accounts are either delegated
+    /// or conform to what's specified in the config.
     async fn validate_accounts(
         &self,
         transaction_accounts: &TransactionAccountsHolder,

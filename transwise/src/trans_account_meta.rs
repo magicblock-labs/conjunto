@@ -70,16 +70,6 @@ impl TransAccountMeta {
     pub fn is_payer(&self) -> bool {
         matches!(self, TransAccountMeta::Writable { is_payer: true, .. })
     }
-
-    pub fn is_program(&self) -> bool {
-        matches!(
-            self,
-            TransAccountMeta::Readonly {
-                lockstate: AccountLockState::Unlocked { is_program: true },
-                ..
-            }
-        )
-    }
 }
 
 // -----------------
@@ -162,7 +152,7 @@ impl TransAccountMetas {
         self.iter()
             .filter(|x| match x {
                 TransAccountMeta::Writable { lockstate, .. } => {
-                    lockstate.is_locked()
+                    lockstate.is_delegated()
                 }
                 _ => false,
             })
@@ -177,7 +167,7 @@ impl TransAccountMetas {
                     is_payer: false,
                     lockstate,
                     ..
-                } if !lockstate.is_locked() => true,
+                } if !lockstate.is_delegated() => true,
                 _ => false,
             })
             .map(|x| *x.pubkey())
