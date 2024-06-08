@@ -164,8 +164,8 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
 
         let (readonly_metas, writable_metas): (Vec<_>, Vec<_>) =
             metas.iter().partition(|meta| match meta {
-                TransAccountMeta::Readonly { .. } => false,
-                TransAccountMeta::Writable { .. } => true,
+                TransAccountMeta::Readonly { .. } => true,
+                TransAccountMeta::Writable { .. } => false,
             });
 
         // Generate the validated account structs
