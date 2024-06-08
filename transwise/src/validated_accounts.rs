@@ -115,7 +115,7 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         // TODO(vbrunet) - make sure in the validator's config this throws a warning in this case
         assert!(!config.require_delegation || !config.allow_new_accounts);
 
-        // First, a quick guard against buggy accounts
+        // First, a quick guard against accounts that are inconsistently delegated
         let writable_inconsistent_pubkeys =
             meta.writable_inconsistent_pubkeys();
         let has_writable_inconsistent =

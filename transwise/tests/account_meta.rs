@@ -157,7 +157,7 @@ async fn test_account_meta_one_locked_writable_with_invalid_delegation_record_an
 }
 
 #[tokio::test]
-async fn test_account_meta_one_properly_writable_delegated_and_one_writable_new_account(
+async fn test_account_meta_one_writable_properly_delegated_and_one_writable_new_account(
 ) {
     let (writable_delegated_id, delegation_pda) = delegated_account_ids();
     let lockstate_provider = setup_lockstate_provider(
