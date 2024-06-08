@@ -110,10 +110,22 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
     fn try_from(
         (meta, config): (&TransAccountMetas, &ValidateAccountsConfig),
     ) -> Result<Self, Self::Error> {
-        // The flags require_delegation and allow_new_accounts cannot be true at the same time
-        // This is because a new account cannot have been delegated (so it creates all sort of edge cases)
-        // TODO(vbrunet) - make sure in the validator's config this throws a warning in this case
-        assert!(!config.require_delegation || !config.allow_new_accounts);
+        // We put the following constraint on the config:
+        //
+        // A) the validator CAN create new accounts and can clone ANY account from chain, even non-delegated ones
+        // B) the validator CANNOT create new accounts and can ONLY clone delegated accounts from chain
+        // C) the validator CANNOT create new accounts and can clone ANY account from chain, even non-delegated ones
+        //
+        // This means we disallow the following remaining case:
+        //
+        // D) the validator CAN create new accounts and can ONLY clone delegated accounts from chain
+        // This edge case is difficult to handle properly and most likely not what the user intended for the following reason:
+        // If a transaction as an writable account does not exist on chain by definition that account is not delegated
+        // and if we accept it as a writable it now violates the delegation requirement.
+        // In short this is a conflicting requirement that we don't allow.
+        if config.require_delegation && config.allow_new_accounts {
+            return Err(TranswiseError::ValidateAccountsConfigIsInvalid);
+        }
 
         // First, a quick guard against accounts that are inconsistently delegated
         let writable_inconsistent_pubkeys =

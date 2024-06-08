@@ -27,4 +27,7 @@ pub enum TranswiseError {
 
     #[error("Transaction is missing payer account")]
     TransactionIsMissingPayerAccount,
+
+    #[error("ValidateAccountsConfig is configured improperly")]
+    ValidateAccountsConfigIsInvalid,
 }
