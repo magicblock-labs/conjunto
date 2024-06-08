@@ -42,7 +42,9 @@ impl TryFrom<&TransAccountMeta> for ValidatedReadonlyAccount {
                     is_program: lockstate.is_program(),
                 })
             }
-            _ => Err(TranswiseError::ConvertValidatedAccountFailed),
+            _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
+                format!("{:?}", meta),
+            )),
         }
     }
 }
@@ -80,7 +82,9 @@ impl TryFrom<&TransAccountMeta> for ValidatedWritableAccount {
                 is_payer: *is_payer,
                 is_new: lockstate.is_new(),
             }),
-            _ => Err(TranswiseError::ConvertValidatedAccountFailed),
+            _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
+                format!("{:?}", meta),
+            )),
         }
     }
 }
@@ -113,7 +117,9 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         // and if we accept it as a writable it now violates the delegation requirement.
         // In short this is a conflicting requirement that we don't allow.
         if config.require_delegation && config.allow_new_accounts {
-            return Err(TranswiseError::ValidateAccountsConfigIsInvalid);
+            return Err(TranswiseError::ValidateAccountsConfigIsInvalid(
+                format!("{:?}", config),
+            ));
         }
 
         // First, a quick guard against accounts that are inconsistently delegated

@@ -29,8 +29,11 @@ pub enum TranswiseError {
     TransactionIsMissingPayerAccount,
 
     #[error("ValidateAccountsConfig is configured improperly")]
-    ValidateAccountsConfigIsInvalid,
+    ValidateAccountsConfigIsInvalid(String),
 
-    #[error("Conversion of ValidatedAccount failed")]
-    ConvertValidatedAccountFailed,
+    #[error("Creation of ValidatedReadonlyAccount failed")]
+    CreateValidatedReadonlyAccountFailed(String),
+
+    #[error("Creation of ValidatedWritableAccount failed")]
+    CreateValidatedWritableAccountFailed(String),
 }
