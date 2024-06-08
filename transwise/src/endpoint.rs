@@ -46,7 +46,7 @@ impl Endpoint {
 
 impl Endpoint {
     pub fn from(metas: TransAccountMetas) -> Endpoint {
-        // If any account is in a bugged delegation state, we can't do anything
+        // If any account is in an inconsistent delegation state, we can't do anything
         let writable_inconsistent_pubkeys =
             metas.writable_inconsistent_pubkeys();
         if !writable_inconsistent_pubkeys.is_empty() {
@@ -59,7 +59,7 @@ impl Endpoint {
             };
         }
 
-        // If there are no writable delegated account in the transaction, we can route to chain
+        // If there are no writable delegated accounts in the transaction, we can route to chain
         let writable_delegated_pubkeys = metas.writable_delegated_pubkeys();
         if writable_delegated_pubkeys.is_empty() {
             return Endpoint::Chain(metas);
@@ -68,7 +68,7 @@ impl Endpoint {
         let writable_undelegated_non_payer_pubkeys =
             metas.writable_undelegated_non_payer_pubkeys();
 
-        // If we got here, we are planning to route to ephemeral,
+        // At this point, we are planning to route to ephemeral,
         // so there cannot be any writable undelegated except the payer
         // If there are, we cannot route this transaction
         let has_writable_undelegated_non_payer =
@@ -83,9 +83,8 @@ impl Endpoint {
             };
         }
 
-        // If we got here, we only have delegated writables
+        // Now we know that there are only delegated writables
         // or payers that are writable
-        // So we can route to ephemeral
         Endpoint::Ephemeral(metas)
     }
 }
