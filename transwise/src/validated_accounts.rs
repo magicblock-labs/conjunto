@@ -109,7 +109,7 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         //
         // D) the validator CAN create new accounts and can ONLY clone delegated accounts from chain
         // This edge case is difficult to handle properly and most likely not what the user intended for the following reason:
-        // If a transaction as an writable account does not exist on chain by definition that account is not delegated
+        // If a transaction has a writable account that does not exist on chain by definition that account is not delegated
         // and if we accept it as a writable it now violates the delegation requirement.
         // In short this is a conflicting requirement that we don't allow.
         if config.require_delegation && config.allow_new_accounts {
@@ -170,12 +170,13 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
             });
 
         let validated_readonly_accounts = readonly_metas
-            .iter()
-            .map(|meta| ValidatedReadonlyAccount::try_from(*meta))
+            .into_iter()
+            .map(ValidatedReadonlyAccount::try_from)
             .collect::<Result<Vec<_>, TranswiseError>>()?;
         let validated_writable_accounts = writable_metas
-            .iter()
-            .map(|meta| ValidatedWritableAccount::try_from(*meta))
+            .into_iter()
+            .map(ValidatedWritableAccount::try_from)
+
             .collect::<Result<Vec<_>, TranswiseError>>()?;
 
         // Done
