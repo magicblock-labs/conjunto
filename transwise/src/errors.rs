@@ -30,4 +30,7 @@ pub enum TranswiseError {
 
     #[error("ValidateAccountsConfig is configured improperly")]
     ValidateAccountsConfigIsInvalid,
+
+    #[error("Conversion of ValidatedAccount failed")]
+    ConvertValidatedAccountFailed,
 }

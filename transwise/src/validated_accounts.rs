@@ -1,4 +1,3 @@
-use conjunto_lockbox::AccountLockState;
 pub use conjunto_lockbox::LockConfig;
 use solana_sdk::pubkey::Pubkey;
 
@@ -31,25 +30,19 @@ pub struct ValidatedReadonlyAccount {
     pub is_program: Option<bool>,
 }
 
-impl ValidatedReadonlyAccount {
-    pub fn try_from(
+impl TryFrom<&TransAccountMeta> for ValidatedReadonlyAccount {
+    type Error = TranswiseError;
+    fn try_from(
         meta: &TransAccountMeta,
-    ) -> Option<ValidatedReadonlyAccount> {
+    ) -> Result<ValidatedReadonlyAccount, Self::Error> {
         match meta {
             TransAccountMeta::Readonly { pubkey, lockstate } => {
-                Some(ValidatedReadonlyAccount {
+                Ok(ValidatedReadonlyAccount {
                     pubkey: *pubkey,
-                    is_program: match lockstate {
-                        AccountLockState::NewAccount => None,
-                        AccountLockState::Undelegated { is_program } => {
-                            Some(*is_program)
-                        }
-                        AccountLockState::Delegated { .. } => Some(false),
-                        AccountLockState::Inconsistent { .. } => Some(false),
-                    },
+                    is_program: lockstate.is_program(),
                 })
             }
-            _ => None,
+            _ => Err(TranswiseError::ConvertValidatedAccountFailed),
         }
     }
 }
@@ -71,27 +64,23 @@ pub struct ValidatedWritableAccount {
     pub is_new: bool,
 }
 
-impl ValidatedWritableAccount {
-    pub fn try_from(
+impl TryFrom<&TransAccountMeta> for ValidatedWritableAccount {
+    type Error = TranswiseError;
+    fn try_from(
         meta: &TransAccountMeta,
-    ) -> Option<ValidatedWritableAccount> {
+    ) -> Result<ValidatedWritableAccount, Self::Error> {
         match meta {
             TransAccountMeta::Writable {
                 pubkey,
                 lockstate,
                 is_payer,
-            } => Some(ValidatedWritableAccount {
+            } => Ok(ValidatedWritableAccount {
                 pubkey: *pubkey,
-                lock_config: match lockstate {
-                    AccountLockState::Delegated { config, .. } => {
-                        Some(config.clone())
-                    }
-                    _ => None,
-                },
+                lock_config: lockstate.lock_config(),
                 is_payer: *is_payer,
                 is_new: lockstate.is_new(),
             }),
-            _ => None,
+            _ => Err(TranswiseError::ConvertValidatedAccountFailed),
         }
     }
 }
@@ -108,7 +97,7 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
     type Error = TranswiseError;
 
     fn try_from(
-        (meta, config): (&TransAccountMetas, &ValidateAccountsConfig),
+        (metas, config): (&TransAccountMetas, &ValidateAccountsConfig),
     ) -> Result<Self, Self::Error> {
         // We put the following constraint on the config:
         //
@@ -129,7 +118,7 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
 
         // First, a quick guard against accounts that are inconsistently delegated
         let writable_inconsistent_pubkeys =
-            meta.writable_inconsistent_pubkeys();
+            metas.writable_inconsistent_pubkeys();
         let has_writable_inconsistent =
             !writable_inconsistent_pubkeys.is_empty();
         if has_writable_inconsistent {
@@ -143,12 +132,12 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         // Except we don't worry about the payer, because it doesn't contain data, it just need to sign
         if config.require_delegation {
             let writable_undelegated_non_payer_pubkeys =
-                meta.writable_undelegated_non_payer_pubkeys();
+                metas.writable_undelegated_non_payer_pubkeys();
             let has_writable_undelegated_non_payer =
                 !writable_undelegated_non_payer_pubkeys.is_empty();
             if has_writable_undelegated_non_payer {
                 let writable_delegated_pubkeys =
-                    meta.writable_delegated_pubkeys();
+                    metas.writable_delegated_pubkeys();
                 return Err(TranswiseError::NotAllWritablesDelegated {
                     writable_delegated_pubkeys,
                     writable_undelegated_non_payer_pubkeys,
@@ -164,7 +153,7 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
 
         // Then, if we are not allowed to create new accounts, we need to guard against them
         if !config.allow_new_accounts {
-            let writable_new_pubkeys = meta.writable_new_pubkeys();
+            let writable_new_pubkeys = metas.writable_new_pubkeys();
             let has_writable_new = !writable_new_pubkeys.is_empty();
             if has_writable_new {
                 return Err(TranswiseError::WritablesIncludeNewAccounts {
@@ -173,16 +162,26 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
             }
         }
 
+        let (readonly_metas, writable_metas): (Vec<_>, Vec<_>) =
+            metas.iter().partition(|meta| match meta {
+                TransAccountMeta::Readonly { .. } => false,
+                TransAccountMeta::Writable { .. } => true,
+            });
+
         // Generate the validated account structs
-        let validated_readonly_accounts =
-            meta.iter().flat_map(ValidatedReadonlyAccount::try_from);
-        let validated_writable_accounts =
-            meta.iter().flat_map(ValidatedWritableAccount::try_from);
+        let validated_readonly_accounts = readonly_metas
+            .iter()
+            .map(|meta| ValidatedReadonlyAccount::try_from(*meta))
+            .collect::<Result<Vec<_>, TranswiseError>>()?;
+        let validated_writable_accounts = writable_metas
+            .iter()
+            .map(|meta| ValidatedWritableAccount::try_from(*meta))
+            .collect::<Result<Vec<_>, TranswiseError>>()?;
 
         // Done
         Ok(ValidatedAccounts {
-            readonly: validated_readonly_accounts.collect(),
-            writable: validated_writable_accounts.collect(),
+            readonly: validated_readonly_accounts,
+            writable: validated_writable_accounts,
         })
     }
 }

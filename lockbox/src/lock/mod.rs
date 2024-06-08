@@ -93,6 +93,22 @@ impl AccountLockState {
     pub fn is_inconsistent(&self) -> bool {
         matches!(self, AccountLockState::Inconsistent { .. })
     }
+
+    pub fn is_program(&self) -> Option<bool> {
+        match self {
+            AccountLockState::NewAccount => None,
+            AccountLockState::Undelegated { is_program } => Some(*is_program),
+            AccountLockState::Delegated { .. } => Some(false),
+            AccountLockState::Inconsistent { .. } => Some(false),
+        }
+    }
+
+    pub fn lock_config(&self) -> Option<LockConfig> {
+        match self {
+            AccountLockState::Delegated { config, .. } => Some(config.clone()),
+            _ => None,
+        }
+    }
 }
 
 pub struct AccountLockStateProvider<
