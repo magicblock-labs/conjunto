@@ -182,7 +182,6 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         let validated_writable_accounts = writable_metas
             .into_iter()
             .map(ValidatedWritableAccount::try_from)
-
             .collect::<Result<Vec<_>, TranswiseError>>()?;
 
         // Done
