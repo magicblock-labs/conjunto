@@ -3,7 +3,9 @@ use solana_sdk::pubkey::Pubkey;
 
 use crate::{
     errors::TranswiseError,
-    trans_account_meta::{TransAccountMeta, TransAccountMetas},
+    transaction_account_meta::{
+        TransactionAccountMeta, TransactionAccountMetas,
+    },
 };
 
 #[derive(Debug)]
@@ -30,18 +32,19 @@ pub struct ValidatedReadonlyAccount {
     pub is_program: Option<bool>,
 }
 
-impl TryFrom<&TransAccountMeta> for ValidatedReadonlyAccount {
+impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
     type Error = TranswiseError;
     fn try_from(
-        meta: &TransAccountMeta,
+        meta: &TransactionAccountMeta,
     ) -> Result<ValidatedReadonlyAccount, Self::Error> {
         match meta {
-            TransAccountMeta::Readonly { pubkey, lockstate } => {
-                Ok(ValidatedReadonlyAccount {
-                    pubkey: *pubkey,
-                    is_program: lockstate.is_program(),
-                })
-            }
+            TransactionAccountMeta::Readonly {
+                pubkey,
+                chain_state,
+            } => Ok(ValidatedReadonlyAccount {
+                pubkey: *pubkey,
+                is_program: chain_state.is_program(),
+            }),
             _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
                 format!("{:?}", meta),
             )),
@@ -66,21 +69,21 @@ pub struct ValidatedWritableAccount {
     pub is_new: bool,
 }
 
-impl TryFrom<&TransAccountMeta> for ValidatedWritableAccount {
+impl TryFrom<&TransactionAccountMeta> for ValidatedWritableAccount {
     type Error = TranswiseError;
     fn try_from(
-        meta: &TransAccountMeta,
+        meta: &TransactionAccountMeta,
     ) -> Result<ValidatedWritableAccount, Self::Error> {
         match meta {
-            TransAccountMeta::Writable {
+            TransactionAccountMeta::Writable {
                 pubkey,
-                lockstate,
+                chain_state,
                 is_payer,
             } => Ok(ValidatedWritableAccount {
                 pubkey: *pubkey,
-                lock_config: lockstate.lock_config(),
+                lock_config: chain_state.lock_config(),
                 is_payer: *is_payer,
-                is_new: lockstate.is_new(),
+                is_new: chain_state.is_new(),
             }),
             _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
                 format!("{:?}", meta),
@@ -95,13 +98,13 @@ pub struct ValidatedAccounts {
     pub writable: Vec<ValidatedWritableAccount>,
 }
 
-impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
+impl TryFrom<(&TransactionAccountMetas, &ValidateAccountsConfig)>
     for ValidatedAccounts
 {
     type Error = TranswiseError;
 
     fn try_from(
-        (metas, config): (&TransAccountMetas, &ValidateAccountsConfig),
+        (metas, config): (&TransactionAccountMetas, &ValidateAccountsConfig),
     ) -> Result<Self, Self::Error> {
         // We put the following constraint on the config:
         //
@@ -152,7 +155,7 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         }
 
         // NOTE: when we don't require delegation then we still query the account states to
-        // get the lockstate of each delegated. This causes some unnecessary overhead which we
+        // get the chain_state of each delegated. This causes some unnecessary overhead which we
         // could avoid if we make the lockbox aware of this, i.e. by adding an LockstateUnknown
         // variant and returning that instead of checking it.
         // However this is only the case when developing locally and thus we may not optimize for it.
@@ -171,8 +174,8 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
         // Generate the validated account structs
         let (readonly_metas, writable_metas): (Vec<_>, Vec<_>) =
             metas.iter().partition(|meta| match meta {
-                TransAccountMeta::Readonly { .. } => true,
-                TransAccountMeta::Writable { .. } => false,
+                TransactionAccountMeta::Readonly { .. } => true,
+                TransactionAccountMeta::Writable { .. } => false,
             });
 
         let validated_readonly_accounts = readonly_metas
@@ -195,11 +198,12 @@ impl TryFrom<(&TransAccountMetas, &ValidateAccountsConfig)>
 #[cfg(test)]
 mod tests {
     use conjunto_core::CommitFrequency;
-    use conjunto_lockbox::{AccountLockState, LockConfig};
+    use conjunto_lockbox::{AccountChainState, LockConfig};
 
     use super::*;
     use crate::{
-        errors::TranswiseResult, trans_account_meta::TransAccountMeta,
+        errors::TranswiseResult,
+        transaction_account_meta::TransactionAccountMeta,
     };
 
     fn config_strict() -> ValidateAccountsConfig {
@@ -216,8 +220,8 @@ mod tests {
         }
     }
 
-    fn lockstate_delegated() -> AccountLockState {
-        AccountLockState::Delegated {
+    fn chain_state_delegated() -> AccountChainState {
+        AccountChainState::Delegated {
             delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
             config: LockConfig {
@@ -227,16 +231,16 @@ mod tests {
         }
     }
 
-    fn lockstate_undelegated() -> AccountLockState {
-        AccountLockState::Undelegated { is_program: false }
+    fn chain_state_undelegated() -> AccountChainState {
+        AccountChainState::Undelegated { is_program: false }
     }
 
-    fn lockstate_new_account() -> AccountLockState {
-        AccountLockState::NewAccount
+    fn chain_state_new_account() -> AccountChainState {
+        AccountChainState::NewAccount
     }
 
-    fn lockstate_inconsistent() -> AccountLockState {
-        AccountLockState::Inconsistent {
+    fn chain_state_inconsistent() -> AccountChainState {
+        AccountChainState::Inconsistent {
             delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
             inconsistencies: vec![],
@@ -259,32 +263,32 @@ mod tests {
         let writable_delegated_id2 = Pubkey::new_unique();
         let writable_undelegated_payer_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::Readonly {
+        let meta1 = TransactionAccountMeta::Readonly {
             pubkey: readonly_undelegated_id1,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
         };
-        let meta2 = TransAccountMeta::Readonly {
+        let meta2 = TransactionAccountMeta::Readonly {
             pubkey: readonly_undelegated_id2,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
         };
-        let meta3 = TransAccountMeta::Writable {
+        let meta3 = TransactionAccountMeta::Writable {
             pubkey: writable_delegated_id1,
-            lockstate: lockstate_delegated(),
+            chain_state: chain_state_delegated(),
             is_payer: false,
         };
-        let meta4 = TransAccountMeta::Writable {
+        let meta4 = TransactionAccountMeta::Writable {
             pubkey: writable_delegated_id2,
-            lockstate: lockstate_delegated(),
+            chain_state: chain_state_delegated(),
             is_payer: false,
         };
-        let meta5 = TransAccountMeta::Writable {
+        let meta5 = TransactionAccountMeta::Writable {
             pubkey: writable_undelegated_payer_id,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
             is_payer: true,
         };
 
         let vas: ValidatedAccounts = (
-            &TransAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
+            &TransactionAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
             &config_strict(),
         )
             .try_into()
@@ -309,19 +313,21 @@ mod tests {
         let readonly_undelegated_id = Pubkey::new_unique();
         let writable_undelegated_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::Readonly {
+        let meta1 = TransactionAccountMeta::Readonly {
             pubkey: readonly_undelegated_id,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
         };
-        let meta2 = TransAccountMeta::Writable {
+        let meta2 = TransactionAccountMeta::Writable {
             pubkey: writable_undelegated_id,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
             is_payer: false,
         };
 
-        let res: TranswiseResult<ValidatedAccounts> =
-            (&TransAccountMetas(vec![meta1, meta2]), &config_strict())
-                .try_into();
+        let res: TranswiseResult<ValidatedAccounts> = (
+            &TransactionAccountMetas(vec![meta1, meta2]),
+            &config_strict(),
+        )
+            .try_into();
 
         assert!(res.is_err());
     }
@@ -331,20 +337,22 @@ mod tests {
         let readonly_undelegated_id = Pubkey::new_unique();
         let writable_undelegated_payer_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::Readonly {
+        let meta1 = TransactionAccountMeta::Readonly {
             pubkey: readonly_undelegated_id,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
         };
-        let meta2 = TransAccountMeta::Writable {
+        let meta2 = TransactionAccountMeta::Writable {
             pubkey: writable_undelegated_payer_id,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
             is_payer: true,
         };
 
-        let vas: ValidatedAccounts =
-            (&TransAccountMetas(vec![meta1, meta2]), &config_strict())
-                .try_into()
-                .unwrap();
+        let vas: ValidatedAccounts = (
+            &TransactionAccountMetas(vec![meta1, meta2]),
+            &config_strict(),
+        )
+            .try_into()
+            .unwrap();
 
         assert_eq!(readonly_pubkeys(&vas), vec![readonly_undelegated_id]);
         assert_eq!(writable_pubkeys(&vas), vec![writable_undelegated_payer_id]);
@@ -355,19 +363,21 @@ mod tests {
         let readonly_undelegated_id = Pubkey::new_unique();
         let writable_inconsistent_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::Readonly {
+        let meta1 = TransactionAccountMeta::Readonly {
             pubkey: readonly_undelegated_id,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
         };
-        let meta2 = TransAccountMeta::Writable {
+        let meta2 = TransactionAccountMeta::Writable {
             pubkey: writable_inconsistent_id,
-            lockstate: lockstate_inconsistent(),
+            chain_state: chain_state_inconsistent(),
             is_payer: false,
         };
 
-        let res: TranswiseResult<ValidatedAccounts> =
-            (&TransAccountMetas(vec![meta1, meta2]), &config_strict())
-                .try_into();
+        let res: TranswiseResult<ValidatedAccounts> = (
+            &TransactionAccountMetas(vec![meta1, meta2]),
+            &config_strict(),
+        )
+            .try_into();
 
         assert!(res.is_err());
     }
@@ -377,19 +387,21 @@ mod tests {
         let readonly_undelegated_id = Pubkey::new_unique();
         let writable_new_account_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::Readonly {
+        let meta1 = TransactionAccountMeta::Readonly {
             pubkey: readonly_undelegated_id,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
         };
-        let meta2 = TransAccountMeta::Writable {
+        let meta2 = TransactionAccountMeta::Writable {
             pubkey: writable_new_account_id,
-            lockstate: lockstate_new_account(),
+            chain_state: chain_state_new_account(),
             is_payer: false,
         };
 
-        let res: TranswiseResult<ValidatedAccounts> =
-            (&TransAccountMetas(vec![meta1, meta2]), &config_strict())
-                .try_into();
+        let res: TranswiseResult<ValidatedAccounts> = (
+            &TransactionAccountMetas(vec![meta1, meta2]),
+            &config_strict(),
+        )
+            .try_into();
 
         assert!(res.is_err());
     }
@@ -401,23 +413,23 @@ mod tests {
         let writable_new_account_id = Pubkey::new_unique();
         let writable_undelegated_id = Pubkey::new_unique();
 
-        let meta1 = TransAccountMeta::Readonly {
+        let meta1 = TransactionAccountMeta::Readonly {
             pubkey: readonly_undelegated_id1,
-            lockstate: lockstate_undelegated(),
+            chain_state: chain_state_undelegated(),
         };
-        let meta2 = TransAccountMeta::Writable {
+        let meta2 = TransactionAccountMeta::Writable {
             pubkey: writable_new_account_id,
-            lockstate: lockstate_new_account(),
+            chain_state: chain_state_new_account(),
             is_payer: false,
         };
-        let meta3 = TransAccountMeta::Writable {
+        let meta3 = TransactionAccountMeta::Writable {
             pubkey: writable_undelegated_id,
-            lockstate: lockstate_delegated(),
+            chain_state: chain_state_delegated(),
             is_payer: false,
         };
 
         let vas: ValidatedAccounts = (
-            &TransAccountMetas(vec![meta1, meta2, meta3]),
+            &TransactionAccountMetas(vec![meta1, meta2, meta3]),
             &config_permissive(),
         )
             .try_into()

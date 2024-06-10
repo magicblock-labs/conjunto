@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use conjunto_core::{CommitFrequency, DelegationRecord};
-use conjunto_lockbox::{AccountLockState, AccountLockStateProvider};
+use conjunto_lockbox::{AccountChainState, AccountChainStateProvider};
 use conjunto_providers::{
     rpc_account_provider::RpcAccountProvider,
     rpc_provider_config::RpcProviderConfig,
@@ -31,7 +31,7 @@ async fn test_known_delegation() {
     let mut delegation_record_parser = DelegationRecordParserStub::default();
     delegation_record_parser.set_next_record(delegation_record.clone());
 
-    let lockstate_provider = AccountLockStateProvider::<
+    let chain_state_provider = AccountChainStateProvider::<
         RpcAccountProvider,
         DelegationRecordParserStub,
     >::new_with_parser(
@@ -39,17 +39,18 @@ async fn test_known_delegation() {
         delegation_record_parser,
     );
 
-    let state = lockstate_provider
-        .try_lockstate_of_pubkey(&delegated_id)
+    let state = chain_state_provider
+        .try_fetch_chain_state_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
     assert_eq!(
         state,
-        AccountLockState::Delegated {
+        AccountChainState::Delegated {
             delegated_id,
             delegation_pda: delegation_id,
             config: delegation_record.into(),
+            account:
         }
     );
 }
@@ -58,15 +59,15 @@ async fn test_known_delegation() {
 async fn test_system_account_not_delegated() {
     let delegated_id = system_program::id();
 
-    let lockstate_provider = AccountLockStateProvider::<
+    let chain_state_provider = AccountChainStateProvider::<
         RpcAccountProvider,
         DelegationRecordParserStub,
     >::new(RpcProviderConfig::default());
 
-    let state = lockstate_provider
-        .try_lockstate_of_pubkey(&delegated_id)
+    let chain_state = chain_state_provider
+        .try_fetch_chain_state_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
-    assert!(matches!(state, AccountLockState::Undelegated { .. }));
+    assert!(matches!(chain_state, AccountChainState::Undelegated { .. }));
 }
