@@ -17,7 +17,8 @@ use solana_sdk::{account::Account, pubkey::Pubkey};
 fn setup_chain_state_provider(
     accounts: Vec<(Pubkey, Account)>,
     record: Option<DelegationRecord>,
-) -> AccountChainStateProvider<AccountProviderStub, DelegationRecordParserStub> {
+) -> AccountChainStateProvider<AccountProviderStub, DelegationRecordParserStub>
+{
     let mut account_provider = AccountProviderStub::default();
     for (pubkey, account) in accounts {
         account_provider.add(pubkey, account);

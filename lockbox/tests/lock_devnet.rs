@@ -47,7 +47,7 @@ async fn test_known_delegation() {
         delegation_record_parser,
     );
 
-    let state: AccountChainState = chain_state_provider
+    let state = chain_state_provider
         .try_fetch_chain_state_of_pubkey(&delegated_id)
         .await
         .unwrap();
@@ -55,10 +55,10 @@ async fn test_known_delegation() {
     assert_eq!(
         state,
         AccountChainState::Delegated {
+            account: Arc::new(delegated_account),
             delegated_id,
             delegation_pda: delegation_id,
             config: delegation_record.into(),
-            account: Arc::new(delegated_account),
         }
     );
 }
