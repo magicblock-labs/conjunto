@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use conjunto_core::{CommitFrequency, DelegationRecord};
 use conjunto_lockbox::{
     AccountChainState, AccountChainStateProvider, LockInconsistency,
@@ -58,6 +60,7 @@ async fn test_delegate_properly_delegated() {
     assert_eq!(
         state,
         AccountChainState::Delegated {
+            account: Arc::new(account_owned_by_delegation_program()),
             delegated_id,
             delegation_pda,
             config: delegation_record.into(),
@@ -122,9 +125,10 @@ async fn test_delegate_missing_delegate_account() {
     assert_eq!(
         state,
         AccountChainState::Inconsistent {
+            account: Arc::new(account_owned_by_delegation_program()),
             delegated_id,
             delegation_pda,
-            inconsistencies: vec![LockInconsistency::DelegationAccountNotFound]
+            inconsistencies: vec![LockInconsistency::DelegationAccountNotFound],
         }
     );
 }
@@ -149,6 +153,7 @@ async fn test_delegate_delegation_not_owned_by_delegate_program() {
     assert_eq!(
         state,
         AccountChainState::Inconsistent {
+            account: Arc::new(account_owned_by_delegation_program()),
             delegated_id,
             delegation_pda,
             inconsistencies: vec![
@@ -178,6 +183,7 @@ async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_reco
     assert_eq!(
         state,
         AccountChainState::Inconsistent {
+            account: Arc::new(account_owned_by_delegation_program()),
             delegated_id,
             delegation_pda,
             inconsistencies: vec![

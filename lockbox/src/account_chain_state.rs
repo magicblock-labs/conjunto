@@ -24,27 +24,27 @@ pub enum AccountChainState {
     /// In this case we assume that this is an account that temporarily exists
     /// on the ephemeral validator and will not have to be undelegated.
     /// However in the short term we don't allow new accounts to be created inside
-    /// the validator which means that we reject any transactions that attempt to do
-    /// that
+    /// the validator which means that we reject any transactions that attempt to do so
     NewAccount,
     /// The account was found on chain and is not delegated and therefore should
-    /// not be used as writable on the ephemeral validator unless otherwise requested
-    /// via the `require_delegation` setting.
+    /// not be used as writable on the ephemeral validator unless otherwise allowed
+    /// via the `require_delegation=false` setting.
     Undelegated { account: Arc<Account> },
     /// The account was found on chain in a proper delegated state which means we
     /// also found the related accounts like the buffer and delegation
     /// NOTE: commit records and state diff accountsk are not checked since an
     /// account is delegated and then used before the validator commits a state change.
     Delegated {
+        account: Arc<Account>,
         delegated_id: Pubkey,
         delegation_pda: Pubkey,
         config: LockConfig,
-        account: Arc<Account>,
     },
     /// The account was found on chain and was partially delegated which means that
     /// it is owned by the delegation program but one or more of the related
     /// accounts were either not present or not owned by the delegation program
     Inconsistent {
+        account: Arc<Account>,
         delegated_id: Pubkey,
         delegation_pda: Pubkey,
         inconsistencies: Vec<LockInconsistency>,
@@ -74,8 +74,25 @@ impl AccountChainState {
             AccountChainState::Undelegated { account } => {
                 Some(account.executable)
             }
-            AccountChainState::Delegated { .. } => Some(false),
-            AccountChainState::Inconsistent { .. } => Some(false),
+            AccountChainState::Delegated { account, .. } => {
+                Some(account.executable)
+            }
+            AccountChainState::Inconsistent { account, .. } => {
+                Some(account.executable)
+            }
+        }
+    }
+
+    pub fn account(&self) -> Option<Arc<Account>> {
+        match self {
+            AccountChainState::NewAccount => None,
+            AccountChainState::Undelegated { account } => Some(account.clone()),
+            AccountChainState::Delegated { account, .. } => {
+                Some(account.clone())
+            }
+            AccountChainState::Inconsistent { account, .. } => {
+                Some(account.clone())
+            }
         }
     }
 
@@ -170,15 +187,16 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                 commit_frequency,
                 owner,
             }) => Ok(AccountChainState::Delegated {
+                account: Arc::new(account),
                 delegated_id: *pubkey,
                 delegation_pda,
                 config: LockConfig {
                     commit_frequency,
                     owner,
                 },
-                account: Arc::new(account),
             }),
             Invalid(inconsistencies) => Ok(AccountChainState::Inconsistent {
+                account: Arc::new(account),
                 delegated_id: *pubkey,
                 delegation_pda,
                 inconsistencies,

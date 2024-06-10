@@ -1,3 +1,4 @@
+use conjunto_lockbox::AccountChainState;
 pub use conjunto_lockbox::LockConfig;
 use solana_sdk::pubkey::Pubkey;
 
@@ -26,10 +27,7 @@ impl Default for ValidateAccountsConfig {
 #[derive(Debug)]
 pub struct ValidatedReadonlyAccount {
     pub pubkey: Pubkey,
-
-    // The logic here is that this is None if the account doesn't exist
-    // If the account exists, this represents wether or not the account is executable
-    pub is_program: Option<bool>,
+    pub chain_state: AccountChainState,
 }
 
 impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
@@ -43,7 +41,7 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
                 chain_state,
             } => Ok(ValidatedReadonlyAccount {
                 pubkey: *pubkey,
-                is_program: chain_state.is_program(),
+                chain_state: chain_state.clone(),
             }),
             _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
                 format!("{:?}", meta),
@@ -55,18 +53,8 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
 #[derive(Debug)]
 pub struct ValidatedWritableAccount {
     pub pubkey: Pubkey,
-
-    /// The config for delegated accounts.
-    /// This is `None` for undelegated or new writable accounts.
-    pub lock_config: Option<LockConfig>,
-
-    /// Indicates if this account was a payer in the transaction from which
-    /// it was extracted.
+    pub chain_state: AccountChainState,
     pub is_payer: bool,
-
-    /// Indicates that this account was not found on chain but was included
-    /// since we allow new accounts to be created.
-    pub is_new: bool,
 }
 
 impl TryFrom<&TransactionAccountMeta> for ValidatedWritableAccount {
@@ -81,9 +69,8 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedWritableAccount {
                 is_payer,
             } => Ok(ValidatedWritableAccount {
                 pubkey: *pubkey,
-                lock_config: chain_state.lock_config(),
+                chain_state: chain_state.clone(),
                 is_payer: *is_payer,
-                is_new: chain_state.is_new(),
             }),
             _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
                 format!("{:?}", meta),
@@ -197,8 +184,13 @@ impl TryFrom<(&TransactionAccountMetas, &ValidateAccountsConfig)>
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use conjunto_core::CommitFrequency;
     use conjunto_lockbox::{AccountChainState, LockConfig};
+    use conjunto_test_tools::accounts::{
+        account_owned_by_delegation_program, account_owned_by_system_program,
+    };
 
     use super::*;
     use crate::{
@@ -222,6 +214,7 @@ mod tests {
 
     fn chain_state_delegated() -> AccountChainState {
         AccountChainState::Delegated {
+            account: Arc::new(account_owned_by_delegation_program()),
             delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
             config: LockConfig {
@@ -232,7 +225,9 @@ mod tests {
     }
 
     fn chain_state_undelegated() -> AccountChainState {
-        AccountChainState::Undelegated { is_program: false }
+        AccountChainState::Undelegated {
+            account: Arc::new(account_owned_by_system_program()),
+        }
     }
 
     fn chain_state_new_account() -> AccountChainState {
@@ -241,6 +236,7 @@ mod tests {
 
     fn chain_state_inconsistent() -> AccountChainState {
         AccountChainState::Inconsistent {
+            account: Arc::new(account_owned_by_system_program()),
             delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
             inconsistencies: vec![],

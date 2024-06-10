@@ -17,7 +17,7 @@ use crate::{
 // -----------------
 // TransactionAccountMeta
 // -----------------
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum TransactionAccountMeta {
     Readonly {
         pubkey: Pubkey,
@@ -83,7 +83,7 @@ impl TransactionAccountMeta {
 // -----------------
 // TransactionAccountMetas
 // -----------------
-#[derive(Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TransactionAccountMetas(pub Vec<TransactionAccountMeta>);
 
 impl Deref for TransactionAccountMetas {
@@ -173,10 +173,10 @@ impl TransactionAccountMetas {
         self.iter()
             .filter(|x| match x {
                 TransactionAccountMeta::Writable {
-                    is_payer: false,
+                    is_payer,
                     chain_state,
                     ..
-                } => !chain_state.is_delegated(),
+                } => !chain_state.is_delegated() && !is_payer,
                 _ => false,
             })
             .map(|x| *x.pubkey())

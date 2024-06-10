@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 
-use crate::trans_account_meta::TransactionAccountMetas;
+use crate::transaction_account_meta::TransactionAccountMetas;
 
 #[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnroutableReason {
@@ -14,7 +14,7 @@ pub enum UnroutableReason {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Endpoint {
     Chain(TransactionAccountMetas),
     Ephemeral(TransactionAccountMetas),
