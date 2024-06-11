@@ -517,6 +517,7 @@ mod tests {
         assert!(vas.readonly[3].account.is_some());
         assert!(vas.writable[0].account.is_some());
     }
+
     #[test]
     fn test_one_of_each_valid_type_while_permissive() {
         let readonly_new_account_id = Pubkey::new_unique();
