@@ -98,9 +98,9 @@ impl TryFrom<(&TransactionAccountMetas, &ValidateAccountsConfig)>
     ) -> Result<Self, Self::Error> {
         // We put the following constraint on the config:
         //
-        // A) the validator CAN create new accounts and can clone ANY account from chain, even non-delegated ones
-        // B) the validator CANNOT create new accounts and can ONLY clone delegated accounts from chain
-        // C) the validator CANNOT create new accounts and can clone ANY account from chain, even non-delegated ones
+        // A) the validator CAN create new accounts and can clone ANY account from chain, even non-delegated ones (permissive mode)
+        // B) the validator CANNOT create new accounts and can ONLY clone delegated accounts from chain (strict mode)
+        // C) the validator CANNOT create new accounts and can clone ANY account from chain, even non-delegated ones (frozen mode)
         //
         // This means we disallow the following remaining case:
         //
@@ -382,6 +382,34 @@ mod tests {
     }
 
     #[test]
+    fn test_one_readonly_new_account_and_one_payer() {
+        let readonly_new_account_id = Pubkey::new_unique();
+        let writable_undelegated_payer_id = Pubkey::new_unique();
+
+        let meta1 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_new_account_id,
+            chain_state: chain_state_new_account(),
+        };
+        let meta2 = TransactionAccountMeta::Writable {
+            pubkey: writable_undelegated_payer_id,
+            chain_state: chain_state_delegated(),
+            is_payer: true,
+        };
+
+        let vas: ValidatedAccounts = (
+            &TransactionAccountMetas(vec![meta1, meta2]),
+            &config_strict(),
+        )
+            .try_into()
+            .unwrap();
+
+        // While this is a new account, it's a readonly so we don't need to write to it, so it's valid
+        // However it cannot be cloned, but that last bit of clone filtering will be done in the validator
+        assert_eq!(readonly_pubkeys(&vas), vec![readonly_new_account_id]);
+        assert_eq!(writable_pubkeys(&vas), vec![writable_undelegated_payer_id]);
+    }
+
+    #[test]
     fn test_one_readonly_undelegated_and_one_writable_new_account() {
         let readonly_undelegated_id = Pubkey::new_unique();
         let writable_new_account_id = Pubkey::new_unique();
@@ -439,5 +467,117 @@ mod tests {
             writable_pubkeys(&vas),
             vec![writable_new_account_id, writable_undelegated_id]
         );
+    }
+
+    #[test]
+    fn test_one_of_each_valid_type() {
+        let readonly_new_account_id = Pubkey::new_unique();
+        let readonly_undelegated_id = Pubkey::new_unique();
+        let readonly_delegated_id = Pubkey::new_unique();
+        let writable_delegated_id = Pubkey::new_unique();
+
+        let meta1 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_new_account_id,
+            chain_state: chain_state_new_account(),
+        };
+        let meta2 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_undelegated_id,
+            chain_state: chain_state_undelegated(),
+        };
+        let meta3 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_delegated_id,
+            chain_state: chain_state_delegated(),
+        };
+        let meta4 = TransactionAccountMeta::Writable {
+            pubkey: writable_delegated_id,
+            chain_state: chain_state_delegated(),
+            is_payer: false,
+        };
+
+        let vas: ValidatedAccounts = (
+            &TransactionAccountMetas(vec![meta1, meta2, meta3, meta4]),
+            &config_strict(),
+        )
+            .try_into()
+            .unwrap();
+
+        assert_eq!(vas.readonly.len(), 3);
+        assert_eq!(vas.writable.len(), 1);
+
+        assert_eq!(vas.readonly[0].pubkey, readonly_new_account_id);
+        assert_eq!(vas.readonly[1].pubkey, readonly_undelegated_id);
+        assert_eq!(vas.readonly[2].pubkey, readonly_delegated_id);
+        assert_eq!(vas.writable[0].pubkey, writable_delegated_id);
+
+        assert!(vas.readonly[0].account.is_none());
+        assert!(vas.readonly[1].account.is_some());
+        assert!(vas.readonly[2].account.is_some());
+        assert!(vas.writable[0].account.is_some());
+    }
+    #[test]
+    fn test_one_of_each_valid_type_while_permissive() {
+        let readonly_new_account_id = Pubkey::new_unique();
+        let readonly_undelegated_id = Pubkey::new_unique();
+        let readonly_delegated_id = Pubkey::new_unique();
+        let writable_new_account_id = Pubkey::new_unique();
+        let writable_undelegated_id = Pubkey::new_unique();
+        let writable_delegated_id = Pubkey::new_unique();
+
+        let meta1 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_new_account_id,
+            chain_state: chain_state_new_account(),
+        };
+        let meta2 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_undelegated_id,
+            chain_state: chain_state_undelegated(),
+        };
+        let meta3 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_delegated_id,
+            chain_state: chain_state_delegated(),
+        };
+
+        let meta4 = TransactionAccountMeta::Writable {
+            pubkey: writable_new_account_id,
+            chain_state: chain_state_new_account(),
+            is_payer: false,
+        };
+        let meta5 = TransactionAccountMeta::Writable {
+            pubkey: writable_undelegated_id,
+            chain_state: chain_state_undelegated(),
+            is_payer: false,
+        };
+        let meta6 = TransactionAccountMeta::Writable {
+            pubkey: writable_delegated_id,
+            chain_state: chain_state_delegated(),
+            is_payer: false,
+        };
+
+        let vas: ValidatedAccounts = (
+            &TransactionAccountMetas(vec![
+                meta1, meta2, meta3, meta4, meta5, meta6,
+            ]),
+            &config_permissive(),
+        )
+            .try_into()
+            .unwrap();
+
+        assert_eq!(vas.readonly.len(), 3);
+        assert_eq!(vas.writable.len(), 3);
+
+        assert_eq!(vas.readonly[0].pubkey, readonly_new_account_id);
+        assert_eq!(vas.readonly[1].pubkey, readonly_undelegated_id);
+        assert_eq!(vas.readonly[2].pubkey, readonly_delegated_id);
+
+        assert_eq!(vas.writable[0].pubkey, writable_new_account_id);
+        assert_eq!(vas.writable[1].pubkey, writable_undelegated_id);
+        assert_eq!(vas.writable[2].pubkey, writable_delegated_id);
+
+        assert!(vas.readonly[0].account.is_none());
+        assert!(vas.readonly[1].account.is_some());
+        assert!(vas.readonly[2].account.is_some());
+
+        assert!(vas.writable[0].account.is_none());
+        assert!(vas.writable[1].account.is_some());
+        assert!(vas.writable[2].account.is_some());
     }
 }
