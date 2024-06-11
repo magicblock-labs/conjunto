@@ -1,11 +1,7 @@
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 
-<<<<<<< HEAD
 use crate::transaction_account_meta::TransactionAccountMetas;
-=======
-use crate::trans_account_meta::TransAccountMetas;
->>>>>>> master
 
 #[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnroutableReason {
@@ -18,21 +14,12 @@ pub enum UnroutableReason {
     },
 }
 
-<<<<<<< HEAD
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Endpoint {
     Chain(TransactionAccountMetas),
     Ephemeral(TransactionAccountMetas),
     Unroutable {
         account_metas: TransactionAccountMetas,
-=======
-#[derive(Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub enum Endpoint {
-    Chain(TransAccountMetas),
-    Ephemeral(TransAccountMetas),
-    Unroutable {
-        account_metas: TransAccountMetas,
->>>>>>> master
         reason: UnroutableReason,
     },
 }
@@ -47,11 +34,7 @@ impl Endpoint {
     pub fn is_unroutable(&self) -> bool {
         matches!(self, Endpoint::Unroutable { .. })
     }
-<<<<<<< HEAD
     pub fn into_account_metas(self) -> TransactionAccountMetas {
-=======
-    pub fn into_account_metas(self) -> TransAccountMetas {
->>>>>>> master
         use Endpoint::*;
         match self {
             Chain(account_metas)
@@ -62,11 +45,7 @@ impl Endpoint {
 }
 
 impl Endpoint {
-<<<<<<< HEAD
     pub fn from(metas: TransactionAccountMetas) -> Endpoint {
-=======
-    pub fn from(metas: TransAccountMetas) -> Endpoint {
->>>>>>> master
         // If any account is in an inconsistent delegation state, we can't do anything
         let writable_inconsistent_pubkeys =
             metas.writable_inconsistent_pubkeys();

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 pub use conjunto_lockbox::LockConfig;
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
@@ -28,41 +26,22 @@ impl Default for ValidateAccountsConfig {
 #[derive(Debug)]
 pub struct ValidatedReadonlyAccount {
     pub pubkey: Pubkey,
-    pub account: Option<Arc<Account>>,
+    pub account: Option<Account>,
 }
 
-impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
+impl TryFrom<TransactionAccountMeta> for ValidatedReadonlyAccount {
     type Error = TranswiseError;
     fn try_from(
-        meta: &TransactionAccountMeta,
+        meta: TransactionAccountMeta,
     ) -> Result<ValidatedReadonlyAccount, Self::Error> {
         match meta {
             TransactionAccountMeta::Readonly {
                 pubkey,
                 chain_state,
             } => Ok(ValidatedReadonlyAccount {
-                pubkey: *pubkey,
-                account: chain_state.account(),
+                pubkey,
+                account: chain_state.into_account(),
             }),
-            _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
-                format!("{:?}", meta),
-            )),
-        }
-    }
-}
-
-impl TryFrom<&TransAccountMeta> for ValidatedReadonlyAccount {
-    type Error = TranswiseError;
-    fn try_from(
-        meta: &TransAccountMeta,
-    ) -> Result<ValidatedReadonlyAccount, Self::Error> {
-        match meta {
-            TransAccountMeta::Readonly { pubkey, lockstate } => {
-                Ok(ValidatedReadonlyAccount {
-                    pubkey: *pubkey,
-                    is_program: lockstate.is_program(),
-                })
-            }
             _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
                 format!("{:?}", meta),
             )),
@@ -73,15 +52,15 @@ impl TryFrom<&TransAccountMeta> for ValidatedReadonlyAccount {
 #[derive(Debug)]
 pub struct ValidatedWritableAccount {
     pub pubkey: Pubkey,
-    pub account: Option<Arc<Account>>,
+    pub account: Option<Account>,
     pub lock_config: Option<LockConfig>,
     pub is_payer: bool,
 }
 
-impl TryFrom<&TransactionAccountMeta> for ValidatedWritableAccount {
+impl TryFrom<TransactionAccountMeta> for ValidatedWritableAccount {
     type Error = TranswiseError;
     fn try_from(
-        meta: &TransactionAccountMeta,
+        meta: TransactionAccountMeta,
     ) -> Result<ValidatedWritableAccount, Self::Error> {
         match meta {
             TransactionAccountMeta::Writable {
@@ -89,33 +68,10 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedWritableAccount {
                 chain_state,
                 is_payer,
             } => Ok(ValidatedWritableAccount {
-                pubkey: *pubkey,
-                account: chain_state.account(),
-                lock_config: chain_state.lock_config(),
-                is_payer: *is_payer,
-            }),
-            _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
-                format!("{:?}", meta),
-            )),
-        }
-    }
-}
-
-impl TryFrom<&TransAccountMeta> for ValidatedWritableAccount {
-    type Error = TranswiseError;
-    fn try_from(
-        meta: &TransAccountMeta,
-    ) -> Result<ValidatedWritableAccount, Self::Error> {
-        match meta {
-            TransAccountMeta::Writable {
                 pubkey,
-                lockstate,
+                lock_config: chain_state.lock_config(),
+                account: chain_state.into_account(),
                 is_payer,
-            } => Ok(ValidatedWritableAccount {
-                pubkey: *pubkey,
-                lock_config: lockstate.lock_config(),
-                is_payer: *is_payer,
-                is_new: lockstate.is_new(),
             }),
             _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
                 format!("{:?}", meta),
@@ -130,13 +86,13 @@ pub struct ValidatedAccounts {
     pub writable: Vec<ValidatedWritableAccount>,
 }
 
-impl TryFrom<(&TransactionAccountMetas, &ValidateAccountsConfig)>
+impl TryFrom<(TransactionAccountMetas, &ValidateAccountsConfig)>
     for ValidatedAccounts
 {
     type Error = TranswiseError;
 
     fn try_from(
-        (metas, config): (&TransactionAccountMetas, &ValidateAccountsConfig),
+        (metas, config): (TransactionAccountMetas, &ValidateAccountsConfig),
     ) -> Result<Self, Self::Error> {
         // We put the following constraint on the config:
         //
@@ -205,7 +161,7 @@ impl TryFrom<(&TransactionAccountMetas, &ValidateAccountsConfig)>
 
         // Generate the validated account structs
         let (readonly_metas, writable_metas): (Vec<_>, Vec<_>) =
-            metas.iter().partition(|meta| match meta {
+            metas.0.into_iter().partition(|meta| match meta {
                 TransactionAccountMeta::Readonly { .. } => true,
                 TransactionAccountMeta::Writable { .. } => false,
             });
@@ -229,8 +185,6 @@ impl TryFrom<(&TransactionAccountMetas, &ValidateAccountsConfig)>
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use conjunto_core::CommitFrequency;
     use conjunto_lockbox::{AccountChainState, LockConfig};
     use conjunto_test_tools::accounts::{
@@ -259,7 +213,7 @@ mod tests {
 
     fn chain_state_delegated() -> AccountChainState {
         AccountChainState::Delegated {
-            account: Arc::new(account_owned_by_delegation_program()),
+            account: account_owned_by_delegation_program(),
             delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
             config: LockConfig {
@@ -271,7 +225,7 @@ mod tests {
 
     fn chain_state_undelegated() -> AccountChainState {
         AccountChainState::Undelegated {
-            account: Arc::new(account_owned_by_system_program()),
+            account: account_owned_by_system_program(),
         }
     }
 
@@ -281,7 +235,7 @@ mod tests {
 
     fn chain_state_inconsistent() -> AccountChainState {
         AccountChainState::Inconsistent {
-            account: Arc::new(account_owned_by_system_program()),
+            account: account_owned_by_system_program(),
             delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
             inconsistencies: vec![],
@@ -329,7 +283,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            &TransactionAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
+            TransactionAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
             &config_strict(),
         )
             .try_into()
@@ -365,7 +319,7 @@ mod tests {
         };
 
         let res: TranswiseResult<ValidatedAccounts> = (
-            &TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into();
@@ -389,7 +343,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            &TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into()
@@ -415,7 +369,7 @@ mod tests {
         };
 
         let res: TranswiseResult<ValidatedAccounts> = (
-            &TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into();
@@ -439,7 +393,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            &TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into()
@@ -467,7 +421,7 @@ mod tests {
         };
 
         let res: TranswiseResult<ValidatedAccounts> = (
-            &TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into();
@@ -498,7 +452,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            &TransactionAccountMetas(vec![meta1, meta2, meta3]),
+            TransactionAccountMetas(vec![meta1, meta2, meta3]),
             &config_permissive(),
         )
             .try_into()
@@ -542,7 +496,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            &TransactionAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
+            TransactionAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
             &config_strict(),
         )
             .try_into()
@@ -608,7 +562,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            &TransactionAccountMetas(vec![
+            TransactionAccountMetas(vec![
                 meta1, meta2, meta3, meta4, meta5, meta6, meta7,
             ]),
             &config_permissive(),

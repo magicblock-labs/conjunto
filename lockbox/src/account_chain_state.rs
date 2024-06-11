@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use conjunto_addresses::pda;
 use conjunto_core::{
     AccountProvider, DelegationRecord, DelegationRecordParser,
@@ -29,13 +27,13 @@ pub enum AccountChainState {
     /// The account was found on chain and is not delegated and therefore should
     /// not be used as writable on the ephemeral validator unless otherwise allowed
     /// via the `require_delegation=false` setting.
-    Undelegated { account: Arc<Account> },
+    Undelegated { account: Account },
     /// The account was found on chain in a proper delegated state which means we
     /// also found the related accounts like the buffer and delegation
     /// NOTE: commit records and state diff accountsk are not checked since an
     /// account is delegated and then used before the validator commits a state change.
     Delegated {
-        account: Arc<Account>,
+        account: Account,
         delegated_id: Pubkey,
         delegation_pda: Pubkey,
         config: LockConfig,
@@ -44,7 +42,7 @@ pub enum AccountChainState {
     /// it is owned by the delegation program but one or more of the related
     /// accounts were either not present or not owned by the delegation program
     Inconsistent {
-        account: Arc<Account>,
+        account: Account,
         delegated_id: Pubkey,
         delegation_pda: Pubkey,
         inconsistencies: Vec<LockInconsistency>,
@@ -68,27 +66,19 @@ impl AccountChainState {
         matches!(self, AccountChainState::Inconsistent { .. })
     }
 
-    pub fn is_program(&self) -> Option<bool> {
-        self.account().map(|account| account.executable)
-    }
-
-    pub fn account(&self) -> Option<Arc<Account>> {
-        match self {
-            AccountChainState::NewAccount => None,
-            AccountChainState::Undelegated { account } => Some(account.clone()),
-            AccountChainState::Delegated { account, .. } => {
-                Some(account.clone())
-            }
-            AccountChainState::Inconsistent { account, .. } => {
-                Some(account.clone())
-            }
-        }
-    }
-
     pub fn lock_config(&self) -> Option<LockConfig> {
         match self {
             AccountChainState::Delegated { config, .. } => Some(config.clone()),
             _ => None,
+        }
+    }
+
+    pub fn into_account(self) -> Option<Account> {
+        match self {
+            AccountChainState::NewAccount => None,
+            AccountChainState::Undelegated { account } => Some(account),
+            AccountChainState::Delegated { account, .. } => Some(account),
+            AccountChainState::Inconsistent { account, .. } => Some(account),
         }
     }
 }
@@ -157,9 +147,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
 
         // 2. Check that it is locked by the delegation program
         if !is_owned_by_delegation_program(&account) {
-            return Ok(AccountChainState::Undelegated {
-                account: Arc::new(account),
-            });
+            return Ok(AccountChainState::Undelegated { account });
         }
 
         // 3. Verify the delegation account exists and is owned by the delegation program
@@ -176,7 +164,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                 commit_frequency,
                 owner,
             }) => Ok(AccountChainState::Delegated {
-                account: Arc::new(account),
+                account,
                 delegated_id: *pubkey,
                 delegation_pda,
                 config: LockConfig {
@@ -185,7 +173,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                 },
             }),
             Invalid(inconsistencies) => Ok(AccountChainState::Inconsistent {
-                account: Arc::new(account),
+                account,
                 delegated_id: *pubkey,
                 delegation_pda,
                 inconsistencies,

@@ -1,4 +1,4 @@
-use std::{str::FromStr, sync::Arc};
+use std::str::FromStr;
 
 use conjunto_core::AccountProvider;
 use conjunto_core::{CommitFrequency, DelegationRecord};
@@ -55,7 +55,7 @@ async fn test_known_delegation() {
     assert_eq!(
         state,
         AccountChainState::Delegated {
-            account: Arc::new(delegated_account),
+            account: delegated_account,
             delegated_id,
             delegation_pda: delegation_id,
             config: delegation_record.into(),

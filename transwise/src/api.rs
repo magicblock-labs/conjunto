@@ -9,11 +9,7 @@ use solana_sdk::transaction::{SanitizedTransaction, VersionedTransaction};
 use crate::{
     endpoint::Endpoint,
     errors::TranswiseResult,
-<<<<<<< HEAD
     transaction_account_meta::TransactionAccountMetas,
-=======
-    trans_account_meta::TransAccountMetas,
->>>>>>> master
     transaction_accounts_holder::TransactionAccountsHolder,
     validated_accounts::{ValidateAccountsConfig, ValidatedAccounts},
 };
@@ -141,7 +137,7 @@ impl ValidatedAccountsProvider for Transwise {
         config: &ValidateAccountsConfig,
     ) -> TranswiseResult<ValidatedAccounts> {
         let account_metas = self.account_metas(transaction_accounts).await?;
-        ValidatedAccounts::try_from((&account_metas, config))
+        ValidatedAccounts::try_from((account_metas, config))
     }
 }
 
