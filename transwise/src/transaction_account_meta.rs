@@ -13,7 +13,6 @@ use crate::{
     transaction_accounts_holder::TransactionAccountsHolder,
 };
 
-// TODO(vbrunet) - this abbreviation is a bit confusing, TransactionAccountMeta would be clearer?
 // -----------------
 // TransactionAccountMeta
 // -----------------
