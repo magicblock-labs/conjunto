@@ -69,18 +69,7 @@ impl AccountChainState {
     }
 
     pub fn is_program(&self) -> Option<bool> {
-        match self {
-            AccountChainState::NewAccount => None,
-            AccountChainState::Undelegated { account } => {
-                Some(account.executable)
-            }
-            AccountChainState::Delegated { account, .. } => {
-                Some(account.executable)
-            }
-            AccountChainState::Inconsistent { account, .. } => {
-                Some(account.executable)
-            }
-        }
+        self.account().map(|account| account.executable)
     }
 
     pub fn account(&self) -> Option<Arc<Account>> {

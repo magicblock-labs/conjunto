@@ -1,6 +1,7 @@
-use conjunto_lockbox::AccountChainState;
+use std::sync::Arc;
+
 pub use conjunto_lockbox::LockConfig;
-use solana_sdk::pubkey::Pubkey;
+use solana_sdk::{account::Account, pubkey::Pubkey};
 
 use crate::{
     errors::TranswiseError,
@@ -27,7 +28,7 @@ impl Default for ValidateAccountsConfig {
 #[derive(Debug)]
 pub struct ValidatedReadonlyAccount {
     pub pubkey: Pubkey,
-    pub chain_state: AccountChainState,
+    pub account: Option<Arc<Account>>,
 }
 
 impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
@@ -41,7 +42,7 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
                 chain_state,
             } => Ok(ValidatedReadonlyAccount {
                 pubkey: *pubkey,
-                chain_state: chain_state.clone(),
+                account: chain_state.account(),
             }),
             _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
                 format!("{:?}", meta),
@@ -53,7 +54,8 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
 #[derive(Debug)]
 pub struct ValidatedWritableAccount {
     pub pubkey: Pubkey,
-    pub chain_state: AccountChainState,
+    pub account: Option<Arc<Account>>,
+    pub lock_config: Option<LockConfig>,
     pub is_payer: bool,
 }
 
@@ -69,7 +71,8 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedWritableAccount {
                 is_payer,
             } => Ok(ValidatedWritableAccount {
                 pubkey: *pubkey,
-                chain_state: chain_state.clone(),
+                account: chain_state.account(),
+                lock_config: chain_state.lock_config(),
                 is_payer: *is_payer,
             }),
             _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
