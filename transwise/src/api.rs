@@ -27,18 +27,6 @@ pub trait ValidatedAccountsProvider {
     ) -> TranswiseResult<ValidatedAccounts>;
 }
 
-pub trait TransactionAccountsExtractor {
-    fn try_accounts_from_versioned_transaction(
-        &self,
-        tx: &VersionedTransaction,
-    ) -> TranswiseResult<TransactionAccountsHolder>;
-
-    fn try_accounts_from_sanitized_transaction(
-        &self,
-        tx: &SanitizedTransaction,
-    ) -> TranswiseResult<TransactionAccountsHolder>;
-}
-
 /// The API that allows us to guide a transaction given a cluster
 /// Guiding decisions are made by consulting the state of accounts on chain
 /// See [../examples/guiding_transactions.rs] for more info.
@@ -138,21 +126,5 @@ impl ValidatedAccountsProvider for Transwise {
     ) -> TranswiseResult<ValidatedAccounts> {
         let account_metas = self.account_metas(transaction_accounts).await?;
         ValidatedAccounts::try_from((&account_metas, config))
-    }
-}
-
-impl TransactionAccountsExtractor for Transwise {
-    fn try_accounts_from_versioned_transaction(
-        &self,
-        tx: &VersionedTransaction,
-    ) -> TranswiseResult<TransactionAccountsHolder> {
-        TransactionAccountsHolder::try_from(tx)
-    }
-
-    fn try_accounts_from_sanitized_transaction(
-        &self,
-        tx: &SanitizedTransaction,
-    ) -> TranswiseResult<TransactionAccountsHolder> {
-        TransactionAccountsHolder::try_from(tx)
     }
 }

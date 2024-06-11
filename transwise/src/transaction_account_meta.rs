@@ -32,10 +32,11 @@ pub enum TransactionAccountMeta {
 impl TransactionAccountMeta {
     pub async fn try_readonly<T: AccountProvider, U: DelegationRecordParser>(
         pubkey: Pubkey,
-        lockbox: &AccountChainStateProvider<T, U>,
+        account_chain_state_provider: &AccountChainStateProvider<T, U>,
     ) -> TranswiseResult<Self> {
-        let chain_state =
-            lockbox.try_fetch_chain_state_of_pubkey(&pubkey).await?;
+        let chain_state = account_chain_state_provider
+            .try_fetch_chain_state_of_pubkey(&pubkey)
+            .await?;
         Ok(TransactionAccountMeta::Readonly {
             pubkey,
             chain_state,
@@ -44,11 +45,12 @@ impl TransactionAccountMeta {
 
     pub async fn try_writable<T: AccountProvider, U: DelegationRecordParser>(
         pubkey: Pubkey,
-        lockbox: &AccountChainStateProvider<T, U>,
+        account_chain_state_provider: &AccountChainStateProvider<T, U>,
         payer: &Pubkey,
     ) -> TranswiseResult<Self> {
-        let chain_state =
-            lockbox.try_fetch_chain_state_of_pubkey(&pubkey).await?;
+        let chain_state = account_chain_state_provider
+            .try_fetch_chain_state_of_pubkey(&pubkey)
+            .await?;
         let is_payer = pubkey == *payer;
         Ok(TransactionAccountMeta::Writable {
             pubkey,
@@ -99,10 +101,11 @@ impl TransactionAccountMetas {
         U: DelegationRecordParser,
     >(
         tx: &VersionedTransaction,
-        lockbox: &AccountChainStateProvider<T, U>,
+        account_chain_state_provider: &AccountChainStateProvider<T, U>,
     ) -> TranswiseResult<Self> {
         let tx_accounts = TransactionAccountsHolder::try_from(tx)?;
-        Self::from_accounts_holder(&tx_accounts, lockbox).await
+        Self::from_accounts_holder(&tx_accounts, account_chain_state_provider)
+            .await
     }
 
     pub async fn from_sanitized_transaction<
@@ -110,10 +113,11 @@ impl TransactionAccountMetas {
         U: DelegationRecordParser,
     >(
         tx: &SanitizedTransaction,
-        lockbox: &AccountChainStateProvider<T, U>,
+        account_chain_state_provider: &AccountChainStateProvider<T, U>,
     ) -> TranswiseResult<Self> {
         let tx_accounts = TransactionAccountsHolder::try_from(tx)?;
-        Self::from_accounts_holder(&tx_accounts, lockbox).await
+        Self::from_accounts_holder(&tx_accounts, account_chain_state_provider)
+            .await
     }
 
     pub async fn from_accounts_holder<
@@ -122,20 +126,24 @@ impl TransactionAccountMetas {
         V: DelegationRecordParser,
     >(
         holder: &U,
-        lockbox: &AccountChainStateProvider<T, V>,
+        account_chain_state_provider: &AccountChainStateProvider<T, V>,
     ) -> TranswiseResult<Self> {
         let mut account_metas = Vec::new();
         let readonly = holder.get_readonly();
         let writable = holder.get_writable();
         for pubkey in readonly.into_iter() {
             account_metas.push(
-                TransactionAccountMeta::try_readonly(pubkey, lockbox).await?,
+                TransactionAccountMeta::try_readonly(
+                    pubkey,
+                    account_chain_state_provider,
+                )
+                .await?,
             );
         }
         for pubkey in writable.into_iter() {
             let account_meta = TransactionAccountMeta::try_writable(
                 pubkey,
-                lockbox,
+                account_chain_state_provider,
                 holder.get_payer(),
             )
             .await?;
