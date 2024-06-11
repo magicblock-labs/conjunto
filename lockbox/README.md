@@ -17,11 +17,12 @@ Accounts are read from a `Pubkey` using `AccountProvider`
 
 - `AccountChainState` enum
   - can be NewAccount / Delegated / Undelegated / Inconsistent
+  - contains the `Account` data and the delegation configuration if available
 
 - `AccountChainStateProvider` struct
   - depends on an `AccountProvider`
   - depends on a `DelegationRecordParser`
-  - can read a `Pubkey` -> `DelegationAccount` -> `AccountChainState`
+  - can read a `Pubkey` -> `Account` + `DelegationAccount` -> `AccountChainState`
 
 # Notes
 

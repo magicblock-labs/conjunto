@@ -27,6 +27,7 @@ Help the director route a transaction properly by computing an `Endpoint`.
 - `TransactionAccountMeta` struct
   - enum of Writable or Readable
   - contains delegation state and meta info with a pubkey
+  - also contains the actual account data in an `Account` if it was available
 
 - `TransactionAccountMetas` struct
   - vec of `TransactionAccountMeta`
