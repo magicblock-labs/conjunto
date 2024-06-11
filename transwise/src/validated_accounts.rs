@@ -474,6 +474,7 @@ mod tests {
         let readonly_new_account_id = Pubkey::new_unique();
         let readonly_undelegated_id = Pubkey::new_unique();
         let readonly_delegated_id = Pubkey::new_unique();
+        let readonly_inconsistent_id = Pubkey::new_unique();
         let writable_delegated_id = Pubkey::new_unique();
 
         let meta1 = TransactionAccountMeta::Readonly {
@@ -488,30 +489,36 @@ mod tests {
             pubkey: readonly_delegated_id,
             chain_state: chain_state_delegated(),
         };
-        let meta4 = TransactionAccountMeta::Writable {
+        let meta4 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_inconsistent_id,
+            chain_state: chain_state_inconsistent(),
+        };
+        let meta5 = TransactionAccountMeta::Writable {
             pubkey: writable_delegated_id,
             chain_state: chain_state_delegated(),
             is_payer: false,
         };
 
         let vas: ValidatedAccounts = (
-            &TransactionAccountMetas(vec![meta1, meta2, meta3, meta4]),
+            &TransactionAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
             &config_strict(),
         )
             .try_into()
             .unwrap();
 
-        assert_eq!(vas.readonly.len(), 3);
+        assert_eq!(vas.readonly.len(), 4);
         assert_eq!(vas.writable.len(), 1);
 
         assert_eq!(vas.readonly[0].pubkey, readonly_new_account_id);
         assert_eq!(vas.readonly[1].pubkey, readonly_undelegated_id);
         assert_eq!(vas.readonly[2].pubkey, readonly_delegated_id);
+        assert_eq!(vas.readonly[3].pubkey, readonly_inconsistent_id);
         assert_eq!(vas.writable[0].pubkey, writable_delegated_id);
 
         assert!(vas.readonly[0].account.is_none());
         assert!(vas.readonly[1].account.is_some());
         assert!(vas.readonly[2].account.is_some());
+        assert!(vas.readonly[3].account.is_some());
         assert!(vas.writable[0].account.is_some());
     }
     #[test]
@@ -519,6 +526,8 @@ mod tests {
         let readonly_new_account_id = Pubkey::new_unique();
         let readonly_undelegated_id = Pubkey::new_unique();
         let readonly_delegated_id = Pubkey::new_unique();
+        let readonly_inconsistent_id = Pubkey::new_unique();
+
         let writable_new_account_id = Pubkey::new_unique();
         let writable_undelegated_id = Pubkey::new_unique();
         let writable_delegated_id = Pubkey::new_unique();
@@ -535,18 +544,22 @@ mod tests {
             pubkey: readonly_delegated_id,
             chain_state: chain_state_delegated(),
         };
+        let meta4 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_inconsistent_id,
+            chain_state: chain_state_inconsistent(),
+        };
 
-        let meta4 = TransactionAccountMeta::Writable {
+        let meta5 = TransactionAccountMeta::Writable {
             pubkey: writable_new_account_id,
             chain_state: chain_state_new_account(),
             is_payer: false,
         };
-        let meta5 = TransactionAccountMeta::Writable {
+        let meta6 = TransactionAccountMeta::Writable {
             pubkey: writable_undelegated_id,
             chain_state: chain_state_undelegated(),
             is_payer: false,
         };
-        let meta6 = TransactionAccountMeta::Writable {
+        let meta7 = TransactionAccountMeta::Writable {
             pubkey: writable_delegated_id,
             chain_state: chain_state_delegated(),
             is_payer: false,
@@ -554,19 +567,20 @@ mod tests {
 
         let vas: ValidatedAccounts = (
             &TransactionAccountMetas(vec![
-                meta1, meta2, meta3, meta4, meta5, meta6,
+                meta1, meta2, meta3, meta4, meta5, meta6, meta7,
             ]),
             &config_permissive(),
         )
             .try_into()
             .unwrap();
 
-        assert_eq!(vas.readonly.len(), 3);
+        assert_eq!(vas.readonly.len(), 4);
         assert_eq!(vas.writable.len(), 3);
 
         assert_eq!(vas.readonly[0].pubkey, readonly_new_account_id);
         assert_eq!(vas.readonly[1].pubkey, readonly_undelegated_id);
         assert_eq!(vas.readonly[2].pubkey, readonly_delegated_id);
+        assert_eq!(vas.readonly[3].pubkey, readonly_inconsistent_id);
 
         assert_eq!(vas.writable[0].pubkey, writable_new_account_id);
         assert_eq!(vas.writable[1].pubkey, writable_undelegated_id);
@@ -575,6 +589,7 @@ mod tests {
         assert!(vas.readonly[0].account.is_none());
         assert!(vas.readonly[1].account.is_some());
         assert!(vas.readonly[2].account.is_some());
+        assert!(vas.readonly[3].account.is_some());
 
         assert!(vas.writable[0].account.is_none());
         assert!(vas.writable[1].account.is_some());
