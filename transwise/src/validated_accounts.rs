@@ -51,6 +51,25 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedReadonlyAccount {
     }
 }
 
+impl TryFrom<&TransAccountMeta> for ValidatedReadonlyAccount {
+    type Error = TranswiseError;
+    fn try_from(
+        meta: &TransAccountMeta,
+    ) -> Result<ValidatedReadonlyAccount, Self::Error> {
+        match meta {
+            TransAccountMeta::Readonly { pubkey, lockstate } => {
+                Ok(ValidatedReadonlyAccount {
+                    pubkey: *pubkey,
+                    is_program: lockstate.is_program(),
+                })
+            }
+            _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
+                format!("{:?}", meta),
+            )),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ValidatedWritableAccount {
     pub pubkey: Pubkey,
@@ -74,6 +93,29 @@ impl TryFrom<&TransactionAccountMeta> for ValidatedWritableAccount {
                 account: chain_state.account(),
                 lock_config: chain_state.lock_config(),
                 is_payer: *is_payer,
+            }),
+            _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
+                format!("{:?}", meta),
+            )),
+        }
+    }
+}
+
+impl TryFrom<&TransAccountMeta> for ValidatedWritableAccount {
+    type Error = TranswiseError;
+    fn try_from(
+        meta: &TransAccountMeta,
+    ) -> Result<ValidatedWritableAccount, Self::Error> {
+        match meta {
+            TransAccountMeta::Writable {
+                pubkey,
+                lockstate,
+                is_payer,
+            } => Ok(ValidatedWritableAccount {
+                pubkey: *pubkey,
+                lock_config: lockstate.lock_config(),
+                is_payer: *is_payer,
+                is_new: lockstate.is_new(),
             }),
             _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
                 format!("{:?}", meta),

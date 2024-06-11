@@ -9,7 +9,11 @@ use solana_sdk::transaction::{SanitizedTransaction, VersionedTransaction};
 use crate::{
     endpoint::Endpoint,
     errors::TranswiseResult,
+<<<<<<< HEAD
     transaction_account_meta::TransactionAccountMetas,
+=======
+    trans_account_meta::TransAccountMetas,
+>>>>>>> master
     transaction_accounts_holder::TransactionAccountsHolder,
     validated_accounts::{ValidateAccountsConfig, ValidatedAccounts},
 };
