@@ -113,7 +113,7 @@ mod tests {
                     "3vAK9JQiDsKoQNwmcfeEng4Cnv22pYuj1ASfso7U4ukF"
                 )
                 .unwrap(),
-                commit_frequency: CommitFrequency::Millis(30000),
+                commit_frequency: CommitFrequency::Millis(30_000),
             }
         );
     }
