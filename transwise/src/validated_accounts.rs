@@ -128,9 +128,9 @@ impl TryFrom<(TransactionAccountMetas, &ValidateAccountsConfig)>
         if !config.allow_new_accounts {
             let writable_new_account_non_payer_pubkeys =
                 metas.writable_new_account_non_payer_pubkeys();
-            let has_writable_new =
+            let has_writable_new_account_non_payer =
                 !writable_new_account_non_payer_pubkeys.is_empty();
-            if has_writable_new {
+            if has_writable_new_account_non_payer {
                 return Err(TranswiseError::WritablesIncludeNewAccounts {
                     writable_new_account_non_payer_pubkeys,
                 });
