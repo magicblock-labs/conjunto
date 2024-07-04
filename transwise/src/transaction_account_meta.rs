@@ -190,12 +190,14 @@ impl TransactionAccountMetas {
             .collect()
     }
 
-    pub fn writable_new_pubkeys(&self) -> Vec<Pubkey> {
+    pub fn writable_new_account_non_payer_pubkeys(&self) -> Vec<Pubkey> {
         self.iter()
             .filter(|x| match x {
-                TransactionAccountMeta::Writable { chain_state, .. } => {
-                    chain_state.is_new()
-                }
+                TransactionAccountMeta::Writable {
+                    is_payer,
+                    chain_state,
+                    ..
+                } => chain_state.is_new() && !is_payer,
                 _ => false,
             })
             .map(|x| *x.pubkey())

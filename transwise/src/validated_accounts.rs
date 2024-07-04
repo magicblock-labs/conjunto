@@ -126,11 +126,13 @@ impl TryFrom<(TransactionAccountMetas, &ValidateAccountsConfig)>
 
         // If we are not allowed to create new accounts, we need to guard against them
         if !config.allow_new_accounts {
-            let writable_new_pubkeys = metas.writable_new_pubkeys();
-            let has_writable_new = !writable_new_pubkeys.is_empty();
+            let writable_new_account_non_payer_pubkeys =
+                metas.writable_new_account_non_payer_pubkeys();
+            let has_writable_new =
+                !writable_new_account_non_payer_pubkeys.is_empty();
             if has_writable_new {
                 return Err(TranswiseError::WritablesIncludeNewAccounts {
-                    writable_new_pubkeys,
+                    writable_new_account_non_payer_pubkeys,
                 });
             }
         }

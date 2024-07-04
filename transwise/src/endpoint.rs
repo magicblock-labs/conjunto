@@ -65,12 +65,11 @@ impl Endpoint {
             return Endpoint::Chain(metas);
         }
 
-        let writable_undelegated_non_payer_pubkeys =
-            metas.writable_undelegated_non_payer_pubkeys();
-
         // At this point, we are planning to route to ephemeral,
         // so there cannot be any writable undelegated except the payer
         // If there are, we cannot route this transaction
+        let writable_undelegated_non_payer_pubkeys =
+            metas.writable_undelegated_non_payer_pubkeys();
         let has_writable_undelegated_non_payer =
             !writable_undelegated_non_payer_pubkeys.is_empty();
         if has_writable_undelegated_non_payer {
