@@ -356,6 +356,32 @@ mod tests {
     }
 
     #[test]
+    fn test_one_readonly_undelegated_and_new_account_payer() {
+        let readonly_undelegated_id = Pubkey::new_unique();
+        let writable_new_account_payer_id = Pubkey::new_unique();
+
+        let meta1 = TransactionAccountMeta::Readonly {
+            pubkey: readonly_undelegated_id,
+            chain_state: chain_state_undelegated(),
+        };
+        let meta2 = TransactionAccountMeta::Writable {
+            pubkey: writable_new_account_payer_id,
+            chain_state: chain_state_new_account(),
+            is_payer: true,
+        };
+
+        let vas: ValidatedAccounts = (
+            TransactionAccountMetas(vec![meta1, meta2]),
+            &config_strict(),
+        )
+            .try_into()
+            .unwrap();
+
+        assert_eq!(readonly_pubkeys(&vas), vec![readonly_undelegated_id]);
+        assert_eq!(writable_pubkeys(&vas), vec![writable_new_account_payer_id]);
+    }
+
+    #[test]
     fn test_one_readonly_undelegated_and_one_writable_inconsistent() {
         let readonly_undelegated_id = Pubkey::new_unique();
         let writable_inconsistent_id = Pubkey::new_unique();
