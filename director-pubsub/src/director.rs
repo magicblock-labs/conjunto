@@ -22,10 +22,11 @@ pub struct DirectorPubsubConfig {
     pub ephemeral_cluster: RpcCluster,
 }
 
-impl Default for DirectorPubsubConfig {
-    fn default() -> Self {
+impl DirectorPubsubConfig {
+    pub fn devnet() -> Self {
         Self {
-            chain_cluster: Default::default(),
+            chain_cluster: RpcCluster::Development,
+            // TODO(vbrunet) - this should point to the correct ephemeral endpoint?
             ephemeral_cluster: RpcCluster::Development,
         }
     }
@@ -165,7 +166,7 @@ mod tests {
         signature_status_provider.add_ok(signature());
 
         let director = DirectorPubsub::with_providers(
-            DirectorPubsubConfig::default(),
+            DirectorPubsubConfig::devnet(),
             AccountProviderStub::default(),
             signature_status_provider,
         );
@@ -182,7 +183,7 @@ mod tests {
         let signature_status_provider = SignatureStatusProviderStub::default();
 
         let director = DirectorPubsub::with_providers(
-            DirectorPubsubConfig::default(),
+            DirectorPubsubConfig::devnet(),
             AccountProviderStub::default(),
             signature_status_provider,
         );
@@ -199,7 +200,7 @@ mod tests {
         let signature_status_provider = SignatureStatusProviderStub::default();
 
         let director = DirectorPubsub::with_providers(
-            DirectorPubsubConfig::default(),
+            DirectorPubsubConfig::devnet(),
             AccountProviderStub::default(),
             signature_status_provider,
         );

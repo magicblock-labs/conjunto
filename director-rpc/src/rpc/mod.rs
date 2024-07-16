@@ -15,10 +15,19 @@ pub mod guide;
 mod params;
 pub mod passthrough;
 
-#[derive(Default)]
 pub struct DirectorConfig {
     pub ephem_account_provider_config: RpcProviderConfig,
     pub chain_cluster: RpcCluster,
+}
+
+impl DirectorConfig {
+    pub fn devnet() -> Self {
+        Self {
+            chain_cluster: RpcCluster::Development,
+            // TODO(vbrunet) - this should point to the correct ephemeral endpoint?
+            ephem_account_provider_config: RpcProviderConfig::devnet(),
+        }
+    }
 }
 
 pub struct DirectorRpc {
