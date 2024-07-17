@@ -5,8 +5,6 @@ use crate::{
     transaction_accounts_holder::TransactionAccountsHolder,
 };
 
-pub struct TransactionAccountsExtractorImpl;
-
 pub trait TransactionAccountsExtractor {
     fn try_accounts_from_versioned_transaction(
         &self,
@@ -18,6 +16,8 @@ pub trait TransactionAccountsExtractor {
         tx: &SanitizedTransaction,
     ) -> TranswiseResult<TransactionAccountsHolder>;
 }
+
+pub struct TransactionAccountsExtractorImpl;
 
 impl TransactionAccountsExtractor for TransactionAccountsExtractorImpl {
     fn try_accounts_from_versioned_transaction(
