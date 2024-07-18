@@ -1,31 +1,57 @@
-use async_trait::async_trait;
-use conjunto_core::{errors::CoreResult, AccountWatcher};
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use solana_rpc_client_api::{client_error::ErrorKind, request::RpcError};
-use solana_sdk::{
-    account::Account, commitment_config::CommitmentConfig, pubkey::Pubkey,
-};
+use std::{collections::HashMap, time::Instant};
 
 use crate::rpc_provider_config::RpcProviderConfig;
+use async_trait::async_trait;
+use conjunto_core::{
+    errors::{CoreError, CoreResult},
+    AccountWatcher,
+};
+use solana_pubsub_client::nonblocking::pubsub_client::PubsubClient;
+use solana_rpc_client_api::config::RpcAccountInfoConfig;
+use solana_sdk::{
+    commitment_config::{CommitmentConfig, CommitmentLevel},
+    pubkey::Pubkey,
+};
 
 pub struct RpcAccountWatcher {
-    rpc_client: RpcClient,
+    commitment: Option<CommitmentLevel>,
+    pubsub_client: PubsubClient,
+    subscribed_accounts: HashMap<Pubkey, Instant>,
 }
 
 impl RpcAccountWatcher {
-    pub fn new(config: RpcProviderConfig) -> Self {
-        let rpc_client = RpcClient::new_with_commitment(
-            config.cluster().url().to_string(),
-            CommitmentConfig {
-                commitment: config.commitment().unwrap_or_default(),
-            },
-        );
-        Self { rpc_client }
+    pub async fn new(config: RpcProviderConfig) -> CoreResult<Self> {
+        let pubsub_client = PubsubClient::new(config.ws_url())
+            .await
+            .map_err(CoreError::PubsubClientError)?;
+        Ok(Self {
+            commitment: config.commitment(),
+            pubsub_client,
+            subscribed_accounts: Default::default(),
+        })
     }
 }
 
 #[async_trait]
-impl AccountWatcher for RpcAccountWatcher {}
+impl AccountWatcher for RpcAccountWatcher {
+    async fn test(&self) -> Option<bool> {
+        let pubkey = &Pubkey::default();
+        let config = Some(RpcAccountInfoConfig {
+            commitment: self
+                .commitment
+                .map(|commitment| CommitmentConfig { commitment }),
+            encoding: None,
+            data_slice: None,
+            min_context_slot: None,
+        });
+        let dudu = self.pubsub_client.account_subscribe(pubkey, config).await;
+        let val = match dudu {
+            Ok(value) => value,
+            Err(_) => return None,
+        };
+        val.0.as_mut().poll_next()
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -17,7 +17,10 @@ pub trait AccountProvider:
     ) -> CoreResult<Vec<Option<Account>>>;
 }
 
-pub trait AccountWatcher {}
+#[async_trait]
+pub trait AccountWatcher {
+    async fn test(&self) -> Option<bool>;
+}
 
 pub trait AccountsHolder {
     fn get_writable(&self) -> Vec<Pubkey>;

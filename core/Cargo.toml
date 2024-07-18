@@ -11,5 +11,6 @@ edition.workspace = true
 async-trait = { workspace = true }
 serde = { workspace = true }
 solana-rpc-client-api = { workspace = true }
+solana-pubsub-client = { workspace = true }
 solana-sdk = { workspace = true }
 thiserror = { workspace = true }
