@@ -19,7 +19,11 @@ pub trait AccountProvider:
 
 #[async_trait]
 pub trait AccountWatcher {
-    async fn test(&self) -> Option<bool>;
+    async fn start_monitoring_account(&self, pubkey: &Pubkey)
+        -> CoreResult<()>;
+
+    fn test(&self, pubkey: &Pubkey, slot: u64) -> bool;
+    async fn stop_monitoring_account(&self, pubkey: &Pubkey) -> CoreResult<()>;
 }
 
 pub trait AccountsHolder {
