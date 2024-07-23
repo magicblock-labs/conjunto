@@ -8,16 +8,11 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
-log = { workspace = true }
-tokio = { workspace = true }
-futures-util = { workspace = true }
 async-trait = { workspace = true }
 conjunto-addresses = { workspace = true }
 conjunto-core = { workspace = true }
 solana-rpc-client = { workspace = true }
 solana-rpc-client-api = { workspace = true }
-solana-pubsub-client = { workspace = true }
-solana-account-decoder = { workspace = true }
 solana-sdk = { workspace = true }
 thiserror = { workspace = true }
 [dev-dependencies]
