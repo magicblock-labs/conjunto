@@ -6,8 +6,11 @@ pub mod transaction_accounts_holder;
 pub mod transwise;
 pub mod validated_accounts;
 pub mod validated_accounts_provider;
-pub use conjunto_core::CommitFrequency;
 
+pub use api::{
+    TransactionAccountsExtractor, Transwise, ValidatedAccountsProvider,
+};
+pub use conjunto_core::CommitFrequency;
 pub use conjunto_providers::{
     rpc_provider_config::RpcProviderConfig, RpcCluster,
 };
