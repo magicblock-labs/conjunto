@@ -38,9 +38,9 @@ pub struct DirectorRpc {
 pub fn create_rpc_module(
     config: DirectorConfig,
 ) -> DirectorRpcResult<RpcModule<DirectorRpc>> {
+    let ephem_url = config.ephem_rpc_provider_config.url().to_string();
     let transwise = Transwise::new(config.ephem_rpc_provider_config);
 
-    let ephem_url = config.ephem_rpc_provider_config.url().to_string();
     let rpc_ephem_client = HttpClientBuilder::default().build(ephem_url)?;
     let rpc_chain_client =
         HttpClientBuilder::default().build(config.chain_cluster.url())?;
