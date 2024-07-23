@@ -8,6 +8,9 @@ pub const WS_TESTNET: &str = "wss://api.testnet.solana.com/";
 pub const WS_DEVNET: &str = "wss://api.devnet.solana.com/";
 pub const WS_DEVELOPMENT: &str = "ws://localhost:8900";
 
+pub const MAGICBLOCK_DEVNET: &str = "https://devnet.magicblock.app";
+pub const MAGICBLOCK_WS_DEVNET: &str = "wss://devnet.magicblock.app:8900";
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RpcCluster {
     Mainnet,
@@ -36,5 +39,12 @@ impl RpcCluster {
             RpcCluster::Development => WS_DEVELOPMENT,
             RpcCluster::Custom(_, ws_url) => ws_url,
         }
+    }
+
+    pub fn magicblock_devnet() -> Self {
+        Self::Custom(
+            MAGICBLOCK_DEVNET.to_owned(),
+            MAGICBLOCK_WS_DEVNET.to_owned(),
+        )
     }
 }

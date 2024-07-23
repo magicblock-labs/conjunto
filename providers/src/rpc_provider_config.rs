@@ -37,4 +37,8 @@ impl RpcProviderConfig {
     pub fn devnet() -> Self {
         RpcProviderConfig::new(RpcCluster::Devnet, None)
     }
+
+    pub fn magicblock_devnet() -> Self {
+        RpcProviderConfig::new(RpcCluster::magicblock_devnet(), None)
+    }
 }

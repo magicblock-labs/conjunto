@@ -19,15 +19,14 @@ use crate::{
 
 pub struct DirectorPubsubConfig {
     pub chain_cluster: RpcCluster,
-    pub ephemeral_cluster: RpcCluster,
+    pub ephem_rpc_provider_config: RpcProviderConfig,
 }
 
 impl DirectorPubsubConfig {
     pub fn devnet() -> Self {
         Self {
             chain_cluster: RpcCluster::Devnet,
-            // TODO(vbrunet) - this should point to the correct ephemeral endpoint?
-            ephemeral_cluster: RpcCluster::Devnet,
+            ephem_rpc_provider_config: RpcProviderConfig::magicblock_devnet(),
         }
     }
 }
@@ -41,12 +40,12 @@ impl<T: AccountProvider, U: SignatureStatusProvider> DirectorPubsub<T, U> {
     pub fn new(
         config: DirectorPubsubConfig,
     ) -> DirectorPubsub<RpcAccountProvider, RpcSignatureStatusProvider> {
-        let rpc_provider_config =
-            RpcProviderConfig::new(config.ephemeral_cluster.clone(), None);
-        let ephemeral_account_provider =
-            RpcAccountProvider::new(rpc_provider_config.clone());
+        let ephemeral_account_provider: RpcAccountProvider =
+            RpcAccountProvider::new(config.ephem_rpc_provider_config.clone());
         let ephemeral_signature_status_provider =
-            RpcSignatureStatusProvider::new(rpc_provider_config);
+            RpcSignatureStatusProvider::new(
+                config.ephem_rpc_provider_config.clone(),
+            );
         DirectorPubsub::with_providers(
             config,
             ephemeral_account_provider,
