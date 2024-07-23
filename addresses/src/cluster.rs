@@ -43,8 +43,8 @@ impl RpcCluster {
 
     pub fn magicblock_devnet() -> Self {
         Self::Custom(
-            MAGICBLOCK_DEVNET.to_owned(),
-            MAGICBLOCK_WS_DEVNET.to_owned(),
+            MAGICBLOCK_DEVNET.to_string(),
+            MAGICBLOCK_WS_DEVNET.to_string(),
         )
     }
 }
