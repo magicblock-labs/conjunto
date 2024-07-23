@@ -56,7 +56,7 @@ impl DelegationAccount {
         delegation_record_parser: &U,
     ) -> LockboxResult<DelegationAccount> {
         let delegation_account =
-            match account_provider.get_account(delegation_pda).await? {
+            match account_provider.get_account(delegation_pda).await?.1 {
                 None => {
                     return Ok(DelegationAccount::Invalid(vec![
                         LockInconsistency::DelegationAccountNotFound,

@@ -138,7 +138,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         // detailed information about the inconsistencies as we are now.
 
         // 1. Make sure the delegated account exists at all
-        let account = match self.account_provider.get_account(pubkey).await? {
+        let account = match self.account_provider.get_account(pubkey).await?.1 {
             Some(acc) => acc,
             None => {
                 return Ok(AccountChainState::NewAccount);

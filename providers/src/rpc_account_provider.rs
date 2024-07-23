@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use conjunto_core::{errors::CoreResult, AccountProvider};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use solana_rpc_client_api::{client_error::ErrorKind, request::RpcError};
 use solana_sdk::{
-    account::Account, commitment_config::CommitmentConfig, pubkey::Pubkey,
+    account::Account, clock::Slot, commitment_config::CommitmentConfig,
+    pubkey::Pubkey,
 };
 
 use crate::rpc_provider_config::RpcProviderConfig;
@@ -35,30 +35,26 @@ impl AccountProvider for RpcAccountProvider {
     async fn get_account(
         &self,
         pubkey: &Pubkey,
-    ) -> CoreResult<Option<Account>> {
-        let account = match self.rpc_client.get_account(pubkey).await {
-            Ok(acc) => Some(acc),
-            Err(err) => match err.kind() {
-                ErrorKind::RpcError(RpcError::ForUser(msg)) => {
-                    if msg.contains("AccountNotFound") {
-                        None
-                    } else {
-                        return Err(err.into());
-                    }
-                }
-                _ => {
-                    return Err(err.into());
-                }
-            },
-        };
-        Ok(account)
+    ) -> CoreResult<(Slot, Option<Account>)> {
+        let response = self
+            .rpc_client
+            .get_account_with_commitment(pubkey, self.rpc_client.commitment())
+            .await?;
+        Ok((response.context.slot, response.value))
     }
 
     async fn get_multiple_accounts(
         &self,
         pubkeys: &[Pubkey],
-    ) -> CoreResult<Vec<Option<Account>>> {
-        Ok(self.rpc_client.get_multiple_accounts(pubkeys).await?)
+    ) -> CoreResult<(Slot, Vec<Option<Account>>)> {
+        let response = self
+            .rpc_client
+            .get_multiple_accounts_with_commitment(
+                pubkeys,
+                self.rpc_client.commitment(),
+            )
+            .await?;
+        Ok((response.context.slot, response.value))
     }
 }
 
