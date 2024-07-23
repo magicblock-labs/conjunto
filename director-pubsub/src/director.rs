@@ -108,7 +108,7 @@ impl<T: AccountProvider, U: SignatureStatusProvider> DirectorPubsub<T, U> {
     pub async fn try_ephemeral_client(
         &self,
     ) -> DirectorPubsubResult<BackendWebSocket> {
-        let url = self.config.ephemeral_cluster.ws_url();
+        let url = self.config.ephem_rpc_provider_config.cluster().ws_url();
         let (socket, _) = connect_async(Url::parse(url)?).await?;
         Ok(socket)
     }
