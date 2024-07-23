@@ -141,7 +141,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         // Fetch the current chain state for revelant accounts (all at once)
         let (from_slot, mut fetched_accounts) = self
             .account_provider
-            .get_multiple_accounts(&[delegation_pda, pubkey.clone()])
+            .get_multiple_accounts(&[delegation_pda, *pubkey])
             .await?;
         // Parse the result into an AccountChainState
         self.try_parse_chain_state_of_fetched_accounts(
