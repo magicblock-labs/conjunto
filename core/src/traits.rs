@@ -17,15 +17,6 @@ pub trait AccountProvider:
     ) -> CoreResult<Vec<Option<Account>>>;
 }
 
-#[async_trait]
-pub trait AccountWatcher {
-    async fn start_monitoring_account(&self, pubkey: &Pubkey)
-        -> CoreResult<()>;
-
-    fn test(&self, pubkey: &Pubkey, slot: u64) -> bool;
-    async fn stop_monitoring_account(&self, pubkey: &Pubkey) -> CoreResult<()>;
-}
-
 pub trait AccountsHolder {
     fn get_writable(&self) -> Vec<Pubkey>;
     fn get_readonly(&self) -> Vec<Pubkey>;
