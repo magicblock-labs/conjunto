@@ -42,7 +42,7 @@ impl TryFrom<TransactionAccountMeta> for ValidatedReadonlyAccount {
             } => Ok(ValidatedReadonlyAccount {
                 pubkey,
                 account: chain_state_snapshot.chain_state.into_account(),
-                from_slot: chain_state_snapshot.slot,
+                from_slot: chain_state_snapshot.from_slot,
             }),
             _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
                 format!("{:?}", meta),
@@ -74,7 +74,7 @@ impl TryFrom<TransactionAccountMeta> for ValidatedWritableAccount {
                 pubkey,
                 lock_config: chain_state_snapshot.chain_state.lock_config(),
                 account: chain_state_snapshot.chain_state.into_account(),
-                from_slot: chain_state_snapshot.slot,
+                from_slot: chain_state_snapshot.from_slot,
                 is_payer,
             }),
             _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
@@ -219,7 +219,7 @@ mod tests {
 
     fn chain_state_snapshot_delegated() -> AccountChainStateSnapshot {
         AccountChainStateSnapshot {
-            slot: 0,
+            from_slot: 0,
             chain_state: AccountChainState::Delegated {
                 account: account_owned_by_delegation_program(),
                 delegated_id: Pubkey::new_unique(),
@@ -234,7 +234,7 @@ mod tests {
 
     fn chain_state_snapshot_undelegated() -> AccountChainStateSnapshot {
         AccountChainStateSnapshot {
-            slot: 0,
+            from_slot: 0,
             chain_state: AccountChainState::Undelegated {
                 account: account_owned_by_system_program(),
             },
@@ -243,14 +243,14 @@ mod tests {
 
     fn chain_state_snapshot_new_account() -> AccountChainStateSnapshot {
         AccountChainStateSnapshot {
-            slot: 0,
+            from_slot: 0,
             chain_state: AccountChainState::NewAccount,
         }
     }
 
     fn chain_state_snapshot_inconsistent() -> AccountChainStateSnapshot {
         AccountChainStateSnapshot {
-            slot: 0,
+            from_slot: 0,
             chain_state: AccountChainState::Inconsistent {
                 account: account_owned_by_system_program(),
                 delegated_id: Pubkey::new_unique(),
