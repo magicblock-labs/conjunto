@@ -50,13 +50,13 @@ async fn test_delegate_properly_delegated() {
         Some(delegation_record.clone()),
     );
 
-    let state = chain_state_provider
-        .try_fetch_chain_state_of_pubkey(&delegated_id)
+    let chain_state_snapshot = chain_state_provider
+        .try_fetch_chain_state_snapshot_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
     assert_eq!(
-        state,
+        chain_state_snapshot.chain_state,
         AccountChainState::Delegated {
             account: account_owned_by_delegation_program(),
             delegated_id,
@@ -78,12 +78,15 @@ async fn test_delegate_undelegated() {
         None,
     );
 
-    let state = chain_state_provider
-        .try_fetch_chain_state_of_pubkey(&delegated_id)
+    let chain_state_snapshot = chain_state_provider
+        .try_fetch_chain_state_snapshot_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
-    assert!(matches!(state, AccountChainState::Undelegated { .. }));
+    assert!(matches!(
+        chain_state_snapshot.chain_state,
+        AccountChainState::Undelegated { .. }
+    ));
 }
 
 #[tokio::test]
@@ -98,12 +101,15 @@ async fn test_delegate_not_found() {
         None,
     );
 
-    let state = chain_state_provider
-        .try_fetch_chain_state_of_pubkey(&delegated_id)
+    let chain_state_snapshot = chain_state_provider
+        .try_fetch_chain_state_snapshot_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
-    assert_eq!(state, AccountChainState::NewAccount);
+    assert_eq!(
+        chain_state_snapshot.chain_state,
+        AccountChainState::NewAccount
+    );
 }
 
 #[tokio::test]
@@ -115,13 +121,13 @@ async fn test_delegate_missing_delegate_account() {
         None,
     );
 
-    let state = chain_state_provider
-        .try_fetch_chain_state_of_pubkey(&delegated_id)
+    let chain_state_snapshot = chain_state_provider
+        .try_fetch_chain_state_snapshot_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
     assert_eq!(
-        state,
+        chain_state_snapshot.chain_state,
         AccountChainState::Inconsistent {
             account: account_owned_by_delegation_program(),
             delegated_id,
@@ -143,13 +149,13 @@ async fn test_delegate_delegation_not_owned_by_delegate_program() {
         Some(delegation_record.clone()),
     );
 
-    let state = chain_state_provider
-        .try_fetch_chain_state_of_pubkey(&delegated_id)
+    let chain_state_snapshot = chain_state_provider
+        .try_fetch_chain_state_snapshot_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
     assert_eq!(
-        state,
+        chain_state_snapshot.chain_state,
         AccountChainState::Inconsistent {
             account: account_owned_by_delegation_program(),
             delegated_id,
@@ -173,13 +179,13 @@ async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_reco
         None,
     );
 
-    let state = chain_state_provider
-        .try_fetch_chain_state_of_pubkey(&delegated_id)
+    let chain_state_snapshot = chain_state_provider
+        .try_fetch_chain_state_snapshot_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
     assert_eq!(
-        state,
+        chain_state_snapshot.chain_state,
         AccountChainState::Inconsistent {
             account: account_owned_by_delegation_program(),
             delegated_id,

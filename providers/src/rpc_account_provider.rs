@@ -68,7 +68,8 @@ mod tests {
     async fn test_get_non_existing_account() {
         let rpc_account_provider = RpcAccountProvider::default();
         let pubkey = Pubkey::new_from_array([5; 32]);
-        let account = rpc_account_provider.get_account(&pubkey).await.unwrap();
+        let (_slot, account) =
+            rpc_account_provider.get_account(&pubkey).await.unwrap();
         assert!(account.is_none());
     }
 
@@ -76,7 +77,8 @@ mod tests {
     async fn test_get_existing_account() {
         let rpc_account_provider = RpcAccountProvider::default();
         let pubkey = Pubkey::default();
-        let account = rpc_account_provider.get_account(&pubkey).await.unwrap();
+        let (_slot, account) =
+            rpc_account_provider.get_account(&pubkey).await.unwrap();
         assert!(account.is_some());
     }
 
@@ -84,7 +86,7 @@ mod tests {
     async fn test_get_multiple_accounts() {
         let rpc_account_provider = RpcAccountProvider::default();
         let pubkeys = vec![Pubkey::default(), Pubkey::new_from_array([5; 32])];
-        let accounts = rpc_account_provider
+        let (_slot, accounts) = rpc_account_provider
             .get_multiple_accounts(&pubkeys)
             .await
             .unwrap();

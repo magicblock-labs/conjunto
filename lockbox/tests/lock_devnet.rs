@@ -30,6 +30,7 @@ async fn test_known_delegation() {
         .get_account(&delegated_id)
         .await
         .unwrap()
+        .1
         .unwrap();
 
     let delegation_addr = "CkieZJmrj6dLhwteG69LSutpWwRHiDJY9S8ua7xJ7CRW";
@@ -47,13 +48,13 @@ async fn test_known_delegation() {
         delegation_record_parser,
     );
 
-    let state = chain_state_provider
-        .try_fetch_chain_state_of_pubkey(&delegated_id)
+    let chain_state_snapshot = chain_state_provider
+        .try_fetch_chain_state_snapshot_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
     assert_eq!(
-        state,
+        chain_state_snapshot.chain_state,
         AccountChainState::Delegated {
             account: delegated_account,
             delegated_id,
@@ -72,10 +73,13 @@ async fn test_system_account_not_delegated() {
         DelegationRecordParserStub,
     >::new(RpcProviderConfig::default());
 
-    let chain_state = chain_state_provider
-        .try_fetch_chain_state_of_pubkey(&delegated_id)
+    let chain_state_snapshot = chain_state_provider
+        .try_fetch_chain_state_snapshot_of_pubkey(&delegated_id)
         .await
         .unwrap();
 
-    assert!(matches!(chain_state, AccountChainState::Undelegated { .. }));
+    assert!(matches!(
+        chain_state_snapshot.chain_state,
+        AccountChainState::Undelegated { .. }
+    ));
 }

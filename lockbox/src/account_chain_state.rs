@@ -7,14 +7,20 @@ use conjunto_providers::{
 };
 use dlp::pda;
 use serde::{Deserialize, Serialize};
-use solana_sdk::{account::Account, pubkey::Pubkey};
+use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
 
 use crate::{
     accounts::predicates::is_owned_by_delegation_program,
     delegation_account::{DelegationAccount, DelegationRecordParserImpl},
-    errors::LockboxResult,
+    errors::{LockboxError, LockboxResult},
     LockConfig, LockInconsistency,
 };
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+pub struct AccountChainStateSnapshot {
+    pub slot: Slot,
+    pub chain_state: AccountChainState,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum AccountChainState {
@@ -127,44 +133,56 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         }
     }
 
-    pub async fn try_fetch_chain_state_of_pubkey(
+    pub async fn try_fetch_chain_state_snapshot_of_pubkey(
         &self,
         pubkey: &Pubkey,
-    ) -> LockboxResult<AccountChainState> {
-        // NOTE: this could be perf optimized by using get_multiple_accounts in one request
-        // instead: https://docs.rs/solana-rpc-client/1.18.12/solana_rpc_client/nonblocking/rpc_client/struct.RpcClient.html#method.get_multiple_accounts
-        // However that method returns one ClientResult, meaning if any account is not found it
-        // we don't know which ones were there and which ones weren't and thus couldn't provide as
-        // detailed information about the inconsistencies as we are now.
-
-        // 1. Make sure the delegated account exists at all
-        let account = match self.account_provider.get_account(pubkey).await?.1 {
-            Some(acc) => acc,
-            None => {
-                return Ok(AccountChainState::NewAccount);
-            }
-        };
-
-        // 2. Check that it is locked by the delegation program
-        if !is_owned_by_delegation_program(&account) {
-            return Ok(AccountChainState::Undelegated { account });
-        }
-
-        // 3. Verify the delegation account exists and is owned by the delegation program
+    ) -> LockboxResult<AccountChainStateSnapshot> {
         let delegation_pda = pda::delegation_record_pda_from_pubkey(pubkey);
-        use DelegationAccount::*;
-        match DelegationAccount::try_from_pda_pubkey(
-            &delegation_pda,
-            &self.account_provider,
-            &self.delegation_record_parser,
+        // Fetch the current chain state for revelant accounts (all at once)
+        let (slot, mut fetched_accounts) = self
+            .account_provider
+            .get_multiple_accounts(&[delegation_pda, pubkey.clone()])
+            .await?;
+        // Parse the result into an AccountChainState
+        self.try_parse_chain_state_of_fetched_accounts(
+            pubkey,
+            delegation_pda,
+            &mut fetched_accounts,
         )
-        .await?
-        {
-            Valid(DelegationRecord {
+        .map(|chain_state| AccountChainStateSnapshot { slot, chain_state })
+    }
+
+    fn try_parse_chain_state_of_fetched_accounts(
+        &self,
+        pubkey: &Pubkey,
+        delegation_pda: Pubkey,
+        fetched_accounts: &mut Vec<Option<Account>>,
+    ) -> LockboxResult<AccountChainState> {
+        // If something went wrong in the fetch we stop, we should receive 2 accounts exactly every time
+        if fetched_accounts.len() != 2 {
+            return Err(LockboxError::InvalidFetch);
+        }
+        // Check if the base account exists (it should always be account at index[1])
+        let base_account = match fetched_accounts.remove(1) {
+            Some(account) => account,
+            None => return Ok(AccountChainState::NewAccount),
+        };
+        // Check if the base account is locked by the delegation program
+        if !is_owned_by_delegation_program(&base_account) {
+            return Ok(AccountChainState::Undelegated {
+                account: base_account,
+            });
+        }
+        // Verify the delegation account exists and is owned by the delegation program
+        match DelegationAccount::try_from_fetched_account(
+            fetched_accounts.remove(0),
+            &self.delegation_record_parser,
+        )? {
+            DelegationAccount::Valid(DelegationRecord {
                 commit_frequency,
                 owner,
             }) => Ok(AccountChainState::Delegated {
-                account,
+                account: base_account,
                 delegated_id: *pubkey,
                 delegation_pda,
                 config: LockConfig {
@@ -172,12 +190,14 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                     owner,
                 },
             }),
-            Invalid(inconsistencies) => Ok(AccountChainState::Inconsistent {
-                account,
-                delegated_id: *pubkey,
-                delegation_pda,
-                inconsistencies,
-            }),
+            DelegationAccount::Invalid(inconsistencies) => {
+                Ok(AccountChainState::Inconsistent {
+                    account: base_account,
+                    delegated_id: *pubkey,
+                    delegation_pda,
+                    inconsistencies,
+                })
+            }
         }
     }
 }

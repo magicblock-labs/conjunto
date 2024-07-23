@@ -8,4 +8,6 @@ pub enum LockboxError {
     RpcClientError(#[from] solana_rpc_client_api::client_error::Error),
     #[error("ConjuntoCoreError")]
     ConjuntoCoreError(#[from] conjunto_core::errors::CoreError),
+    #[error("InvalidFetch")]
+    InvalidFetch,
 }
