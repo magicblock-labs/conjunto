@@ -23,7 +23,7 @@ pub struct DirectorConfig {
 impl DirectorConfig {
     pub fn devnet() -> Self {
         Self {
-            chain_cluster: RpcCluster::Development,
+            chain_cluster: RpcCluster::Devnet,
             // TODO(vbrunet) - this should point to the correct ephemeral endpoint?
             ephem_account_provider_config: RpcProviderConfig::devnet(),
         }

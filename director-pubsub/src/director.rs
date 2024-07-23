@@ -25,9 +25,9 @@ pub struct DirectorPubsubConfig {
 impl DirectorPubsubConfig {
     pub fn devnet() -> Self {
         Self {
-            chain_cluster: RpcCluster::Development,
+            chain_cluster: RpcCluster::Devnet,
             // TODO(vbrunet) - this should point to the correct ephemeral endpoint?
-            ephemeral_cluster: RpcCluster::Development,
+            ephemeral_cluster: RpcCluster::Devnet,
         }
     }
 }
