@@ -15,14 +15,14 @@ Accounts are read from a `Pubkey` using `AccountProvider`
 - `DelegationRecordParser` trait
   - allows parsing a blob into a `DelegationRecord`
 
-- `AccountChainState` enum
+- `AccountChainSnapshot` struct
   - can be NewAccount / Delegated / Undelegated / Inconsistent
   - contains the `Account` data and the delegation configuration if available
 
-- `AccountChainStateProvider` struct
+- `AccountChainSnapshotProvider` struct
   - depends on an `AccountProvider`
   - depends on a `DelegationRecordParser`
-  - can read a `Pubkey` -> `Account` + `DelegationAccount` -> `AccountChainState`
+  - can read a `Pubkey` -> `Account` + `DelegationAccount` -> `AccountChainSnapshot`
 
 # Notes
 

@@ -37,11 +37,11 @@ Help the director route a transaction properly by computing an `Endpoint`.
 
 - `Transwise` struct
   - implements `ValidatedAccountsProvider`
-  - depends on an `AccountChainStateProvider`
+  - depends on an `AccountChainSnapshotProvider`
   - Computes solana transaction -> `TransactionAccountMetas` -> `Endpoint`
 
 # Notes
 
 *Important dependencies:*
 
-- Provides `AccountChainStateProvider`: [lockbox](../lockbox/README.md)
+- Provides `AccountChainSnapshotProvider`: [lockbox](../lockbox/README.md)

@@ -17,7 +17,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct AccountChainStateSnapshot {
+pub struct AccountChainSnapshot {
     pub from_slot: Slot,
     pub chain_state: AccountChainState,
 }
@@ -89,7 +89,7 @@ impl AccountChainState {
     }
 }
 
-pub struct AccountChainStateProvider<
+pub struct AccountChainSnapshotProvider<
     T: AccountProvider,
     U: DelegationRecordParser,
 > {
@@ -98,15 +98,17 @@ pub struct AccountChainStateProvider<
 }
 
 impl<T: AccountProvider, U: DelegationRecordParser>
-    AccountChainStateProvider<T, U>
+    AccountChainSnapshotProvider<T, U>
 {
     pub fn new(
         config: RpcProviderConfig,
-    ) -> AccountChainStateProvider<RpcAccountProvider, DelegationRecordParserImpl>
-    {
+    ) -> AccountChainSnapshotProvider<
+        RpcAccountProvider,
+        DelegationRecordParserImpl,
+    > {
         let rpc_account_provider = RpcAccountProvider::new(config);
         let delegation_record_parser = DelegationRecordParserImpl;
-        AccountChainStateProvider::with_provider_and_parser(
+        AccountChainSnapshotProvider::with_provider_and_parser(
             rpc_account_provider,
             delegation_record_parser,
         )
@@ -115,9 +117,9 @@ impl<T: AccountProvider, U: DelegationRecordParser>
     pub fn new_with_parser(
         config: RpcProviderConfig,
         delegation_record_parser: U,
-    ) -> AccountChainStateProvider<RpcAccountProvider, U> {
+    ) -> AccountChainSnapshotProvider<RpcAccountProvider, U> {
         let rpc_account_provider = RpcAccountProvider::new(config);
-        AccountChainStateProvider::with_provider_and_parser(
+        AccountChainSnapshotProvider::with_provider_and_parser(
             rpc_account_provider,
             delegation_record_parser,
         )
@@ -133,10 +135,10 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         }
     }
 
-    pub async fn try_fetch_chain_state_snapshot_of_pubkey(
+    pub async fn try_fetch_chain_snapshot_of_pubkey(
         &self,
         pubkey: &Pubkey,
-    ) -> LockboxResult<AccountChainStateSnapshot> {
+    ) -> LockboxResult<AccountChainSnapshot> {
         let delegation_pda = pda::delegation_record_pda_from_pubkey(pubkey);
         // Fetch the current chain state for revelant accounts (all at once)
         let (from_slot, mut fetched_accounts) = self
@@ -149,7 +151,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             delegation_pda,
             &mut fetched_accounts,
         )
-        .map(|chain_state| AccountChainStateSnapshot {
+        .map(|chain_state| AccountChainSnapshot {
             from_slot,
             chain_state,
         })
