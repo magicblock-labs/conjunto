@@ -163,7 +163,10 @@ impl<T: AccountProvider, U: DelegationRecordParser>
     ) -> LockboxResult<AccountChainState> {
         // If something went wrong in the fetch we stop, we should receive 2 accounts exactly every time
         if fetched_accounts.len() != 2 {
-            return Err(LockboxError::InvalidFetch);
+            return Err(LockboxError::InvalidFetch {
+                fetched_pubkeys: vec![*pubkey, delegation_pda],
+                fetched_accounts: fetched_accounts.clone(),
+            });
         }
         // Check if the base account exists (it should always be account at index[1])
         let base_account = match fetched_accounts.remove(1) {
