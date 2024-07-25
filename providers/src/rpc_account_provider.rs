@@ -77,7 +77,7 @@ mod tests {
         // Note: this test relies on devnet
         let rpc_account_provider = RpcAccountProvider::devnet();
         let pubkey = Pubkey::default();
-        let (_slot, account) =
+        let (_, account) =
             rpc_account_provider.get_account(&pubkey).await.unwrap();
         assert!(account.is_some());
     }
