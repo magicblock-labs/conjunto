@@ -85,11 +85,11 @@ impl<T: AccountProvider, U: SignatureStatusProvider>
         };
         let account =
             match self.ephemeral_account_provider.get_account(&pubkey).await {
-                Ok((_slot, Some(acc))) => acc,
+                Ok((_, Some(acc))) => acc,
                 // If the ephemeral validator does not have he account then we go to chain for
                 // single requests and to both for subscriptions (since the account may be created
                 // after the subscription)
-                Ok((_slot, None)) => {
+                Ok((_, None)) => {
                     if is_subscription {
                         return RequestEndpoint::Both;
                     } else {
