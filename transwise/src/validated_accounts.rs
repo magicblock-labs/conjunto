@@ -27,7 +27,7 @@ impl Default for ValidateAccountsConfig {
 pub struct ValidatedReadonlyAccount {
     pub pubkey: Pubkey,
     pub account: Option<Account>,
-    pub from_slot: Slot,
+    pub at_slot: Slot,
 }
 
 impl TryFrom<TransactionAccountMeta> for ValidatedReadonlyAccount {
@@ -42,7 +42,7 @@ impl TryFrom<TransactionAccountMeta> for ValidatedReadonlyAccount {
             } => Ok(ValidatedReadonlyAccount {
                 pubkey,
                 account: chain_snapshot.chain_state.into_account(),
-                from_slot: chain_snapshot.from_slot,
+                at_slot: chain_snapshot.at_slot,
             }),
             _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
                 format!("{:?}", meta),
@@ -56,7 +56,7 @@ pub struct ValidatedWritableAccount {
     pub pubkey: Pubkey,
     pub account: Option<Account>,
     pub lock_config: Option<LockConfig>,
-    pub from_slot: Slot,
+    pub at_slot: Slot,
     pub is_payer: bool,
 }
 
@@ -74,7 +74,7 @@ impl TryFrom<TransactionAccountMeta> for ValidatedWritableAccount {
                 pubkey,
                 lock_config: chain_snapshot.chain_state.lock_config(),
                 account: chain_snapshot.chain_state.into_account(),
-                from_slot: chain_snapshot.from_slot,
+                at_slot: chain_snapshot.at_slot,
                 is_payer,
             }),
             _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
@@ -219,7 +219,7 @@ mod tests {
 
     fn chain_snapshot_delegated() -> AccountChainSnapshot {
         AccountChainSnapshot {
-            from_slot: 42,
+            at_slot: 42,
             chain_state: AccountChainState::Delegated {
                 account: account_owned_by_delegation_program(),
                 delegated_id: Pubkey::new_unique(),
@@ -234,7 +234,7 @@ mod tests {
 
     fn chain_snapshot_undelegated() -> AccountChainSnapshot {
         AccountChainSnapshot {
-            from_slot: 42,
+            at_slot: 42,
             chain_state: AccountChainState::Undelegated {
                 account: account_owned_by_system_program(),
             },
@@ -243,14 +243,14 @@ mod tests {
 
     fn chain_snapshot_new_account() -> AccountChainSnapshot {
         AccountChainSnapshot {
-            from_slot: 42,
+            at_slot: 42,
             chain_state: AccountChainState::NewAccount,
         }
     }
 
     fn chain_snapshot_inconsistent() -> AccountChainSnapshot {
         AccountChainSnapshot {
-            from_slot: 42,
+            at_slot: 42,
             chain_state: AccountChainState::Inconsistent {
                 account: account_owned_by_system_program(),
                 delegated_id: Pubkey::new_unique(),
@@ -535,11 +535,11 @@ mod tests {
         assert!(vas.readonly[3].account.is_some());
         assert!(vas.writable[0].account.is_some());
 
-        assert_eq!(vas.readonly[0].from_slot, 42);
-        assert_eq!(vas.readonly[1].from_slot, 42);
-        assert_eq!(vas.readonly[2].from_slot, 42);
-        assert_eq!(vas.readonly[3].from_slot, 42);
-        assert_eq!(vas.writable[0].from_slot, 42);
+        assert_eq!(vas.readonly[0].at_slot, 42);
+        assert_eq!(vas.readonly[1].at_slot, 42);
+        assert_eq!(vas.readonly[2].at_slot, 42);
+        assert_eq!(vas.readonly[3].at_slot, 42);
+        assert_eq!(vas.writable[0].at_slot, 42);
     }
 
     #[test]
@@ -616,13 +616,13 @@ mod tests {
         assert!(vas.writable[1].account.is_some());
         assert!(vas.writable[2].account.is_some());
 
-        assert_eq!(vas.readonly[0].from_slot, 42);
-        assert_eq!(vas.readonly[1].from_slot, 42);
-        assert_eq!(vas.readonly[2].from_slot, 42);
-        assert_eq!(vas.readonly[3].from_slot, 42);
+        assert_eq!(vas.readonly[0].at_slot, 42);
+        assert_eq!(vas.readonly[1].at_slot, 42);
+        assert_eq!(vas.readonly[2].at_slot, 42);
+        assert_eq!(vas.readonly[3].at_slot, 42);
 
-        assert_eq!(vas.writable[0].from_slot, 42);
-        assert_eq!(vas.writable[1].from_slot, 42);
-        assert_eq!(vas.writable[2].from_slot, 42);
+        assert_eq!(vas.writable[0].at_slot, 42);
+        assert_eq!(vas.writable[1].at_slot, 42);
+        assert_eq!(vas.writable[2].at_slot, 42);
     }
 }

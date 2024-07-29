@@ -18,7 +18,7 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct AccountChainSnapshot {
-    pub from_slot: Slot,
+    pub at_slot: Slot,
     pub chain_state: AccountChainState,
 }
 
@@ -74,7 +74,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
     ) -> LockboxResult<AccountChainSnapshot> {
         let delegation_pda = pda::delegation_record_pda_from_pubkey(pubkey);
         // Fetch the current chain state for revelant accounts (all at once)
-        let (from_slot, mut fetched_accounts) = self
+        let (at_slot, mut fetched_accounts) = self
             .account_provider
             .get_multiple_accounts(&[delegation_pda, *pubkey])
             .await?;
@@ -85,7 +85,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             &mut fetched_accounts,
         )
         .map(|chain_state| AccountChainSnapshot {
-            from_slot,
+            at_slot,
             chain_state,
         })
     }
