@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
-use crate::{LockConfig, LockInconsistency};
+use crate::{DelegationInconsistency, DelegationRecord};
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum AccountChainState {
@@ -23,7 +23,7 @@ pub enum AccountChainState {
         account: Account,
         delegated_id: Pubkey,
         delegation_pda: Pubkey,
-        config: LockConfig,
+        record: DelegationRecord,
     },
     /// The account was found on chain and was partially delegated which means that
     /// it is owned by the delegation program but one or more of the related
@@ -32,7 +32,7 @@ pub enum AccountChainState {
         account: Account,
         delegated_id: Pubkey,
         delegation_pda: Pubkey,
-        inconsistencies: Vec<LockInconsistency>,
+        inconsistencies: Vec<DelegationInconsistency>,
     },
 }
 

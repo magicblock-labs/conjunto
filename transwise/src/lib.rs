@@ -1,4 +1,3 @@
-pub mod account_meta;
 pub mod endpoint;
 pub mod errors;
 pub mod transaction_accounts_extractor;

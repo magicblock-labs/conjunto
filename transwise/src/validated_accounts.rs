@@ -1,11 +1,10 @@
+use conjunto_lockbox::AccountChainSnapshot;
 pub use conjunto_lockbox::LockConfig;
 use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
 
 use crate::{
     errors::TranswiseError,
-    transaction_account_meta::{
-        TransactionAccountMeta, TransactionAccountMetas,
-    },
+    transaction_accounts_metas::TransactionAccountsMetas,
 };
 
 #[derive(Debug)]
@@ -30,23 +29,12 @@ pub struct ValidatedReadonlyAccount {
     pub at_slot: Slot,
 }
 
-impl TryFrom<TransactionAccountMeta> for ValidatedReadonlyAccount {
-    type Error = TranswiseError;
-    fn try_from(
-        meta: TransactionAccountMeta,
-    ) -> Result<ValidatedReadonlyAccount, Self::Error> {
-        match meta {
-            TransactionAccountMeta::Readonly {
-                pubkey,
-                chain_snapshot,
-            } => Ok(ValidatedReadonlyAccount {
-                pubkey,
-                account: chain_snapshot.chain_state.into_account(),
-                at_slot: chain_snapshot.at_slot,
-            }),
-            _ => Err(TranswiseError::CreateValidatedReadonlyAccountFailed(
-                format!("{:?}", meta),
-            )),
+impl From<AccountChainSnapshot> for ValidatedReadonlyAccount {
+    fn from(chain_snapshot: AccountChainSnapshot) -> Self {
+        Self {
+            pubkey: chain_snapshot.pubkey,
+            account: chain_snapshot.chain_state.into_account(),
+            at_slot: chain_snapshot.at_slot,
         }
     }
 }
@@ -54,32 +42,20 @@ impl TryFrom<TransactionAccountMeta> for ValidatedReadonlyAccount {
 #[derive(Debug)]
 pub struct ValidatedWritableAccount {
     pub pubkey: Pubkey,
-    pub account: Option<Account>,
     pub lock_config: Option<LockConfig>,
+    pub account: Option<Account>,
     pub at_slot: Slot,
     pub is_payer: bool,
 }
 
-impl TryFrom<TransactionAccountMeta> for ValidatedWritableAccount {
-    type Error = TranswiseError;
-    fn try_from(
-        meta: TransactionAccountMeta,
-    ) -> Result<ValidatedWritableAccount, Self::Error> {
-        match meta {
-            TransactionAccountMeta::Writable {
-                pubkey,
-                chain_snapshot,
-                is_payer,
-            } => Ok(ValidatedWritableAccount {
-                pubkey,
-                lock_config: chain_snapshot.chain_state.lock_config(),
-                account: chain_snapshot.chain_state.into_account(),
-                at_slot: chain_snapshot.at_slot,
-                is_payer,
-            }),
-            _ => Err(TranswiseError::CreateValidatedWritableAccountFailed(
-                format!("{:?}", meta),
-            )),
+impl From<(AccountChainSnapshot, Pubkey)> for ValidatedWritableAccount {
+    fn from((chain_snapshot, payer): (AccountChainSnapshot, Pubkey)) -> Self {
+        Self {
+            pubkey: chain_snapshot.pubkey,
+            lock_config: chain_snapshot.chain_state.lock_config(),
+            account: chain_snapshot.chain_state.into_account(),
+            at_slot: chain_snapshot.at_slot,
+            is_payer: chain_snapshot.pubkey == payer,
         }
     }
 }
@@ -90,13 +66,13 @@ pub struct ValidatedAccounts {
     pub writable: Vec<ValidatedWritableAccount>,
 }
 
-impl TryFrom<(TransactionAccountMetas, &ValidateAccountsConfig)>
+impl TryFrom<(TransactionAccountsMetas, &ValidateAccountsConfig)>
     for ValidatedAccounts
 {
     type Error = TranswiseError;
 
     fn try_from(
-        (metas, config): (TransactionAccountMetas, &ValidateAccountsConfig),
+        (metas, config): (TransactionAccountsMetas, &ValidateAccountsConfig),
     ) -> Result<Self, Self::Error> {
         // We put the following constraint on the config:
         //
@@ -157,27 +133,18 @@ impl TryFrom<(TransactionAccountMetas, &ValidateAccountsConfig)>
             }
         }
 
-        // NOTE: when we don't require delegation then we still query the account states to
-        // get the chain_state of each delegated. This causes some unnecessary overhead which we
-        // could avoid if we make the lockbox aware of this, i.e. by adding an LockstateUnknown
-        // variant and returning that instead of checking it.
-        // However this is only the case when developing locally and thus we may not optimize for it.
-
-        // Generate the validated account structs
-        let (readonly_metas, writable_metas): (Vec<_>, Vec<_>) =
-            metas.0.into_iter().partition(|meta| match meta {
-                TransactionAccountMeta::Readonly { .. } => true,
-                TransactionAccountMeta::Writable { .. } => false,
-            });
-
-        let validated_readonly_accounts = readonly_metas
+        let validated_readonly_accounts = metas
+            .readonly
             .into_iter()
-            .map(ValidatedReadonlyAccount::try_from)
-            .collect::<Result<Vec<_>, TranswiseError>>()?;
-        let validated_writable_accounts = writable_metas
+            .map(ValidatedReadonlyAccount::from)
+            .collect();
+        let validated_writable_accounts = metas
+            .writable
             .into_iter()
-            .map(ValidatedWritableAccount::try_from)
-            .collect::<Result<Vec<_>, TranswiseError>>()?;
+            .map(|chain_snapshot| {
+                ValidatedWritableAccount::from((chain_snapshot, metas.payer))
+            })
+            .collect();
 
         // Done
         Ok(ValidatedAccounts {
@@ -198,10 +165,7 @@ mod tests {
     };
 
     use super::*;
-    use crate::{
-        errors::TranswiseResult,
-        transaction_account_meta::TransactionAccountMeta,
-    };
+    use crate::errors::TranswiseResult;
 
     fn config_strict() -> ValidateAccountsConfig {
         ValidateAccountsConfig {
@@ -301,7 +265,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            TransactionAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
+            TransactionAccountsMetas(vec![meta1, meta2, meta3, meta4, meta5]),
             &config_strict(),
         )
             .try_into()
@@ -337,7 +301,7 @@ mod tests {
         };
 
         let res: TranswiseResult<ValidatedAccounts> = (
-            TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountsMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into();
@@ -361,7 +325,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountsMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into()
@@ -387,7 +351,7 @@ mod tests {
         };
 
         let res: TranswiseResult<ValidatedAccounts> = (
-            TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountsMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into();
@@ -411,7 +375,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountsMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into()
@@ -439,7 +403,7 @@ mod tests {
         };
 
         let res: TranswiseResult<ValidatedAccounts> = (
-            TransactionAccountMetas(vec![meta1, meta2]),
+            TransactionAccountsMetas(vec![meta1, meta2]),
             &config_strict(),
         )
             .try_into();
@@ -470,7 +434,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            TransactionAccountMetas(vec![meta1, meta2, meta3]),
+            TransactionAccountsMetas(vec![meta1, meta2, meta3]),
             &config_permissive(),
         )
             .try_into()
@@ -514,7 +478,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            TransactionAccountMetas(vec![meta1, meta2, meta3, meta4, meta5]),
+            TransactionAccountsMetas(vec![meta1, meta2, meta3, meta4, meta5]),
             &config_strict(),
         )
             .try_into()
@@ -587,7 +551,7 @@ mod tests {
         };
 
         let vas: ValidatedAccounts = (
-            TransactionAccountMetas(vec![
+            TransactionAccountsMetas(vec![
                 meta1, meta2, meta3, meta4, meta5, meta6, meta7,
             ]),
             &config_permissive(),

@@ -1,49 +1,14 @@
-use conjunto_core::{
-    errors::{CoreError, CoreResult},
-    CommitFrequency, DelegationRecord, DelegationRecordParser,
-};
 use solana_sdk::account::Account;
 
 use crate::{
     accounts::predicates::is_owned_by_delegation_program,
-    errors::LockboxResult, LockInconsistency,
+    errors::LockboxResult, DelegationInconsistency, DelegationRecord,
+    DelegationRecordParser,
 };
-
-pub struct DelegationRecordParserImpl;
-impl DelegationRecordParser for DelegationRecordParserImpl {
-    fn try_parse(&self, data: &[u8]) -> CoreResult<DelegationRecord> {
-        parse_delegation_record(data)
-    }
-}
-
-fn parse_delegation_record(data: &[u8]) -> CoreResult<DelegationRecord> {
-    // bytemuck fails with TargetAlignmentGreaterAndInputNotAligned when the data isn't
-    // properly aligned. This happens sporadically depending on how the data was stored, i.e.
-    // only in debug mode and is fine in release mode or if we add unrelated code before the call.
-    // The below forces the data to be aligned since vecs are always aligned.
-    // NOTE: I didn't find 100% confirmation that vecs are always correctly aligned, but
-    // the issue I encountered was fixed by this change.
-    // TODO(thlorenz): with this fix we copy data and should revisit this to avoid that
-    let data = data.to_vec();
-    let result =
-        bytemuck::try_from_bytes::<dlp::state::DelegationRecord>(&data[8..])
-            .map_err(|err| {
-                CoreError::FailedToParseDelegationRecord(format!(
-                    "Failed to deserialize DelegationRecord: {}",
-                    err
-                ))
-            });
-
-    let state = result.unwrap();
-    Ok(DelegationRecord {
-        owner: state.owner,
-        commit_frequency: CommitFrequency::Millis(state.commit_frequency_ms),
-    })
-}
 
 pub enum DelegationAccount {
     Valid(DelegationRecord),
-    Invalid(Vec<LockInconsistency>),
+    Invalid(Vec<DelegationInconsistency>),
 }
 
 impl DelegationAccount {
@@ -54,7 +19,7 @@ impl DelegationAccount {
         let delegation_account = match delegation_fetched_account {
             None => {
                 return Ok(DelegationAccount::Invalid(vec![
-                    LockInconsistency::DelegationAccountNotFound,
+                    DelegationInconsistency::DelegationAccountNotFound,
                 ]))
             }
             Some(acc) => acc,
@@ -62,7 +27,7 @@ impl DelegationAccount {
         let mut inconsistencies = vec![];
         if !is_owned_by_delegation_program(&delegation_account) {
             inconsistencies
-                .push(LockInconsistency::DelegationAccountInvalidOwner);
+                .push(DelegationInconsistency::DelegationAccountInvalidOwner);
         }
         match delegation_record_parser.try_parse(&delegation_account.data) {
             Ok(delegation_record) => {
@@ -74,7 +39,7 @@ impl DelegationAccount {
             }
             Err(err) => {
                 inconsistencies.push(
-                    LockInconsistency::DelegationRecordAccountDataInvalid(
+                    DelegationInconsistency::DelegationRecordAccountDataInvalid(
                         err.to_string(),
                     ),
                 );

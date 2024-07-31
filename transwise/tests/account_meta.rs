@@ -10,7 +10,7 @@ use conjunto_test_tools::{
     transaction_accounts_holder_stub::TransactionAccountsHolderStub,
 };
 use conjunto_transwise::{
-    endpoint::Endpoint, transaction_account_meta::TransactionAccountMetas,
+    endpoint::Endpoint, transaction_accounts_metas::TransactionAccountsMetas,
 };
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
@@ -48,7 +48,7 @@ async fn test_account_meta_one_properly_locked_writable_and_one_readonly() {
         payer: Pubkey::new_unique(),
     };
 
-    let account_metas = TransactionAccountMetas::from_accounts_holder(
+    let account_metas = TransactionAccountsMetas::from_accounts_holder(
         &acc_holder,
         &chain_snapshot_provider,
     )
@@ -81,7 +81,7 @@ async fn test_account_meta_one_properly_delegated_writable_and_one_writable_unde
         payer: Pubkey::new_unique(),
     };
 
-    let account_metas = TransactionAccountMetas::from_accounts_holder(
+    let account_metas = TransactionAccountsMetas::from_accounts_holder(
         &acc_holder,
         &chain_snapshot_provider,
     )
@@ -113,7 +113,7 @@ async fn test_account_meta_one_improperly_locked_writable_and_one_readonly() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -145,7 +145,7 @@ async fn test_account_meta_one_locked_writable_with_invalid_delegation_record_an
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -177,7 +177,7 @@ async fn test_account_meta_one_writable_properly_delegated_and_one_writable_new_
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -204,7 +204,7 @@ async fn test_account_meta_one_writable_new_account() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -235,7 +235,7 @@ async fn test_account_meta_one_undelegated_writable_that_is_payer() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -271,7 +271,7 @@ async fn test_account_meta_one_writable_undelegated_that_is_payer_and_locked_wri
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -309,7 +309,7 @@ async fn test_account_meta_one_writable_undelegated_that_is_payer_and_writable_u
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -342,7 +342,7 @@ async fn test_account_meta_one_writable_undelegated_two_readonlys() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -370,7 +370,7 @@ async fn test_account_meta_two_readonlys() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -403,7 +403,7 @@ async fn test_account_meta_two_readonlys_one_program_and_one_writable_undelegate
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountMetas::from_accounts_holder(
+        TransactionAccountsMetas::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )

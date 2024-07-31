@@ -7,7 +7,7 @@ Also provides account validation implementation.
 # Details
 
 It is used by the validator to fetch information for if/how to clone accounts via `ValidatedAccounts`.
-Internally uses an intermediary representation for the accounts: `TransactionAccountMetas`.
+Internally uses an intermediary representation for the accounts: `TransactionAccountsMetas`.
 Help the director route a transaction properly by computing an `Endpoint`.
 
 *Important symbols:*
@@ -22,13 +22,13 @@ Help the director route a transaction properly by computing an `Endpoint`.
   - classified accounts with meta info and delegation state
 
 - `ValidatedAccountsProvider` trait
-  - Computes `TransactionAccountsHolder` -> `TransactionAccountMetas` -> `ValidatedAccounts`
+  - Computes `TransactionAccountsHolder` -> `TransactionAccountsMetas` -> `ValidatedAccounts`
 
 - `TransactionAccountMeta` struct
   - enum of Writable or Readable
   - contains `AccountChainSnapshot` chain account data and delegation state
 
-- `TransactionAccountMetas` struct
+- `TransactionAccountsMetas` struct
   - vec of `TransactionAccountMeta`
 
 - `Endpoint` enum
@@ -37,7 +37,7 @@ Help the director route a transaction properly by computing an `Endpoint`.
 - `Transwise` struct
   - implements `ValidatedAccountsProvider`
   - depends on an `AccountChainSnapshotProvider`
-  - Computes solana transaction -> `TransactionAccountMetas` -> `Endpoint`
+  - Computes solana transaction -> `TransactionAccountsMetas` -> `Endpoint`
 
 # Notes
 

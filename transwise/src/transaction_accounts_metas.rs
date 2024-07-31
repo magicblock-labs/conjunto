@@ -14,9 +14,9 @@ use crate::{
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TransactionAccountsMetas {
-    readonly: Vec<AccountChainSnapshot>,
-    writable: Vec<AccountChainSnapshot>,
-    payer: Pubkey,
+    pub readonly: Vec<AccountChainSnapshot>,
+    pub writable: Vec<AccountChainSnapshot>,
+    pub payer: Pubkey,
 }
 
 impl TransactionAccountsMetas {
@@ -70,7 +70,6 @@ impl TransactionAccountsMetas {
             })),
         )
         .await?;
-        // Done
         Ok(Self {
             readonly,
             writable,

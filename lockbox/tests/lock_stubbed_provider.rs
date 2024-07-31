@@ -1,6 +1,6 @@
 use conjunto_core::{CommitFrequency, DelegationRecord};
 use conjunto_lockbox::{
-    AccountChainSnapshotProvider, AccountChainState, LockInconsistency,
+    AccountChainSnapshotProvider, AccountChainState, DelegationInconsistency,
 };
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
@@ -129,7 +129,9 @@ async fn test_delegate_missing_delegate_account() {
             account: account_owned_by_delegation_program(),
             delegated_id,
             delegation_pda,
-            inconsistencies: vec![LockInconsistency::DelegationAccountNotFound],
+            inconsistencies: vec![
+                DelegationInconsistency::DelegationAccountNotFound
+            ],
         }
     );
 }
@@ -158,7 +160,7 @@ async fn test_delegate_delegation_not_owned_by_delegate_program() {
             delegated_id,
             delegation_pda,
             inconsistencies: vec![
-                LockInconsistency::DelegationAccountInvalidOwner
+                DelegationInconsistency::DelegationAccountInvalidOwner
             ]
         }
     );
@@ -188,8 +190,8 @@ async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_reco
             delegated_id,
             delegation_pda,
             inconsistencies: vec![
-                LockInconsistency::DelegationAccountInvalidOwner,
-                LockInconsistency::DelegationRecordAccountDataInvalid(
+                DelegationInconsistency::DelegationAccountInvalidOwner,
+                DelegationInconsistency::DelegationRecordAccountDataInvalid(
                     "Failed to parse account data".to_string()
                 )
             ]

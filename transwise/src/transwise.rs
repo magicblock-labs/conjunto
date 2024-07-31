@@ -9,8 +9,8 @@ use solana_sdk::transaction::{SanitizedTransaction, VersionedTransaction};
 
 use crate::{
     endpoint::Endpoint, errors::TranswiseResult,
-    transaction_account_meta::TransactionAccountMetas,
     transaction_accounts_holder::TransactionAccountsHolder,
+    transaction_accounts_metas::TransactionAccountsMetas,
 };
 
 /// The API that allows us to guide a transaction given a cluster
@@ -42,8 +42,8 @@ impl Transwise {
     pub async fn account_metas_from_versioned_transaction(
         &self,
         tx: &VersionedTransaction,
-    ) -> TranswiseResult<TransactionAccountMetas> {
-        TransactionAccountMetas::from_versioned_transaction(
+    ) -> TranswiseResult<TransactionAccountsMetas> {
+        TransactionAccountsMetas::from_versioned_transaction(
             tx,
             &self.account_chain_snapshot_provider,
         )
@@ -58,8 +58,8 @@ impl Transwise {
     pub async fn account_metas_from_sanitized_transaction(
         &self,
         tx: &SanitizedTransaction,
-    ) -> TranswiseResult<TransactionAccountMetas> {
-        TransactionAccountMetas::from_sanitized_transaction(
+    ) -> TranswiseResult<TransactionAccountsMetas> {
+        TransactionAccountsMetas::from_sanitized_transaction(
             tx,
             &self.account_chain_snapshot_provider,
         )
@@ -72,8 +72,8 @@ impl Transwise {
     pub async fn account_metas(
         &self,
         accounts: &TransactionAccountsHolder,
-    ) -> TranswiseResult<TransactionAccountMetas> {
-        TransactionAccountMetas::from_accounts_holder(
+    ) -> TranswiseResult<TransactionAccountsMetas> {
+        TransactionAccountsMetas::from_accounts_holder(
             accounts,
             &self.account_chain_snapshot_provider,
         )

@@ -1,6 +1,4 @@
-use conjunto_core::{
-    AccountProvider, DelegationRecord, DelegationRecordParser,
-};
+use conjunto_core::AccountProvider;
 use conjunto_providers::{
     rpc_account_provider::RpcAccountProvider,
     rpc_provider_config::RpcProviderConfig,
@@ -11,9 +9,10 @@ use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
 
 use crate::{
     accounts::predicates::is_owned_by_delegation_program,
-    delegation_account::{DelegationAccount, DelegationRecordParserImpl},
+    delegation_account::DelegationAccount,
     errors::{LockboxError, LockboxResult},
-    AccountChainState, LockConfig,
+    AccountChainState, DelegationRecord, DelegationRecordParser,
+    DelegationRecordParserImpl,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]

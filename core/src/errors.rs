@@ -8,6 +8,4 @@ pub enum CoreError {
     RpcClientError(#[from] solana_rpc_client_api::client_error::Error),
     #[error("Failed to get account from cluster")]
     FailedToGetAccountFromCluster,
-    #[error("Failed to parse account data")]
-    FailedToParseDelegationRecord(String),
 }
