@@ -53,9 +53,9 @@ impl AccountChainState {
         matches!(self, AccountChainState::Inconsistent { .. })
     }
 
-    pub fn lock_config(&self) -> Option<LockConfig> {
+    pub fn delegation_record(&self) -> Option<DelegationRecord> {
         match self {
-            AccountChainState::Delegated { config, .. } => Some(config.clone()),
+            AccountChainState::Delegated { record, .. } => Some(record.clone()),
             _ => None,
         }
     }

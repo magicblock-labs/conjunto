@@ -31,7 +31,7 @@ impl From<CommitFrequency> for Duration {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct DelegationRecord {
     /// The original owner of the account
     pub owner: Pubkey,

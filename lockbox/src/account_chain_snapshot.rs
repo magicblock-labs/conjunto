@@ -120,18 +120,14 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             fetched_accounts.remove(0),
             &self.delegation_record_parser,
         )? {
-            DelegationAccount::Valid(DelegationRecord {
-                commit_frequency,
-                owner,
-            }) => Ok(AccountChainState::Delegated {
-                account: base_account,
-                delegated_id: pubkey,
-                delegation_pda,
-                config: LockConfig {
-                    commit_frequency,
-                    owner,
-                },
-            }),
+            DelegationAccount::Valid(record) => {
+                Ok(AccountChainState::Delegated {
+                    account: base_account,
+                    delegated_id: pubkey,
+                    delegation_pda,
+                    record,
+                })
+            }
             DelegationAccount::Invalid(inconsistencies) => {
                 Ok(AccountChainState::Inconsistent {
                     account: base_account,
