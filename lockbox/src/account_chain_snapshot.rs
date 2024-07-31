@@ -18,6 +18,7 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct AccountChainSnapshot {
+    pub pubkey: Pubkey,
     pub at_slot: Slot,
     pub chain_state: AccountChainState,
 }
@@ -70,13 +71,13 @@ impl<T: AccountProvider, U: DelegationRecordParser>
 
     pub async fn try_fetch_chain_snapshot_of_pubkey(
         &self,
-        pubkey: &Pubkey,
+        pubkey: Pubkey,
     ) -> LockboxResult<AccountChainSnapshot> {
-        let delegation_pda = pda::delegation_record_pda_from_pubkey(pubkey);
+        let delegation_pda = pda::delegation_record_pda_from_pubkey(&pubkey);
         // Fetch the current chain state for revelant accounts (all at once)
         let (at_slot, mut fetched_accounts) = self
             .account_provider
-            .get_multiple_accounts(&[delegation_pda, *pubkey])
+            .get_multiple_accounts(&[delegation_pda, pubkey])
             .await?;
         // Parse the result into an AccountChainState
         self.try_parse_chain_state_of_fetched_accounts(
@@ -85,6 +86,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             &mut fetched_accounts,
         )
         .map(|chain_state| AccountChainSnapshot {
+            pubkey,
             at_slot,
             chain_state,
         })
@@ -92,14 +94,14 @@ impl<T: AccountProvider, U: DelegationRecordParser>
 
     fn try_parse_chain_state_of_fetched_accounts(
         &self,
-        pubkey: &Pubkey,
+        pubkey: Pubkey,
         delegation_pda: Pubkey,
         fetched_accounts: &mut Vec<Option<Account>>,
     ) -> LockboxResult<AccountChainState> {
         // If something went wrong in the fetch we stop, we should receive 2 accounts exactly every time
         if fetched_accounts.len() != 2 {
             return Err(LockboxError::InvalidFetch {
-                fetched_pubkeys: vec![*pubkey, delegation_pda],
+                fetched_pubkeys: vec![pubkey, delegation_pda],
                 fetched_accounts: fetched_accounts.clone(),
             });
         }
@@ -124,7 +126,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                 owner,
             }) => Ok(AccountChainState::Delegated {
                 account: base_account,
-                delegated_id: *pubkey,
+                delegated_id: pubkey,
                 delegation_pda,
                 config: LockConfig {
                     commit_frequency,
@@ -134,7 +136,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             DelegationAccount::Invalid(inconsistencies) => {
                 Ok(AccountChainState::Inconsistent {
                     account: base_account,
-                    delegated_id: *pubkey,
+                    delegated_id: pubkey,
                     delegation_pda,
                     inconsistencies,
                 })

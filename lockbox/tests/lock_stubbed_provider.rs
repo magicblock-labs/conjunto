@@ -1,6 +1,6 @@
 use conjunto_core::{CommitFrequency, DelegationRecord};
 use conjunto_lockbox::{
-    AccountChainState, AccountChainSnapshotProvider, LockInconsistency,
+    AccountChainSnapshotProvider, AccountChainState, LockInconsistency,
 };
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
@@ -51,7 +51,7 @@ async fn test_delegate_properly_delegated() {
     );
 
     let chain_snapshot = chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&delegated_id)
+        .try_fetch_chain_snapshot_of_pubkey(delegated_id)
         .await
         .unwrap();
 
@@ -79,7 +79,7 @@ async fn test_delegate_undelegated() {
     );
 
     let chain_snapshot = chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&delegated_id)
+        .try_fetch_chain_snapshot_of_pubkey(delegated_id)
         .await
         .unwrap();
 
@@ -102,14 +102,11 @@ async fn test_delegate_not_found() {
     );
 
     let chain_snapshot = chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&delegated_id)
+        .try_fetch_chain_snapshot_of_pubkey(delegated_id)
         .await
         .unwrap();
 
-    assert_eq!(
-        chain_snapshot.chain_state,
-        AccountChainState::NewAccount
-    );
+    assert_eq!(chain_snapshot.chain_state, AccountChainState::NewAccount);
 }
 
 #[tokio::test]
@@ -122,7 +119,7 @@ async fn test_delegate_missing_delegate_account() {
     );
 
     let chain_snapshot = chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&delegated_id)
+        .try_fetch_chain_snapshot_of_pubkey(delegated_id)
         .await
         .unwrap();
 
@@ -150,7 +147,7 @@ async fn test_delegate_delegation_not_owned_by_delegate_program() {
     );
 
     let chain_snapshot = chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&delegated_id)
+        .try_fetch_chain_snapshot_of_pubkey(delegated_id)
         .await
         .unwrap();
 
@@ -180,7 +177,7 @@ async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_reco
     );
 
     let chain_snapshot = chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&delegated_id)
+        .try_fetch_chain_snapshot_of_pubkey(delegated_id)
         .await
         .unwrap();
 

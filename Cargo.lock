@@ -888,6 +888,7 @@ dependencies = [
  "conjunto-lockbox",
  "conjunto-providers",
  "conjunto-test-tools",
+ "futures-util",
  "serde",
  "solana-sdk",
  "thiserror",

@@ -1,8 +1,9 @@
+pub mod account_meta;
 pub mod endpoint;
 pub mod errors;
-pub mod transaction_account_meta;
 pub mod transaction_accounts_extractor;
 pub mod transaction_accounts_holder;
+pub mod transaction_accounts_metas;
 pub mod transwise;
 pub mod validated_accounts;
 pub mod validated_accounts_provider;

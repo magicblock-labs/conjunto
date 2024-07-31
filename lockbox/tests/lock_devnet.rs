@@ -48,7 +48,7 @@ async fn test_known_delegation() {
     );
 
     let chain_snapshot = chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&delegated_id)
+        .try_fetch_chain_snapshot_of_pubkey(delegated_id)
         .await
         .unwrap();
 
@@ -73,7 +73,7 @@ async fn test_system_account_not_delegated() {
     >::new(RpcProviderConfig::devnet());
 
     let chain_snapshot = chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&delegated_id)
+        .try_fetch_chain_snapshot_of_pubkey(delegated_id)
         .await
         .unwrap();
 
