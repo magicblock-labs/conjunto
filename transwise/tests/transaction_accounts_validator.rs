@@ -197,8 +197,8 @@ fn test_only_one_writable_new_account_payer_fail() {
         &config_strict(),
     );
 
-    // Because the payer is a new account, this should not work
-    assert!(result.is_ok());
+    // Because there is a new account, this should not work
+    assert!(result.is_err());
 }
 
 #[test]

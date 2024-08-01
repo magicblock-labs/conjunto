@@ -49,7 +49,7 @@ async fn test_one_new_account_readonly_and_one_delegated_writable() {
         ],
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
     );
-    let readonly_new_account_id = Pubkey::new_from_array([4u8; 32]);
+    let readonly_new_account_id = Pubkey::new_unique();
     let payer_id = Pubkey::new_unique();
 
     let acc_holder = TransactionAccountsHolderStub {
@@ -91,7 +91,7 @@ async fn test_one_new_account_readonly_and_one_delegated_writable() {
 #[tokio::test]
 async fn test_one_writable_delegated_and_one_writable_undelegated() {
     let (writable_delegated_id, delegation_pda) = delegated_account_ids();
-    let writable_undelegated_id = Pubkey::new_from_array([4u8; 32]);
+    let writable_undelegated_id = Pubkey::new_unique();
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_delegated_id, account_owned_by_delegation_program()),
@@ -248,7 +248,7 @@ async fn test_one_writable_delegated_and_one_writable_new_account() {
         ],
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
     );
-    let writable_new_account_id = Pubkey::new_from_array([4u8; 32]);
+    let writable_new_account_id = Pubkey::new_unique();
     let payer_id = Pubkey::new_unique();
 
     let acc_holder = TransactionAccountsHolderStub {
@@ -297,7 +297,7 @@ async fn test_one_writable_new_account() {
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
     );
 
-    let writable_new_account_id = Pubkey::new_from_array([4u8; 32]);
+    let writable_new_account_id = Pubkey::new_unique();
     let payer_id = Pubkey::new_unique();
 
     let acc_holder = TransactionAccountsHolderStub {
@@ -338,7 +338,7 @@ async fn test_one_writable_undelegated_that_is_payer() {
     //       write to one account (same as payer) and we don't expect a
     //       transaction like this to make sense inside the ephemeral validator.
     //       That is the main reason we send it to chain
-    let writable_undelegated_id = Pubkey::new_from_array([4u8; 32]);
+    let writable_undelegated_id = Pubkey::new_unique();
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![(writable_undelegated_id, account_owned_by_system_program())],
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
@@ -380,7 +380,7 @@ async fn test_one_writable_undelegated_that_is_payer() {
 async fn test_one_writable_undelegated_that_is_payer_and_one_writable_delegated(
 ) {
     let (writable_delegated_id, delegation_pda) = delegated_account_ids();
-    let writable_undelegated_id = Pubkey::new_from_array([4u8; 32]);
+    let writable_undelegated_id = Pubkey::new_unique();
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_delegated_id, account_owned_by_delegation_program()),
@@ -409,7 +409,7 @@ async fn test_one_writable_undelegated_that_is_payer_and_one_writable_delegated(
     assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated_id);
     assert_eq!(acc_snapshot.writable[1].pubkey, writable_delegated_id);
 
-    assert!(acc_snapshot.readonly[0].chain_state.is_undelegated());
+    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
     assert!(acc_snapshot.writable[1].chain_state.is_delegated());
 
     assert_eq!(acc_snapshot.payer, writable_undelegated_id);
@@ -430,7 +430,7 @@ async fn test_one_writable_undelegated_that_is_payer_and_one_writable_delegated(
 async fn test_account_meta_one_writable_undelegated_that_is_payer_and_writable_undelegated(
 ) {
     let writable_undelegated_id = Pubkey::new_from_array([3u8; 32]);
-    let writable_undelegated_payer_id = Pubkey::new_from_array([4u8; 32]);
+    let writable_undelegated_payer_id = Pubkey::new_unique();
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_undelegated_id, account_owned_by_system_program()),
@@ -487,8 +487,8 @@ async fn test_two_readonly_new_accounts() {
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
     );
 
-    let readonly1_new_account_id = Pubkey::new_from_array([4u8; 32]);
-    let readonly2_new_account_id = Pubkey::new_from_array([5u8; 32]);
+    let readonly1_new_account_id = Pubkey::new_unique();
+    let readonly2_new_account_id = Pubkey::new_unique();
     let payer_id = Pubkey::new_unique();
 
     let acc_holder = TransactionAccountsHolderStub {
@@ -528,13 +528,13 @@ async fn test_two_readonly_new_accounts() {
 
 #[tokio::test]
 async fn test_two_readonly_new_accounts_and_one_writable_undelegated() {
-    let writable_undelegated_id = Pubkey::new_from_array([4u8; 32]);
+    let writable_undelegated_id = Pubkey::new_unique();
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![(writable_undelegated_id, account_owned_by_system_program())],
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
     );
-    let readonly1_new_account_id = Pubkey::new_from_array([4u8; 32]);
-    let readonly2_new_account_id = Pubkey::new_from_array([5u8; 32]);
+    let readonly1_new_account_id = Pubkey::new_unique();
+    let readonly2_new_account_id = Pubkey::new_unique();
     let payer_id = Pubkey::new_unique();
 
     let acc_holder = TransactionAccountsHolderStub {
@@ -575,10 +575,10 @@ async fn test_two_readonly_new_accounts_and_one_writable_undelegated() {
 }
 
 #[tokio::test]
-async fn test_two_readonly_undelegated_and_one_writable_undelegated() {
-    let readonly1_undelegated_id = Pubkey::new_from_array([4u8; 32]);
-    let readonly2_undelegated_id = Pubkey::new_from_array([5u8; 32]);
-    let writable_undelegated_id = Pubkey::new_from_array([6u8; 32]);
+async fn test_two_readonly_undelegated_and_one_writable_new_account() {
+    let readonly1_undelegated_id = Pubkey::new_unique();
+    let readonly2_undelegated_id = Pubkey::new_unique();
+    let writable_new_account_id = Pubkey::new_unique();
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (readonly1_undelegated_id, account_owned_by_system_program()),
@@ -590,7 +590,7 @@ async fn test_two_readonly_undelegated_and_one_writable_undelegated() {
 
     let acc_holder = TransactionAccountsHolderStub {
         readonly: vec![readonly1_undelegated_id, readonly2_undelegated_id],
-        writable: vec![writable_undelegated_id],
+        writable: vec![writable_new_account_id],
         payer: payer_id,
     };
 
@@ -606,11 +606,11 @@ async fn test_two_readonly_undelegated_and_one_writable_undelegated() {
 
     assert_eq!(acc_snapshot.readonly[0].pubkey, readonly1_undelegated_id);
     assert_eq!(acc_snapshot.readonly[1].pubkey, readonly2_undelegated_id);
-    assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated_id);
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_new_account_id);
 
     assert!(acc_snapshot.readonly[0].chain_state.is_undelegated());
     assert!(acc_snapshot.readonly[1].chain_state.is_undelegated());
-    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
+    assert!(acc_snapshot.writable[0].chain_state.is_new());
 
     assert_eq!(acc_snapshot.payer, payer_id);
 
