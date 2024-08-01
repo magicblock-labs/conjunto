@@ -67,7 +67,9 @@ impl Endpoint {
         // If any account is in an inconsistent delegation state, we can't do anything
         let writable_inconsistent_pubkeys =
             transaction_accounts_snapshot.writable_inconsistent_pubkeys();
-        if !writable_inconsistent_pubkeys.is_empty() {
+        let has_writable_inconsistent =
+            !writable_inconsistent_pubkeys.is_empty();
+        if has_writable_inconsistent {
             return Endpoint::Unroutable {
                 transaction_accounts_snapshot,
                 reason:
@@ -80,7 +82,8 @@ impl Endpoint {
         // If there are no writable delegated accounts in the transaction, we can route to chain
         let writable_delegated_pubkeys =
             transaction_accounts_snapshot.writable_delegated_pubkeys();
-        if writable_delegated_pubkeys.is_empty() {
+        let has_writable_delegated = !writable_delegated_pubkeys.is_empty();
+        if !has_writable_delegated {
             return Endpoint::Chain {
                 transaction_accounts_snapshot,
             };
