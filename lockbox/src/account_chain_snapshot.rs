@@ -11,8 +11,7 @@ use crate::{
     accounts::predicates::is_owned_by_delegation_program,
     delegation_account::DelegationAccount,
     errors::{LockboxError, LockboxResult},
-    AccountChainState, DelegationRecord, DelegationRecordParser,
-    DelegationRecordParserImpl,
+    AccountChainState, DelegationRecordParser, DelegationRecordParserImpl,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -120,20 +119,20 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             fetched_accounts.remove(0),
             &self.delegation_record_parser,
         )? {
-            DelegationAccount::Valid(record) => {
+            DelegationAccount::Valid(delegation_record) => {
                 Ok(AccountChainState::Delegated {
                     account: base_account,
                     delegated_id: pubkey,
                     delegation_pda,
-                    record,
+                    delegation_record,
                 })
             }
-            DelegationAccount::Invalid(inconsistencies) => {
+            DelegationAccount::Invalid(delegation_inconsistencies) => {
                 Ok(AccountChainState::Inconsistent {
                     account: base_account,
                     delegated_id: pubkey,
                     delegation_pda,
-                    inconsistencies,
+                    delegation_inconsistencies,
                 })
             }
         }

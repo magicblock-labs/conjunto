@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
-use crate::{DelegationInconsistency, DelegationRecord};
+use crate::{
+    delegation_inconsistency::DelegationInconsistency,
+    delegation_record::DelegationRecord,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum AccountChainState {
@@ -23,7 +26,7 @@ pub enum AccountChainState {
         account: Account,
         delegated_id: Pubkey,
         delegation_pda: Pubkey,
-        record: DelegationRecord,
+        delegation_record: DelegationRecord,
     },
     /// The account was found on chain and was partially delegated which means that
     /// it is owned by the delegation program but one or more of the related
@@ -32,7 +35,7 @@ pub enum AccountChainState {
         account: Account,
         delegated_id: Pubkey,
         delegation_pda: Pubkey,
-        inconsistencies: Vec<DelegationInconsistency>,
+        delegation_inconsistencies: Vec<DelegationInconsistency>,
     },
 }
 
@@ -53,14 +56,16 @@ impl AccountChainState {
         matches!(self, AccountChainState::Inconsistent { .. })
     }
 
-    pub fn delegation_record(&self) -> Option<DelegationRecord> {
+    pub fn delegation_record(&self) -> Option<&DelegationRecord> {
         match self {
-            AccountChainState::Delegated { record, .. } => Some(record.clone()),
+            AccountChainState::Delegated {
+                delegation_record, ..
+            } => Some(delegation_record),
             _ => None,
         }
     }
 
-    pub fn into_account(self) -> Option<Account> {
+    pub fn account(&self) -> Option<&Account> {
         match self {
             AccountChainState::NewAccount => None,
             AccountChainState::Undelegated { account } => Some(account),

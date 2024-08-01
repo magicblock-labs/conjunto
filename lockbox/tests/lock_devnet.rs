@@ -1,7 +1,10 @@
 use std::str::FromStr;
 
-use conjunto_core::{AccountProvider, CommitFrequency, DelegationRecord};
-use conjunto_lockbox::{AccountChainSnapshotProvider, AccountChainState};
+use conjunto_core::AccountProvider;
+use conjunto_lockbox::{
+    AccountChainSnapshotProvider, AccountChainState, CommitFrequency,
+    DelegationRecord,
+};
 use conjunto_providers::{
     rpc_account_provider::RpcAccountProvider,
     rpc_provider_config::RpcProviderConfig,
@@ -58,7 +61,7 @@ async fn test_known_delegation() {
             account: delegated_account,
             delegated_id,
             delegation_pda: delegation_id,
-            config: delegation_record.into(),
+            delegation_record: delegation_record,
         }
     );
 }

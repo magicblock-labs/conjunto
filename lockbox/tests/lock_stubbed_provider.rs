@@ -1,6 +1,6 @@
-use conjunto_core::{CommitFrequency, DelegationRecord};
 use conjunto_lockbox::{
-    AccountChainSnapshotProvider, AccountChainState, DelegationInconsistency,
+    AccountChainSnapshotProvider, AccountChainState, CommitFrequency,
+    DelegationInconsistency, DelegationRecord,
 };
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
@@ -61,7 +61,7 @@ async fn test_delegate_properly_delegated() {
             account: account_owned_by_delegation_program(),
             delegated_id,
             delegation_pda,
-            config: delegation_record.into(),
+            delegation_record,
         }
     );
 }
@@ -129,8 +129,8 @@ async fn test_delegate_missing_delegate_account() {
             account: account_owned_by_delegation_program(),
             delegated_id,
             delegation_pda,
-            inconsistencies: vec![
-                DelegationInconsistency::DelegationAccountNotFound
+            delegation_inconsistencies: vec![
+                DelegationInconsistency::AccountNotFound
             ],
         }
     );
@@ -159,8 +159,8 @@ async fn test_delegate_delegation_not_owned_by_delegate_program() {
             account: account_owned_by_delegation_program(),
             delegated_id,
             delegation_pda,
-            inconsistencies: vec![
-                DelegationInconsistency::DelegationAccountInvalidOwner
+            delegation_inconsistencies: vec![
+                DelegationInconsistency::AccountInvalidOwner
             ]
         }
     );
@@ -189,9 +189,9 @@ async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_reco
             account: account_owned_by_delegation_program(),
             delegated_id,
             delegation_pda,
-            inconsistencies: vec![
-                DelegationInconsistency::DelegationAccountInvalidOwner,
-                DelegationInconsistency::DelegationRecordAccountDataInvalid(
+            delegation_inconsistencies: vec![
+                DelegationInconsistency::AccountInvalidOwner,
+                DelegationInconsistency::RecordAccountDataInvalid(
                     "Failed to parse account data".to_string()
                 )
             ]

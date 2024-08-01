@@ -1,6 +1,6 @@
 use crate::{
+    delegation_record::{CommitFrequency, DelegationRecord},
     errors::{LockboxError, LockboxResult},
-    CommitFrequency, DelegationRecord,
 };
 
 pub trait DelegationRecordParser {

@@ -2,8 +2,9 @@ use solana_sdk::account::Account;
 
 use crate::{
     accounts::predicates::is_owned_by_delegation_program,
-    errors::LockboxResult, DelegationInconsistency, DelegationRecord,
-    DelegationRecordParser,
+    delegation_inconsistency::DelegationInconsistency,
+    delegation_record::DelegationRecord,
+    delegation_record_parser::DelegationRecordParser, errors::LockboxResult,
 };
 
 pub enum DelegationAccount {
@@ -19,15 +20,14 @@ impl DelegationAccount {
         let delegation_account = match delegation_fetched_account {
             None => {
                 return Ok(DelegationAccount::Invalid(vec![
-                    DelegationInconsistency::DelegationAccountNotFound,
+                    DelegationInconsistency::AccountNotFound,
                 ]))
             }
             Some(acc) => acc,
         };
         let mut inconsistencies = vec![];
         if !is_owned_by_delegation_program(&delegation_account) {
-            inconsistencies
-                .push(DelegationInconsistency::DelegationAccountInvalidOwner);
+            inconsistencies.push(DelegationInconsistency::AccountInvalidOwner);
         }
         match delegation_record_parser.try_parse(&delegation_account.data) {
             Ok(delegation_record) => {
@@ -39,7 +39,7 @@ impl DelegationAccount {
             }
             Err(err) => {
                 inconsistencies.push(
-                    DelegationInconsistency::DelegationRecordAccountDataInvalid(
+                    DelegationInconsistency::RecordAccountDataInvalid(
                         err.to_string(),
                     ),
                 );
@@ -52,6 +52,8 @@ impl DelegationAccount {
 #[cfg(test)]
 mod tests {
     use solana_sdk::pubkey::Pubkey;
+
+    use crate::{CommitFrequency, DelegationRecordParserImpl};
 
     use super::*;
 

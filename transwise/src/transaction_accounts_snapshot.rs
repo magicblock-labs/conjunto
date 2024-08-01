@@ -1,5 +1,9 @@
-use conjunto_core::{AccountProvider, AccountsHolder, DelegationRecordParser};
-use conjunto_lockbox::{AccountChainSnapshot, AccountChainSnapshotProvider};
+use std::sync::Arc;
+
+use conjunto_core::{AccountProvider, AccountsHolder};
+use conjunto_lockbox::{
+    AccountChainSnapshot, AccountChainSnapshotProvider, DelegationRecordParser,
+};
 use futures_util::future::{try_join, try_join_all};
 use serde::{Deserialize, Serialize};
 use solana_sdk::{
@@ -13,13 +17,13 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct TransactionAccountsMetas {
-    pub readonly: Vec<AccountChainSnapshot>,
-    pub writable: Vec<AccountChainSnapshot>,
+pub struct TransactionAccountsSnapshot {
+    pub readonly: Vec<Arc<AccountChainSnapshot>>,
+    pub writable: Vec<Arc<AccountChainSnapshot>>,
     pub payer: Pubkey,
 }
 
-impl TransactionAccountsMetas {
+impl TransactionAccountsSnapshot {
     pub async fn from_versioned_transaction<
         T: AccountProvider,
         U: DelegationRecordParser,
@@ -71,8 +75,14 @@ impl TransactionAccountsMetas {
         )
         .await?;
         Ok(Self {
-            readonly,
-            writable,
+            readonly: readonly
+                .into_iter()
+                .map(|chain_snapshot| Arc::new(chain_snapshot))
+                .collect(),
+            writable: writable
+                .into_iter()
+                .map(|chain_snapshot| Arc::new(chain_snapshot))
+                .collect(),
             payer: *holder.get_payer(),
         })
     }

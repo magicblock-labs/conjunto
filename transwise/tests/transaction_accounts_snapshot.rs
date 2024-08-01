@@ -1,5 +1,4 @@
-use conjunto_core::DelegationRecord;
-use conjunto_lockbox::AccountChainSnapshotProvider;
+use conjunto_lockbox::{AccountChainSnapshotProvider, DelegationRecord};
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
     accounts::{
@@ -10,20 +9,22 @@ use conjunto_test_tools::{
     transaction_accounts_holder_stub::TransactionAccountsHolderStub,
 };
 use conjunto_transwise::{
-    endpoint::Endpoint, transaction_accounts_metas::TransactionAccountsMetas,
+    endpoint::Endpoint,
+    transaction_accounts_snapshot::TransactionAccountsSnapshot,
 };
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
 fn setup_chain_snapshot_provider(
     accounts: Vec<(Pubkey, Account)>,
-    record: Option<DelegationRecord>,
+    delegation_record: Option<DelegationRecord>,
 ) -> AccountChainSnapshotProvider<AccountProviderStub, DelegationRecordParserStub>
 {
     let mut account_provider = AccountProviderStub::default();
     for (pubkey, account) in accounts {
         account_provider.add(pubkey, account);
     }
-    let delegation_record_parser = DelegationRecordParserStub::new(record);
+    let delegation_record_parser =
+        DelegationRecordParserStub::new(delegation_record);
     AccountChainSnapshotProvider::with_provider_and_parser(
         account_provider,
         delegation_record_parser,
@@ -48,7 +49,7 @@ async fn test_account_meta_one_properly_locked_writable_and_one_readonly() {
         payer: Pubkey::new_unique(),
     };
 
-    let account_metas = TransactionAccountsMetas::from_accounts_holder(
+    let account_metas = TransactionAccountsSnapshot::from_accounts_holder(
         &acc_holder,
         &chain_snapshot_provider,
     )
@@ -81,7 +82,7 @@ async fn test_account_meta_one_properly_delegated_writable_and_one_writable_unde
         payer: Pubkey::new_unique(),
     };
 
-    let account_metas = TransactionAccountsMetas::from_accounts_holder(
+    let account_metas = TransactionAccountsSnapshot::from_accounts_holder(
         &acc_holder,
         &chain_snapshot_provider,
     )
@@ -113,7 +114,7 @@ async fn test_account_meta_one_improperly_locked_writable_and_one_readonly() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -145,7 +146,7 @@ async fn test_account_meta_one_locked_writable_with_invalid_delegation_record_an
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -177,7 +178,7 @@ async fn test_account_meta_one_writable_properly_delegated_and_one_writable_new_
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -204,7 +205,7 @@ async fn test_account_meta_one_writable_new_account() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -235,7 +236,7 @@ async fn test_account_meta_one_undelegated_writable_that_is_payer() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -271,7 +272,7 @@ async fn test_account_meta_one_writable_undelegated_that_is_payer_and_locked_wri
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -309,7 +310,7 @@ async fn test_account_meta_one_writable_undelegated_that_is_payer_and_writable_u
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -342,7 +343,7 @@ async fn test_account_meta_one_writable_undelegated_two_readonlys() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -370,7 +371,7 @@ async fn test_account_meta_two_readonlys() {
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )
@@ -403,7 +404,7 @@ async fn test_account_meta_two_readonlys_one_program_and_one_writable_undelegate
     };
 
     let endpoint = Endpoint::from(
-        TransactionAccountsMetas::from_accounts_holder(
+        TransactionAccountsSnapshot::from_accounts_holder(
             &acc_holder,
             &chain_snapshot_provider,
         )

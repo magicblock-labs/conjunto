@@ -1,3 +1,8 @@
+use conjunto_lockbox::{
+    errors::{LockboxError, LockboxResult},
+    DelegationRecord, DelegationRecordParser,
+};
+
 #[derive(Default)]
 pub struct DelegationRecordParserStub {
     next_record: Option<DelegationRecord>,
