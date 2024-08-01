@@ -1,4 +1,7 @@
-use conjunto_lockbox::{AccountChainSnapshotProvider, DelegationRecord};
+use conjunto_lockbox::{
+    account_chain_snapshot::AccountChainSnapshotProvider,
+    delegation_record::DelegationRecord,
+};
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
     accounts::{
@@ -12,7 +15,9 @@ use conjunto_transwise::{
     endpoint::Endpoint,
     transaction_accounts_snapshot::TransactionAccountsSnapshot,
 };
-use solana_sdk::{account::Account, pubkey::Pubkey};
+use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
+
+const EXPECTED_SLOT: Slot = 42;
 
 fn setup_chain_snapshot_provider(
     accounts: Vec<(Pubkey, Account)>,
@@ -20,6 +25,7 @@ fn setup_chain_snapshot_provider(
 ) -> AccountChainSnapshotProvider<AccountProviderStub, DelegationRecordParserStub>
 {
     let mut account_provider = AccountProviderStub::default();
+    account_provider.at_slot = EXPECTED_SLOT;
     for (pubkey, account) in accounts {
         account_provider.add(pubkey, account);
     }
@@ -49,17 +55,27 @@ async fn test_account_meta_one_properly_locked_writable_and_one_readonly() {
         payer: Pubkey::new_unique(),
     };
 
-    let account_metas = TransactionAccountsSnapshot::from_accounts_holder(
-        &acc_holder,
-        &chain_snapshot_provider,
-    )
-    .await
-    .unwrap();
-
-    let endpoint = Endpoint::from(account_metas);
+    let endpoint = Endpoint::from(
+        TransactionAccountsSnapshot::from_accounts_holder(
+            &acc_holder,
+            &chain_snapshot_provider,
+        )
+        .await
+        .unwrap(),
+    );
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_ephemeral());
+
+    let tx_accounts = endpoint.transaction_accounts_snapshot();
+
+    assert_eq!(tx_accounts.readonly.len(), 1);
+    assert_eq!(tx_accounts.readonly[0].pubkey, readonly_id);
+    assert!(tx_accounts.readonly[0].chain_state.is_new());
+
+    assert_eq!(tx_accounts.writable.len(), 1);
+    assert_eq!(tx_accounts.readonly[0].pubkey, writable_delegated_id);
+    assert!(tx_accounts.writable[0].chain_state.is_delegated());
 }
 
 #[tokio::test]
@@ -82,17 +98,19 @@ async fn test_account_meta_one_properly_delegated_writable_and_one_writable_unde
         payer: Pubkey::new_unique(),
     };
 
-    let account_metas = TransactionAccountsSnapshot::from_accounts_holder(
+    let tx_accounts = TransactionAccountsSnapshot::from_accounts_holder(
         &acc_holder,
         &chain_snapshot_provider,
     )
     .await
     .unwrap();
 
-    let endpoint = Endpoint::from(account_metas);
+    let endpoint = Endpoint::from(transaction_accounts_snapshot);
 
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_unroutable());
+
+    assert_eq!()
 }
 
 #[tokio::test]
@@ -246,9 +264,12 @@ async fn test_account_meta_one_undelegated_writable_that_is_payer() {
 
     assert!(endpoint.is_chain());
 
-    let metas = endpoint.into_account_metas();
-    assert_eq!(metas.len(), 1);
-    assert!(metas[0].is_payer());
+    let tx_accounts = endpoint.transaction_accounts_snapshot();
+
+    assert_eq!(tx_accounts.writable.len(), 1);
+    assert_eq!(tx_accounts.writable[0].pubkey, writable_undelegated_id);
+
+    assert_eq!(tx_accounts.payer, writable_undelegated_id);
 }
 
 #[tokio::test]
@@ -282,7 +303,7 @@ async fn test_account_meta_one_writable_undelegated_that_is_payer_and_locked_wri
 
     assert!(endpoint.is_ephemeral());
 
-    let metas = endpoint.into_account_metas();
+    let tx_accounts = endpoint.transaction_accounts_snapshot();
     assert_eq!(metas.len(), 2);
     assert!(metas[0].is_payer());
 }
@@ -321,7 +342,7 @@ async fn test_account_meta_one_writable_undelegated_that_is_payer_and_writable_u
     eprintln!("{:#?}", endpoint);
     assert!(endpoint.is_chain());
 
-    let metas = endpoint.into_account_metas();
+    let tx_accounts = endpoint.transaction_accounts_snapshot();
     assert_eq!(metas.len(), 2);
     assert!(metas[0].is_payer());
 }
@@ -413,7 +434,7 @@ async fn test_account_meta_two_readonlys_one_program_and_one_writable_undelegate
     );
     assert!(endpoint.is_chain());
 
-    let transaction_metas = endpoint.into_account_metas();
+    let transaction_metas = endpoint.into_transaction_accounts_snapshot();
     assert_eq!(transaction_metas.len(), 3);
     assert_eq!(*transaction_metas[0].pubkey(), readonly1);
     assert_eq!(*transaction_metas[1].pubkey(), readonly2);

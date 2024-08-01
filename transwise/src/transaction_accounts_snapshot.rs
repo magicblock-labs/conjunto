@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use conjunto_core::{AccountProvider, AccountsHolder};
 use conjunto_lockbox::{
-    AccountChainSnapshot, AccountChainSnapshotProvider, DelegationRecordParser,
+    account_chain_snapshot::{
+        AccountChainSnapshot, AccountChainSnapshotProvider,
+    },
+    delegation_record_parser::DelegationRecordParser,
 };
 use futures_util::future::{try_join, try_join_all};
 use serde::{Deserialize, Serialize};
@@ -120,6 +123,14 @@ impl TransactionAccountsSnapshot {
         self.writable
             .iter()
             .filter(|chain_snapshot| chain_snapshot.chain_state.is_new())
+            .map(|chain_snapshot| chain_snapshot.pubkey)
+            .collect()
+    }
+
+    pub fn writable_payer_pubkeys(&self) -> Vec<Pubkey> {
+        self.writable
+            .iter()
+            .filter(|chain_snapshot| chain_snapshot.pubkey == self.payer)
             .map(|chain_snapshot| chain_snapshot.pubkey)
             .collect()
     }

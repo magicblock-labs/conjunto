@@ -1,7 +1,3 @@
-use conjunto_lockbox::{
-    AccountChainSnapshotProvider, AccountChainState, CommitFrequency,
-    DelegationInconsistency, DelegationRecord,
-};
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
     accounts::{

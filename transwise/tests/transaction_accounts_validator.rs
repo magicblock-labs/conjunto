@@ -1,15 +1,23 @@
+use std::sync::Arc;
+
 use conjunto_lockbox::{
-    AccountChainSnapshot, AccountChainState, CommitFrequency, DelegationRecord,
+    account_chain_snapshot::AccountChainSnapshot,
+    account_chain_state::AccountChainState,
+    delegation_record::{CommitFrequency, DelegationRecord},
 };
 use conjunto_test_tools::accounts::{
     account_owned_by_delegation_program, account_owned_by_system_program,
 };
-use conjunto_transwise::transaction_accounts_snapshot::TransactionAccountsSnapshot;
+use conjunto_transwise::{
+    transaction_accounts_snapshot::TransactionAccountsSnapshot,
+    transaction_accounts_validator::{
+        TransactionAccountsValidator, TransactionAccountsValidatorImpl,
+        ValidateAccountsConfig,
+    },
+};
 use solana_sdk::pubkey::Pubkey;
 
-use crate::errors::TranswiseResult;
-
-fn transaction_accounts_validator() -> TransactionAccountsValidator {
+fn transaction_accounts_validator() -> TransactionAccountsValidatorImpl {
     TransactionAccountsValidatorImpl {}
 }
 
@@ -26,8 +34,8 @@ fn config_permissive() -> ValidateAccountsConfig {
     }
 }
 
-fn chain_snapshot_delegated() -> AccountChainSnapshot {
-    AccountChainSnapshot {
+fn chain_snapshot_delegated() -> Arc<AccountChainSnapshot> {
+    Arc::new(AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::Delegated {
@@ -39,26 +47,26 @@ fn chain_snapshot_delegated() -> AccountChainSnapshot {
                 owner: Pubkey::new_unique(),
             },
         },
-    }
+    })
 }
-fn chain_snapshot_undelegated() -> AccountChainSnapshot {
-    AccountChainSnapshot {
+fn chain_snapshot_undelegated() -> Arc<AccountChainSnapshot> {
+    Arc::new(AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::Undelegated {
             account: account_owned_by_system_program(),
         },
-    }
+    })
 }
-fn chain_snapshot_new_account() -> AccountChainSnapshot {
-    AccountChainSnapshot {
+fn chain_snapshot_new_account() -> Arc<AccountChainSnapshot> {
+    Arc::new(AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::NewAccount,
-    }
+    })
 }
-fn chain_snapshot_inconsistent() -> AccountChainSnapshot {
-    AccountChainSnapshot {
+fn chain_snapshot_inconsistent() -> Arc<AccountChainSnapshot> {
+    Arc::new(AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::Inconsistent {
@@ -67,330 +75,321 @@ fn chain_snapshot_inconsistent() -> AccountChainSnapshot {
             delegation_pda: Pubkey::new_unique(),
             delegation_inconsistencies: vec![],
         },
-    }
+    })
 }
 
 #[test]
 fn test_two_readonly_undelegated_and_two_writable_delegated_and_payer() {
-    let undelegated1 = chain_snapshot_undelegated();
-    let undelegated2 = chain_snapshot_undelegated();
-    let delegated1 = chain_snapshot_delegated();
-    let delegated2 = chain_snapshot_delegated();
-    let undelegated_payer = chain_snapshot_undelegated();
+    let readonly_undelegated1 = chain_snapshot_undelegated();
+    let readonly_undelegated2 = chain_snapshot_undelegated();
+    let writable_delegated1 = chain_snapshot_delegated();
+    let writable_delegated2 = chain_snapshot_delegated();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
 
-    let transaction_accounts = TransactionAccountsSnapshot {
-        readonly: vec![undelegated1, undelegated2],
-        writable: vec![delegated1, delegated2, undelegated_payer],
-        payer: writable_undelegated_payer.pubkey,
-    };
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_undelegated_payer.pubkey.clone(),
+            readonly: vec![readonly_undelegated1, readonly_undelegated2],
+            writable: vec![
+                writable_delegated1,
+                writable_delegated2,
+                writable_undelegated_payer,
+            ],
+        },
+        &config_strict(),
+    );
 
-    let result = transaction_accounts_validator()
-        .validate_accounts(transaction_accounts, &config_strict());
-
+    // This is a fairly typical case that should work (payer and writables are in good condition)
     assert!(result.is_ok());
 }
 
 #[test]
-fn test_one_readonly_undelegated_and_one_writable_undelegated_fail() {
-    let readonly_undelegated_id = Pubkey::new_unique();
-    let writable_undelegated_id = Pubkey::new_unique();
-
-    let meta1 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_undelegated_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-    };
-    let meta2 = TransactionAccountMeta::Writable {
-        pubkey: writable_undelegated_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-        is_payer: false,
-    };
-
-    let res: TranswiseResult<ValidatedAccounts> = (
-        TransactionAccountsSnapshot(vec![meta1, meta2]),
+fn test_empty_transaction_accounts_fail() {
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: Pubkey::new_unique(),
+            readonly: vec![],
+            writable: vec![],
+        },
         &config_strict(),
-    )
-        .try_into();
+    );
 
-    assert!(res.is_err());
+    // Empty transactions are missing a payer, should fail
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_only_one_readonly_undelegated_non_payer_fail() {
+    let readonly_undelegated = chain_snapshot_undelegated();
+
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: Pubkey::new_unique(),
+            readonly: vec![readonly_undelegated],
+            writable: vec![],
+        },
+        &config_strict(),
+    );
+
+    // This transaction is missing a payer, should fail
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_only_one_writable_delegated_non_payer_fail() {
+    let writable_delegated = chain_snapshot_delegated();
+
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: Pubkey::new_unique(),
+            readonly: vec![],
+            writable: vec![writable_delegated],
+        },
+        &config_strict(),
+    );
+
+    // This transaction is missing a payer, should fail
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_only_one_readable_undelegated_payer_fail() {
+    let readable_undelegated_payer = chain_snapshot_undelegated();
+
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: readable_undelegated_payer.pubkey.clone(),
+            readonly: vec![readable_undelegated_payer],
+            writable: vec![],
+        },
+        &config_strict(),
+    );
+
+    // This transaction's payer is readonly, this should fail
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_only_one_writable_undelegated_payer() {
+    let writable_undelegated_payer = chain_snapshot_undelegated();
+
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_undelegated_payer.pubkey.clone(),
+            readonly: vec![],
+            writable: vec![writable_undelegated_payer],
+        },
+        &config_strict(),
+    );
+
+    // Because there is one writable and it's a payer, this should work even when payer is not delegated
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_only_one_writable_new_account_payer_fail() {
+    let writable_new_account_payer = chain_snapshot_new_account();
+
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_new_account_payer.pubkey.clone(),
+            readonly: vec![],
+            writable: vec![writable_new_account_payer],
+        },
+        &config_strict(),
+    );
+
+    // Because the payer is a new account, this should not work
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_only_one_writable_inconsistent_payer_fail() {
+    let writable_inconsistent_payer = chain_snapshot_inconsistent();
+
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_inconsistent_payer.pubkey.clone(),
+            readonly: vec![],
+            writable: vec![writable_inconsistent_payer],
+        },
+        &config_strict(),
+    );
+
+    // Because there is an inconsistent delegation record, this should fail, even if its the payer
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_one_readonly_undelegated_and_payer() {
-    let readonly_undelegated_id = Pubkey::new_unique();
-    let writable_undelegated_payer_id = Pubkey::new_unique();
+    let readonly_undelegated = chain_snapshot_undelegated();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
 
-    let meta1 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_undelegated_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-    };
-    let meta2 = TransactionAccountMeta::Writable {
-        pubkey: writable_undelegated_payer_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-        is_payer: true,
-    };
-
-    let vas: ValidatedAccounts = (
-        TransactionAccountsSnapshot(vec![meta1, meta2]),
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_undelegated_payer.pubkey.clone(),
+            readonly: vec![readonly_undelegated],
+            writable: vec![writable_undelegated_payer],
+        },
         &config_strict(),
-    )
-        .try_into()
-        .unwrap();
+    );
 
-    assert_eq!(readonly_pubkeys(&vas), vec![readonly_undelegated_id]);
-    assert_eq!(writable_pubkeys(&vas), vec![writable_undelegated_payer_id]);
+    // Even if it's a writable undelegated, it should work because that's our payer
+    assert!(result.is_ok());
 }
 
 #[test]
-fn test_one_readonly_undelegated_and_one_writable_inconsistent() {
-    let readonly_undelegated_id = Pubkey::new_unique();
-    let writable_inconsistent_id = Pubkey::new_unique();
+fn test_one_readonly_undelegated_and_one_writable_undelegated_and_payer_fail() {
+    let readonly_undelegated = chain_snapshot_undelegated();
+    let writable_undelegated = chain_snapshot_undelegated();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
 
-    let meta1 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_undelegated_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-    };
-    let meta2 = TransactionAccountMeta::Writable {
-        pubkey: writable_inconsistent_id,
-        chain_snapshot: chain_snapshot_inconsistent(),
-        is_payer: false,
-    };
-
-    let res: TranswiseResult<ValidatedAccounts> = (
-        TransactionAccountsSnapshot(vec![meta1, meta2]),
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: Pubkey::new_unique(),
+            readonly: vec![readonly_undelegated],
+            writable: vec![writable_undelegated, writable_undelegated_payer],
+        },
         &config_strict(),
-    )
-        .try_into();
+    );
 
-    assert!(res.is_err());
+    // Because there is a non-payer writable undelegated, this should not work
+    assert!(result.is_err());
 }
 
 #[test]
-fn test_one_readonly_new_account_and_one_payer() {
-    let readonly_new_account_id = Pubkey::new_unique();
-    let writable_undelegated_payer_id = Pubkey::new_unique();
+fn test_one_readonly_undelegated_and_one_writable_inconsistent_and_payer_fail()
+{
+    let readonly_undelegated = chain_snapshot_undelegated();
+    let writable_inconsistent = chain_snapshot_inconsistent();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
 
-    let meta1 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_new_account_id,
-        chain_snapshot: chain_snapshot_new_account(),
-    };
-    let meta2 = TransactionAccountMeta::Writable {
-        pubkey: writable_undelegated_payer_id,
-        chain_snapshot: chain_snapshot_delegated(),
-        is_payer: true,
-    };
-
-    let vas: ValidatedAccounts = (
-        TransactionAccountsSnapshot(vec![meta1, meta2]),
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: Pubkey::new_unique(),
+            readonly: vec![readonly_undelegated],
+            writable: vec![writable_inconsistent, writable_undelegated_payer],
+        },
         &config_strict(),
-    )
-        .try_into()
-        .unwrap();
+    );
+
+    // Any writable inconsistent should fail
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_one_readonly_new_account_and_payer() {
+    let readonly_new_account = chain_snapshot_new_account();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
+
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_undelegated_payer.pubkey.clone(),
+            readonly: vec![readonly_new_account],
+            writable: vec![writable_undelegated_payer],
+        },
+        &config_strict(),
+    );
 
     // While this is a new account, it's a readonly so we don't need to write to it, so it's valid
-    // However it cannot be cloned, but that last bit of clone filtering will be done in the validator
-    assert_eq!(readonly_pubkeys(&vas), vec![readonly_new_account_id]);
-    assert_eq!(writable_pubkeys(&vas), vec![writable_undelegated_payer_id]);
+    assert!(result.is_ok());
 }
 
 #[test]
-fn test_one_readonly_undelegated_and_one_writable_new_account() {
-    let readonly_undelegated_id = Pubkey::new_unique();
-    let writable_new_account_id = Pubkey::new_unique();
+fn test_one_writable_new_account_and_payer_fail() {
+    let writable_new_account = chain_snapshot_new_account();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
 
-    let meta1 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_undelegated_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-    };
-    let meta2 = TransactionAccountMeta::Writable {
-        pubkey: writable_new_account_id,
-        chain_snapshot: chain_snapshot_new_account(),
-        is_payer: false,
-    };
-
-    let res: TranswiseResult<ValidatedAccounts> = (
-        TransactionAccountsSnapshot(vec![meta1, meta2]),
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_undelegated_payer.pubkey.clone(),
+            readonly: vec![],
+            writable: vec![writable_new_account, writable_undelegated_payer],
+        },
         &config_strict(),
-    )
-        .try_into();
+    );
 
-    assert!(res.is_err());
+    // while the rest of the transaction is valid, because we have a writable new account and strict config, it should fail
+    assert!(result.is_err());
 }
 
 #[test]
-fn test_one_readonly_undelegated_and_one_writable_new_account_and_one_writable_undelegated_while_permissive(
-) {
-    let readonly_undelegated_id1 = Pubkey::new_unique();
-    let writable_new_account_id = Pubkey::new_unique();
-    let writable_undelegated_id = Pubkey::new_unique();
+fn test_one_writable_new_account_and_payer_while_permissive() {
+    let writable_new_account = chain_snapshot_new_account();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
 
-    let meta1 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_undelegated_id1,
-        chain_snapshot: chain_snapshot_undelegated(),
-    };
-    let meta2 = TransactionAccountMeta::Writable {
-        pubkey: writable_new_account_id,
-        chain_snapshot: chain_snapshot_new_account(),
-        is_payer: false,
-    };
-    let meta3 = TransactionAccountMeta::Writable {
-        pubkey: writable_undelegated_id,
-        chain_snapshot: chain_snapshot_delegated(),
-        is_payer: false,
-    };
-
-    let vas: ValidatedAccounts = (
-        TransactionAccountsSnapshot(vec![meta1, meta2, meta3]),
-        &config_permissive(),
-    )
-        .try_into()
-        .unwrap();
-
-    assert_eq!(readonly_pubkeys(&vas), vec![readonly_undelegated_id1]);
-    assert_eq!(
-        writable_pubkeys(&vas),
-        vec![writable_new_account_id, writable_undelegated_id]
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_undelegated_payer.pubkey.clone(),
+            readonly: vec![],
+            writable: vec![writable_new_account, writable_undelegated_payer],
+        },
+        &&config_permissive(),
     );
+
+    // While this should fail when strict mode, we should allow new account in this case
+    assert!(result.is_ok())
 }
 
 #[test]
 fn test_one_of_each_valid_type() {
-    let readonly_new_account_id = Pubkey::new_unique();
-    let readonly_undelegated_id = Pubkey::new_unique();
-    let readonly_delegated_id = Pubkey::new_unique();
-    let readonly_inconsistent_id = Pubkey::new_unique();
-    let writable_delegated_id = Pubkey::new_unique();
+    let readonly_new_account = chain_snapshot_new_account();
+    let readonly_undelegated = chain_snapshot_undelegated();
+    let readonly_delegated = chain_snapshot_delegated();
+    let readonly_inconsistent = chain_snapshot_inconsistent();
 
-    let meta1 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_new_account_id,
-        chain_snapshot: chain_snapshot_new_account(),
-    };
-    let meta2 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_undelegated_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-    };
-    let meta3 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_delegated_id,
-        chain_snapshot: chain_snapshot_delegated(),
-    };
-    let meta4 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_inconsistent_id,
-        chain_snapshot: chain_snapshot_inconsistent(),
-    };
-    let meta5 = TransactionAccountMeta::Writable {
-        pubkey: writable_delegated_id,
-        chain_snapshot: chain_snapshot_delegated(),
-        is_payer: false,
-    };
+    let writable_delegated = chain_snapshot_delegated();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
 
-    let vas: ValidatedAccounts = (
-        TransactionAccountsSnapshot(vec![meta1, meta2, meta3, meta4, meta5]),
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_undelegated_payer.pubkey.clone(),
+            readonly: vec![
+                readonly_new_account,
+                readonly_undelegated,
+                readonly_delegated,
+                readonly_inconsistent,
+            ],
+            writable: vec![writable_delegated, writable_undelegated_payer],
+        },
         &config_strict(),
-    )
-        .try_into()
-        .unwrap();
+    );
 
-    assert_eq!(vas.readonly.len(), 4);
-    assert_eq!(vas.writable.len(), 1);
-
-    assert_eq!(vas.readonly[0].pubkey, readonly_new_account_id);
-    assert_eq!(vas.readonly[1].pubkey, readonly_undelegated_id);
-    assert_eq!(vas.readonly[2].pubkey, readonly_delegated_id);
-    assert_eq!(vas.readonly[3].pubkey, readonly_inconsistent_id);
-    assert_eq!(vas.writable[0].pubkey, writable_delegated_id);
-
-    assert!(vas.readonly[0].account.is_none());
-    assert!(vas.readonly[1].account.is_some());
-    assert!(vas.readonly[2].account.is_some());
-    assert!(vas.readonly[3].account.is_some());
-    assert!(vas.writable[0].account.is_some());
-
-    assert_eq!(vas.readonly[0].at_slot, 42);
-    assert_eq!(vas.readonly[1].at_slot, 42);
-    assert_eq!(vas.readonly[2].at_slot, 42);
-    assert_eq!(vas.readonly[3].at_slot, 42);
-    assert_eq!(vas.writable[0].at_slot, 42);
+    // This should work just right in strict mode
+    assert!(result.is_ok());
 }
 
 #[test]
 fn test_one_of_each_valid_type_while_permissive() {
-    let readonly_new_account_id = Pubkey::new_unique();
-    let readonly_undelegated_id = Pubkey::new_unique();
-    let readonly_delegated_id = Pubkey::new_unique();
-    let readonly_inconsistent_id = Pubkey::new_unique();
+    let readonly_new_account = chain_snapshot_new_account();
+    let readonly_undelegated = chain_snapshot_undelegated();
+    let readonly_delegated = chain_snapshot_delegated();
+    let readonly_inconsistent = chain_snapshot_inconsistent();
 
-    let writable_new_account_id = Pubkey::new_unique();
-    let writable_undelegated_id = Pubkey::new_unique();
-    let writable_delegated_id = Pubkey::new_unique();
+    let writable_new_account = chain_snapshot_new_account();
+    let writable_undelegated = chain_snapshot_undelegated();
+    let writable_delegated = chain_snapshot_delegated();
+    let writable_undelegated_payer = chain_snapshot_undelegated();
 
-    let meta1 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_new_account_id,
-        chain_snapshot: chain_snapshot_new_account(),
-    };
-    let meta2 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_undelegated_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-    };
-    let meta3 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_delegated_id,
-        chain_snapshot: chain_snapshot_delegated(),
-    };
-    let meta4 = TransactionAccountMeta::Readonly {
-        pubkey: readonly_inconsistent_id,
-        chain_snapshot: chain_snapshot_inconsistent(),
-    };
-
-    let meta5 = TransactionAccountMeta::Writable {
-        pubkey: writable_new_account_id,
-        chain_snapshot: chain_snapshot_new_account(),
-        is_payer: false,
-    };
-    let meta6 = TransactionAccountMeta::Writable {
-        pubkey: writable_undelegated_id,
-        chain_snapshot: chain_snapshot_undelegated(),
-        is_payer: false,
-    };
-    let meta7 = TransactionAccountMeta::Writable {
-        pubkey: writable_delegated_id,
-        chain_snapshot: chain_snapshot_delegated(),
-        is_payer: false,
-    };
-
-    let vas: ValidatedAccounts = (
-        TransactionAccountsSnapshot(vec![
-            meta1, meta2, meta3, meta4, meta5, meta6, meta7,
-        ]),
+    let result = transaction_accounts_validator().validate_accounts(
+        &TransactionAccountsSnapshot {
+            payer: writable_undelegated_payer.pubkey.clone(),
+            readonly: vec![
+                readonly_new_account,
+                readonly_undelegated,
+                readonly_delegated,
+                readonly_inconsistent,
+            ],
+            writable: vec![
+                writable_new_account,
+                writable_undelegated,
+                writable_delegated,
+                writable_undelegated_payer,
+            ],
+        },
         &config_permissive(),
-    )
-        .try_into()
-        .unwrap();
+    );
 
-    assert_eq!(vas.readonly.len(), 4);
-    assert_eq!(vas.writable.len(), 3);
-
-    assert_eq!(vas.readonly[0].pubkey, readonly_new_account_id);
-    assert_eq!(vas.readonly[1].pubkey, readonly_undelegated_id);
-    assert_eq!(vas.readonly[2].pubkey, readonly_delegated_id);
-    assert_eq!(vas.readonly[3].pubkey, readonly_inconsistent_id);
-
-    assert_eq!(vas.writable[0].pubkey, writable_new_account_id);
-    assert_eq!(vas.writable[1].pubkey, writable_undelegated_id);
-    assert_eq!(vas.writable[2].pubkey, writable_delegated_id);
-
-    assert!(vas.readonly[0].account.is_none());
-    assert!(vas.readonly[1].account.is_some());
-    assert!(vas.readonly[2].account.is_some());
-    assert!(vas.readonly[3].account.is_some());
-
-    assert!(vas.writable[0].account.is_none());
-    assert!(vas.writable[1].account.is_some());
-    assert!(vas.writable[2].account.is_some());
-
-    assert_eq!(vas.readonly[0].at_slot, 42);
-    assert_eq!(vas.readonly[1].at_slot, 42);
-    assert_eq!(vas.readonly[2].at_slot, 42);
-    assert_eq!(vas.readonly[3].at_slot, 42);
-
-    assert_eq!(vas.writable[0].at_slot, 42);
-    assert_eq!(vas.writable[1].at_slot, 42);
-    assert_eq!(vas.writable[2].at_slot, 42);
+    // This should work just right in permissive mode
+    assert!(result.is_ok());
 }

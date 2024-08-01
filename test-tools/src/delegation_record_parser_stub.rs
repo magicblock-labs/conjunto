@@ -1,6 +1,7 @@
 use conjunto_lockbox::{
+    delegation_record::DelegationRecord,
+    delegation_record_parser::DelegationRecordParser,
     errors::{LockboxError, LockboxResult},
-    DelegationRecord, DelegationRecordParser,
 };
 
 #[derive(Default)]

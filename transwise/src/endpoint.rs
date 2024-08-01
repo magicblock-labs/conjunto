@@ -39,6 +39,25 @@ impl Endpoint {
     pub fn is_unroutable(&self) -> bool {
         matches!(self, Endpoint::Unroutable { .. })
     }
+
+    pub fn transaction_accounts_snapshot(
+        &self,
+    ) -> &TransactionAccountsSnapshot {
+        match self {
+            Endpoint::Chain {
+                transaction_accounts_snapshot,
+                ..
+            } => transaction_accounts_snapshot,
+            Endpoint::Ephemeral {
+                transaction_accounts_snapshot,
+                ..
+            } => transaction_accounts_snapshot,
+            Endpoint::Unroutable {
+                transaction_accounts_snapshot,
+                ..
+            } => transaction_accounts_snapshot,
+        }
+    }
 }
 
 impl Endpoint {
