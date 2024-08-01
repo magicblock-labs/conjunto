@@ -481,7 +481,53 @@ async fn test_account_meta_one_writable_undelegated_that_is_payer_and_writable_u
 }
 
 #[tokio::test]
-async fn test_one_writable_undelegated_and_two_readonly_new_accounts() {
+async fn test_two_readonly_new_accounts() {
+    let chain_snapshot_provider = setup_chain_snapshot_provider(
+        vec![],
+        Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
+    );
+
+    let readonly1_new_account_id = Pubkey::new_from_array([4u8; 32]);
+    let readonly2_new_account_id = Pubkey::new_from_array([5u8; 32]);
+    let payer_id = Pubkey::new_unique();
+
+    let acc_holder = TransactionAccountsHolderStub {
+        readonly: vec![readonly1_new_account_id, readonly2_new_account_id],
+        writable: vec![],
+        payer: payer_id,
+    };
+
+    let acc_snapshot = TransactionAccountsSnapshot::from_accounts_holder(
+        &acc_holder,
+        &chain_snapshot_provider,
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(acc_snapshot.readonly.len(), 2);
+    assert_eq!(acc_snapshot.writable.len(), 0);
+
+    assert_eq!(acc_snapshot.readonly[0].pubkey, readonly1_new_account_id);
+    assert_eq!(acc_snapshot.readonly[1].pubkey, readonly2_new_account_id);
+
+    assert!(acc_snapshot.readonly[0].chain_state.is_new());
+    assert!(acc_snapshot.readonly[1].chain_state.is_new());
+
+    assert_eq!(acc_snapshot.payer, payer_id);
+
+    let endpoint = Endpoint::from(acc_snapshot.clone());
+
+    eprintln!("{:#?}", endpoint);
+    assert_eq!(
+        endpoint,
+        Endpoint::Chain {
+            transaction_accounts_snapshot: acc_snapshot
+        }
+    );
+}
+
+#[tokio::test]
+async fn test_two_readonly_new_accounts_and_one_writable_undelegated() {
     let writable_undelegated_id = Pubkey::new_from_array([4u8; 32]);
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![(writable_undelegated_id, account_owned_by_system_program())],
@@ -529,66 +575,52 @@ async fn test_one_writable_undelegated_and_two_readonly_new_accounts() {
 }
 
 #[tokio::test]
-async fn test_account_meta_two_readonlys() {
-    let chain_snapshot_provider = setup_chain_snapshot_provider(
-        vec![],
-        Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
-    );
-
-    let readonly1 = Pubkey::new_from_array([4u8; 32]);
-    let readonly2 = Pubkey::new_from_array([5u8; 32]);
-
-    let acc_holder = TransactionAccountsHolderStub {
-        readonly: vec![readonly1, readonly2],
-        ..Default::default()
-    };
-
-    let endpoint = Endpoint::from(
-        TransactionAccountsSnapshot::from_accounts_holder(
-            &acc_holder,
-            &chain_snapshot_provider,
-        )
-        .await
-        .unwrap(),
-    );
-
-    eprintln!("{:#?}", endpoint);
-    assert!(endpoint.is_chain());
-}
-
-#[tokio::test]
-async fn test_account_meta_two_readonlys_one_program_and_one_writable_undelegated(
-) {
-    let readonly1 = Pubkey::new_from_array([4u8; 32]);
-    let readonly2 = Pubkey::new_from_array([5u8; 32]);
-    let writable_undelegated = Pubkey::new_from_array([6u8; 32]);
+async fn test_two_readonly_undelegated_and_one_writable_undelegated() {
+    let readonly1_undelegated_id = Pubkey::new_from_array([4u8; 32]);
+    let readonly2_undelegated_id = Pubkey::new_from_array([5u8; 32]);
+    let writable_undelegated_id = Pubkey::new_from_array([6u8; 32]);
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
-            (readonly1, account_owned_by_system_program()),
-            (readonly2, program_account()),
+            (readonly1_undelegated_id, account_owned_by_system_program()),
+            (readonly2_undelegated_id, program_account()),
         ],
         Some(DelegationRecord::default_with_owner(Pubkey::new_unique())),
     );
+    let payer_id = Pubkey::new_unique();
 
     let acc_holder = TransactionAccountsHolderStub {
-        readonly: vec![readonly1, readonly2],
-        writable: vec![writable_undelegated],
-        payer: Pubkey::new_unique(),
+        readonly: vec![readonly1_undelegated_id, readonly2_undelegated_id],
+        writable: vec![writable_undelegated_id],
+        payer: payer_id,
     };
 
-    let endpoint = Endpoint::from(
-        TransactionAccountsSnapshot::from_accounts_holder(
-            &acc_holder,
-            &chain_snapshot_provider,
-        )
-        .await
-        .unwrap(),
-    );
-    assert!(endpoint.is_chain());
+    let acc_snapshot = TransactionAccountsSnapshot::from_accounts_holder(
+        &acc_holder,
+        &chain_snapshot_provider,
+    )
+    .await
+    .unwrap();
 
-    let transaction_metas = endpoint.into_transaction_accounts_snapshot();
-    assert_eq!(transaction_metas.len(), 3);
-    assert_eq!(*transaction_metas[0].pubkey(), readonly1);
-    assert_eq!(*transaction_metas[1].pubkey(), readonly2);
-    assert_eq!(*transaction_metas[2].pubkey(), writable_undelegated);
+    assert_eq!(acc_snapshot.readonly.len(), 2);
+    assert_eq!(acc_snapshot.writable.len(), 1);
+
+    assert_eq!(acc_snapshot.readonly[0].pubkey, readonly1_undelegated_id);
+    assert_eq!(acc_snapshot.readonly[1].pubkey, readonly2_undelegated_id);
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated_id);
+
+    assert!(acc_snapshot.readonly[0].chain_state.is_undelegated());
+    assert!(acc_snapshot.readonly[1].chain_state.is_undelegated());
+    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
+
+    assert_eq!(acc_snapshot.payer, payer_id);
+
+    let endpoint = Endpoint::from(acc_snapshot.clone());
+
+    eprintln!("{:#?}", endpoint);
+    assert_eq!(
+        endpoint,
+        Endpoint::Chain {
+            transaction_accounts_snapshot: acc_snapshot
+        }
+    );
 }

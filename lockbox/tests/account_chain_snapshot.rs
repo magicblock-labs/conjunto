@@ -31,6 +31,7 @@ fn setup(
 ) -> AccountChainSnapshotProvider<AccountProviderStub, DelegationRecordParserStub>
 {
     let mut account_provider = AccountProviderStub::default();
+    account_provider.at_slot = EXPECTED_SLOT;
     for (pubkey, account) in accounts {
         account_provider.add(pubkey, account);
     }
@@ -98,7 +99,7 @@ async fn test_delegate_undelegated() {
             pubkey,
             at_slot: EXPECTED_SLOT,
             chain_state: AccountChainState::Undelegated {
-                account: account_owned_by_delegation_program(),
+                account: account_owned_by_system_program(),
             }
         }
     );
