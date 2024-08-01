@@ -125,7 +125,6 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             DelegationAccount::Valid(delegation_record) => {
                 Ok(AccountChainState::Delegated {
                     account: base_account,
-                    delegated_id: pubkey,
                     delegation_pda,
                     delegation_record,
                 })
@@ -133,7 +132,6 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             DelegationAccount::Invalid(delegation_inconsistencies) => {
                 Ok(AccountChainState::Inconsistent {
                     account: base_account,
-                    delegated_id: pubkey,
                     delegation_pda,
                     delegation_inconsistencies,
                 })

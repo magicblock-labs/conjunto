@@ -40,7 +40,6 @@ fn chain_snapshot_delegated() -> Arc<AccountChainSnapshot> {
         at_slot: 42,
         chain_state: AccountChainState::Delegated {
             account: account_owned_by_delegation_program(),
-            delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
             delegation_record: DelegationRecord {
                 commit_frequency: CommitFrequency::Millis(1_000),
@@ -71,7 +70,6 @@ fn chain_snapshot_inconsistent() -> Arc<AccountChainSnapshot> {
         at_slot: 42,
         chain_state: AccountChainState::Inconsistent {
             account: account_owned_by_system_program(),
-            delegated_id: Pubkey::new_unique(),
             delegation_pda: Pubkey::new_unique(),
             delegation_inconsistencies: vec![],
         },

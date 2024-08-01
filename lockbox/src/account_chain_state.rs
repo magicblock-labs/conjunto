@@ -24,7 +24,6 @@ pub enum AccountChainState {
     /// account is delegated and then used before the validator commits a state change.
     Delegated {
         account: Account,
-        delegated_id: Pubkey,
         delegation_pda: Pubkey,
         delegation_record: DelegationRecord,
     },
@@ -33,7 +32,6 @@ pub enum AccountChainState {
     /// accounts were either not present or not owned by the delegation program
     Inconsistent {
         account: Account,
-        delegated_id: Pubkey,
         delegation_pda: Pubkey,
         delegation_inconsistencies: Vec<DelegationInconsistency>,
     },

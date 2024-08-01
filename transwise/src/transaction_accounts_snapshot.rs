@@ -19,7 +19,7 @@ use crate::{
     transaction_accounts_holder::TransactionAccountsHolder,
 };
 
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TransactionAccountsSnapshot {
     pub readonly: Vec<Arc<AccountChainSnapshot>>,
     pub writable: Vec<Arc<AccountChainSnapshot>>,
