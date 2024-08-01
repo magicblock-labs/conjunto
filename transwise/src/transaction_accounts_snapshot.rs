@@ -78,14 +78,8 @@ impl TransactionAccountsSnapshot {
         )
         .await?;
         Ok(Self {
-            readonly: readonly
-                .into_iter()
-                .map(|chain_snapshot| Arc::new(chain_snapshot))
-                .collect(),
-            writable: writable
-                .into_iter()
-                .map(|chain_snapshot| Arc::new(chain_snapshot))
-                .collect(),
+            readonly: readonly.into_iter().map(Arc::new).collect(),
+            writable: writable.into_iter().map(Arc::new).collect(),
             payer: *holder.get_payer(),
         })
     }

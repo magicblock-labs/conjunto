@@ -6,3 +6,5 @@ pub mod delegation_inconsistency;
 pub mod delegation_record;
 pub mod delegation_record_parser;
 pub mod errors;
+
+pub use conjunto_providers::rpc_provider_config::RpcProviderConfig;
