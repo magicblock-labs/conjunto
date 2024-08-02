@@ -1,8 +1,4 @@
 use conjunto_core::AccountProvider;
-use conjunto_providers::{
-    rpc_account_provider::RpcAccountProvider,
-    rpc_provider_config::RpcProviderConfig,
-};
 use dlp::pda;
 use serde::{Deserialize, Serialize};
 use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
@@ -11,9 +7,7 @@ use crate::{
     account_chain_state::AccountChainState,
     accounts::predicates::is_owned_by_delegation_program,
     delegation_account::DelegationAccount,
-    delegation_record_parser::{
-        DelegationRecordParser, DelegationRecordParserImpl,
-    },
+    delegation_record_parser::DelegationRecordParser,
     errors::{LockboxError, LockboxResult},
 };
 
@@ -35,35 +29,7 @@ pub struct AccountChainSnapshotProvider<
 impl<T: AccountProvider, U: DelegationRecordParser>
     AccountChainSnapshotProvider<T, U>
 {
-    pub fn new(
-        config: RpcProviderConfig,
-    ) -> AccountChainSnapshotProvider<
-        RpcAccountProvider,
-        DelegationRecordParserImpl,
-    > {
-        let rpc_account_provider = RpcAccountProvider::new(config);
-        let delegation_record_parser = DelegationRecordParserImpl;
-        AccountChainSnapshotProvider::with_provider_and_parser(
-            rpc_account_provider,
-            delegation_record_parser,
-        )
-    }
-
-    pub fn new_with_parser(
-        config: RpcProviderConfig,
-        delegation_record_parser: U,
-    ) -> AccountChainSnapshotProvider<RpcAccountProvider, U> {
-        let rpc_account_provider = RpcAccountProvider::new(config);
-        AccountChainSnapshotProvider::with_provider_and_parser(
-            rpc_account_provider,
-            delegation_record_parser,
-        )
-    }
-
-    pub fn with_provider_and_parser(
-        account_provider: T,
-        delegation_record_parser: U,
-    ) -> Self {
+    pub fn new(account_provider: T, delegation_record_parser: U) -> Self {
         Self {
             account_provider,
             delegation_record_parser,

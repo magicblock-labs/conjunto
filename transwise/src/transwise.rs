@@ -10,7 +10,6 @@ use solana_sdk::transaction::{SanitizedTransaction, VersionedTransaction};
 
 use crate::{
     endpoint::Endpoint, errors::TranswiseResult,
-    transaction_accounts_holder::TransactionAccountsHolder,
     transaction_accounts_snapshot::TransactionAccountsSnapshot,
 };
 
@@ -26,13 +25,37 @@ pub struct Transwise {
 
 impl Transwise {
     pub fn new(config: RpcProviderConfig) -> Self {
-        let account_chain_snapshot_provider = AccountChainSnapshotProvider::<
-            RpcAccountProvider,
+        let account_chain_snapshot_provider = AccountChainSnapshotProvider::new(
+            RpcAccountProvider::new(config),
             DelegationRecordParserImpl,
-        >::new(config);
+        );
         Self {
             account_chain_snapshot_provider,
         }
+    }
+
+    /// Extracts information of all accounts involved in the transaction,
+    /// checks their lock state on chain and based on that returns an endpoint.
+    pub async fn guide_versioned_transaction(
+        &self,
+        tx: &VersionedTransaction,
+    ) -> TranswiseResult<Endpoint> {
+        Ok(Endpoint::from(
+            self.transaction_accounts_snapshot_from_versioned_transaction(tx)
+                .await?,
+        ))
+    }
+
+    /// Extracts information of all accounts involved in the transaction,
+    /// checks their lock state on chain and based on that returns an endpoint.
+    pub async fn guide_sanitized_transaction(
+        &self,
+        tx: &SanitizedTransaction,
+    ) -> TranswiseResult<Endpoint> {
+        Ok(Endpoint::from(
+            self.transaction_accounts_snapshot_from_sanitized_transaction(tx)
+                .await?,
+        ))
     }
 
     /// Extracts information of all accounts involved in the transaction and
@@ -40,7 +63,7 @@ impl Transwise {
     /// This method is a convenience API but inefficient since it validates
     /// all accounts found inside the transaction without us being able to omit
     /// checks for some of them
-    pub async fn account_metas_from_versioned_transaction(
+    async fn transaction_accounts_snapshot_from_versioned_transaction(
         &self,
         tx: &VersionedTransaction,
     ) -> TranswiseResult<TransactionAccountsSnapshot> {
@@ -56,7 +79,7 @@ impl Transwise {
     /// This method is a convenience API but inefficient since it validates
     /// all accounts found inside the transaction without us being able to omit
     /// checks for some of them
-    pub async fn account_metas_from_sanitized_transaction(
+    async fn transaction_accounts_snapshot_from_sanitized_transaction(
         &self,
         tx: &SanitizedTransaction,
     ) -> TranswiseResult<TransactionAccountsSnapshot> {
@@ -65,41 +88,5 @@ impl Transwise {
             &self.account_chain_snapshot_provider,
         )
         .await
-    }
-
-    /// Extracts information of all provided accounts and checks their lock state on chain.
-    /// This method allows providing exacty the transaction accounts that we need checked
-    /// and thus is preferred due to the lower overhead.
-    pub async fn account_metas(
-        &self,
-        accounts: &TransactionAccountsHolder,
-    ) -> TranswiseResult<TransactionAccountsSnapshot> {
-        TransactionAccountsSnapshot::from_accounts_holder(
-            accounts,
-            &self.account_chain_snapshot_provider,
-        )
-        .await
-    }
-
-    /// Extracts information of all accounts involved in the transaction,
-    /// checks their lock state on chain and based on that returns an endpoint.
-    pub async fn guide_versioned_transaction(
-        &self,
-        tx: &VersionedTransaction,
-    ) -> TranswiseResult<Endpoint> {
-        Ok(Endpoint::from(
-            self.account_metas_from_versioned_transaction(tx).await?,
-        ))
-    }
-
-    /// Extracts information of all accounts involved in the transaction,
-    /// checks their lock state on chain and based on that returns an endpoint.
-    pub async fn guide_sanitized_transaction(
-        &self,
-        tx: &SanitizedTransaction,
-    ) -> TranswiseResult<Endpoint> {
-        Ok(Endpoint::from(
-            self.account_metas_from_sanitized_transaction(tx).await?,
-        ))
     }
 }

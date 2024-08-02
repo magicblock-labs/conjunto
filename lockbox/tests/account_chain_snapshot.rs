@@ -39,7 +39,7 @@ fn setup(
     if let Some(record) = delegation_record {
         delegation_record_parser.set_next_record(record);
     }
-    AccountChainSnapshotProvider::with_provider_and_parser(
+    AccountChainSnapshotProvider::new(
         account_provider,
         delegation_record_parser,
     )

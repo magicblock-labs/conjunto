@@ -33,7 +33,7 @@ fn setup_chain_snapshot_provider(
     }
     let delegation_record_parser =
         DelegationRecordParserStub::new(delegation_record);
-    AccountChainSnapshotProvider::with_provider_and_parser(
+    AccountChainSnapshotProvider::new(
         account_provider,
         delegation_record_parser,
     )
