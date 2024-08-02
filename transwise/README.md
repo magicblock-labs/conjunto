@@ -17,19 +17,25 @@ Help the director route a transaction properly by computing an `Endpoint`.
 - `TransactionAccountsExtractor` trait
   - allow conversion from solana transactions to `TransactionAccountsHolder`
 
+- `TransactionAccountsSnapshot` struct
+  - readonly and writable vecs of `AccountChainSnapshot`
+
 - `TransactionAccountsValidator` trait
   - takes a `TransactionAccountsSnapshot` and check if it can be a valid ephemeral transaction
 
-- `TransactionAccountsSnapshot` struct
-  - readonly and writable vecs of `AccountChainSnapshot`
+- `AccountFetcher` trait
+  - Allows fetching `TransactionAccountsSnapshot` from a `TransactionAccountsHolder`
+
+- `RemoteAccountFetcher`
+  - Internally uses an `AccountChainSnapshotProvider`
+  - Implements `AccountFetcher`
 
 - `Endpoint` enum
   - enum Chain or Ephemeral or Unroutable
   - can be created from a `TransactionAccountsSnapshot`
 
 - `Transwise` struct
-  - depends on an `AccountChainSnapshotProvider`
-  - Allow conversions from solana transaction -> `TransactionAccountsSnapshot`
+  - Internally uses `AccountChainSnapshotProvider`
   - Also allows conversion from solana transaction -> `Endpoint`
 
 # Notes

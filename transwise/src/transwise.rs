@@ -10,6 +10,7 @@ use solana_sdk::transaction::{SanitizedTransaction, VersionedTransaction};
 
 use crate::{
     endpoint::Endpoint, errors::TranswiseResult,
+    transaction_accounts_holder::TransactionAccountsHolder,
     transaction_accounts_snapshot::TransactionAccountsSnapshot,
 };
 
@@ -67,8 +68,8 @@ impl Transwise {
         &self,
         tx: &VersionedTransaction,
     ) -> TranswiseResult<TransactionAccountsSnapshot> {
-        TransactionAccountsSnapshot::from_versioned_transaction(
-            tx,
+        TransactionAccountsSnapshot::from_accounts_holder(
+            &TransactionAccountsHolder::try_from(tx)?,
             &self.account_chain_snapshot_provider,
         )
         .await
@@ -83,8 +84,8 @@ impl Transwise {
         &self,
         tx: &SanitizedTransaction,
     ) -> TranswiseResult<TransactionAccountsSnapshot> {
-        TransactionAccountsSnapshot::from_sanitized_transaction(
-            tx,
+        TransactionAccountsSnapshot::from_accounts_holder(
+            &TransactionAccountsHolder::try_from(tx)?,
             &self.account_chain_snapshot_provider,
         )
         .await

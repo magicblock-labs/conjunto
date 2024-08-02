@@ -9,15 +9,9 @@ use conjunto_lockbox::{
 };
 use futures_util::future::{try_join, try_join_all};
 use serde::{Deserialize, Serialize};
-use solana_sdk::{
-    pubkey::Pubkey,
-    transaction::{SanitizedTransaction, VersionedTransaction},
-};
+use solana_sdk::pubkey::Pubkey;
 
-use crate::{
-    errors::TranswiseResult,
-    transaction_accounts_holder::TransactionAccountsHolder,
-};
+use crate::errors::TranswiseResult;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TransactionAccountsSnapshot {
@@ -27,36 +21,6 @@ pub struct TransactionAccountsSnapshot {
 }
 
 impl TransactionAccountsSnapshot {
-    pub async fn from_versioned_transaction<
-        T: AccountProvider,
-        U: DelegationRecordParser,
-    >(
-        tx: &VersionedTransaction,
-        account_chain_snapshot_provider: &AccountChainSnapshotProvider<T, U>,
-    ) -> TranswiseResult<Self> {
-        let tx_accounts = TransactionAccountsHolder::try_from(tx)?;
-        Self::from_accounts_holder(
-            &tx_accounts,
-            account_chain_snapshot_provider,
-        )
-        .await
-    }
-
-    pub async fn from_sanitized_transaction<
-        T: AccountProvider,
-        U: DelegationRecordParser,
-    >(
-        tx: &SanitizedTransaction,
-        account_chain_snapshot_provider: &AccountChainSnapshotProvider<T, U>,
-    ) -> TranswiseResult<Self> {
-        let tx_accounts = TransactionAccountsHolder::try_from(tx)?;
-        Self::from_accounts_holder(
-            &tx_accounts,
-            account_chain_snapshot_provider,
-        )
-        .await
-    }
-
     pub async fn from_accounts_holder<
         T: AccountProvider,
         U: AccountsHolder,
