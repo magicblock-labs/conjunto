@@ -1,9 +1,6 @@
-use std::sync::Arc;
-
 use conjunto_lockbox::{
     account_chain_snapshot::AccountChainSnapshot,
     account_chain_state::AccountChainState,
-    delegation_record::{CommitFrequency, DelegationRecord},
 };
 use conjunto_test_tools::accounts::{
     account_owned_by_delegation_program, account_owned_by_system_program,
@@ -14,6 +11,7 @@ use conjunto_transwise::{
         TransactionAccountsValidator, TransactionAccountsValidatorImpl,
         ValidateAccountsConfig,
     },
+    AccountChainSnapshotShared, CommitFrequency, DelegationRecord,
 };
 use solana_sdk::pubkey::Pubkey;
 
@@ -34,8 +32,8 @@ fn config_permissive() -> ValidateAccountsConfig {
     }
 }
 
-fn chain_snapshot_delegated() -> Arc<AccountChainSnapshot> {
-    Arc::new(AccountChainSnapshot {
+fn chain_snapshot_delegated() -> AccountChainSnapshotShared {
+    AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::Delegated {
@@ -46,26 +44,29 @@ fn chain_snapshot_delegated() -> Arc<AccountChainSnapshot> {
                 owner: Pubkey::new_unique(),
             },
         },
-    })
+    }
+    .into()
 }
-fn chain_snapshot_undelegated() -> Arc<AccountChainSnapshot> {
-    Arc::new(AccountChainSnapshot {
+fn chain_snapshot_undelegated() -> AccountChainSnapshotShared {
+    AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::Undelegated {
             account: account_owned_by_system_program(),
         },
-    })
+    }
+    .into()
 }
-fn chain_snapshot_new_account() -> Arc<AccountChainSnapshot> {
-    Arc::new(AccountChainSnapshot {
+fn chain_snapshot_new_account() -> AccountChainSnapshotShared {
+    AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::NewAccount,
-    })
+    }
+    .into()
 }
-fn chain_snapshot_inconsistent() -> Arc<AccountChainSnapshot> {
-    Arc::new(AccountChainSnapshot {
+fn chain_snapshot_inconsistent() -> AccountChainSnapshotShared {
+    AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::Inconsistent {
@@ -73,7 +74,8 @@ fn chain_snapshot_inconsistent() -> Arc<AccountChainSnapshot> {
             delegation_pda: Pubkey::new_unique(),
             delegation_inconsistencies: vec![],
         },
-    })
+    }
+    .into()
 }
 
 #[test]

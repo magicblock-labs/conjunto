@@ -1,10 +1,12 @@
+use conjunto_core::{
+    delegation_inconsistency::DelegationInconsistency,
+    delegation_record::{CommitFrequency, DelegationRecord},
+};
 use conjunto_lockbox::{
     account_chain_snapshot::{
         AccountChainSnapshot, AccountChainSnapshotProvider,
     },
     account_chain_state::AccountChainState,
-    delegation_inconsistency::DelegationInconsistency,
-    delegation_record::{CommitFrequency, DelegationRecord},
 };
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
@@ -58,7 +60,7 @@ async fn test_delegate_properly_delegated() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
         .await
         .unwrap();
 
@@ -89,7 +91,7 @@ async fn test_delegate_undelegated() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
         .await
         .unwrap();
 
@@ -118,7 +120,7 @@ async fn test_delegate_not_found() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
         .await
         .unwrap();
 
@@ -140,7 +142,7 @@ async fn test_delegate_missing_delegate_account() {
         setup(vec![(pubkey, account_owned_by_delegation_program())], None);
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
         .await
         .unwrap();
 
@@ -173,7 +175,7 @@ async fn test_delegate_delegation_not_owned_by_delegate_program() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
         .await
         .unwrap();
 
@@ -206,7 +208,7 @@ async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_reco
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
         .await
         .unwrap();
 

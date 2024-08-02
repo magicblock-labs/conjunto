@@ -1,11 +1,10 @@
-use std::sync::Arc;
-
-use conjunto_core::{AccountProvider, AccountsHolder};
+use conjunto_core::{
+    delegation_record_parser::DelegationRecordParser, AccountProvider,
+    AccountsHolder,
+};
 use conjunto_lockbox::{
-    account_chain_snapshot::{
-        AccountChainSnapshot, AccountChainSnapshotProvider,
-    },
-    delegation_record_parser::DelegationRecordParser,
+    account_chain_snapshot::AccountChainSnapshotProvider,
+    account_chain_snapshot_shared::AccountChainSnapshotShared,
 };
 use futures_util::future::{try_join, try_join_all};
 use serde::{Deserialize, Serialize};
@@ -15,8 +14,8 @@ use crate::errors::TranswiseResult;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TransactionAccountsSnapshot {
-    pub readonly: Vec<Arc<AccountChainSnapshot>>,
-    pub writable: Vec<Arc<AccountChainSnapshot>>,
+    pub readonly: Vec<AccountChainSnapshotShared>,
+    pub writable: Vec<AccountChainSnapshotShared>,
     pub payer: Pubkey,
 }
 
@@ -31,19 +30,25 @@ impl TransactionAccountsSnapshot {
     ) -> TranswiseResult<Self> {
         // Fully parallelize snapshot fetching using join(s)
         let (readonly, writable) = try_join(
-            try_join_all(holder.get_readonly().into_iter().map(|pubkey| {
+            try_join_all(holder.get_readonly().iter().map(|pubkey| {
                 account_chain_snapshot_provider
                     .try_fetch_chain_snapshot_of_pubkey(pubkey)
             })),
-            try_join_all(holder.get_writable().into_iter().map(|pubkey| {
+            try_join_all(holder.get_writable().iter().map(|pubkey| {
                 account_chain_snapshot_provider
                     .try_fetch_chain_snapshot_of_pubkey(pubkey)
             })),
         )
         .await?;
         Ok(Self {
-            readonly: readonly.into_iter().map(Arc::new).collect(),
-            writable: writable.into_iter().map(Arc::new).collect(),
+            readonly: readonly
+                .into_iter()
+                .map(AccountChainSnapshotShared::from)
+                .collect(),
+            writable: writable
+                .into_iter()
+                .map(AccountChainSnapshotShared::from)
+                .collect(),
             payer: *holder.get_payer(),
         })
     }

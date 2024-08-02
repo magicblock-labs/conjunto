@@ -1,21 +1,18 @@
-use crate::{
+use conjunto_core::{
     delegation_record::{CommitFrequency, DelegationRecord},
-    errors::{LockboxError, LockboxResult},
+    delegation_record_parser::DelegationRecordParser,
+    errors::{CoreError, CoreResult},
 };
-
-pub trait DelegationRecordParser {
-    fn try_parse(&self, data: &[u8]) -> LockboxResult<DelegationRecord>;
-}
 
 pub struct DelegationRecordParserImpl;
 
 impl DelegationRecordParser for DelegationRecordParserImpl {
-    fn try_parse(&self, data: &[u8]) -> LockboxResult<DelegationRecord> {
+    fn try_parse(&self, data: &[u8]) -> CoreResult<DelegationRecord> {
         parse_delegation_record(data)
     }
 }
 
-fn parse_delegation_record(data: &[u8]) -> LockboxResult<DelegationRecord> {
+fn parse_delegation_record(data: &[u8]) -> CoreResult<DelegationRecord> {
     // bytemuck fails with TargetAlignmentGreaterAndInputNotAligned when the data isn't
     // properly aligned. This happens sporadically depending on how the data was stored, i.e.
     // only in debug mode and is fine in release mode or if we add unrelated code before the call.
@@ -27,7 +24,7 @@ fn parse_delegation_record(data: &[u8]) -> LockboxResult<DelegationRecord> {
     let result =
         bytemuck::try_from_bytes::<dlp::state::DelegationRecord>(&data[8..])
             .map_err(|err| {
-                LockboxError::FailedToParseDelegationRecord(format!(
+                CoreError::FailedToParseDelegationRecord(format!(
                     "Failed to deserialize DelegationRecord: {}",
                     err
                 ))

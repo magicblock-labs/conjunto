@@ -1,10 +1,9 @@
-use serde::{Deserialize, Serialize};
-use solana_sdk::{account::Account, pubkey::Pubkey};
-
-use crate::{
+use conjunto_core::{
     delegation_inconsistency::DelegationInconsistency,
     delegation_record::DelegationRecord,
 };
+use serde::{Deserialize, Serialize};
+use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum AccountChainState {

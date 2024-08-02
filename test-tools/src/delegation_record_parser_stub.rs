@@ -1,7 +1,7 @@
-use conjunto_lockbox::{
+use conjunto_core::{
     delegation_record::DelegationRecord,
     delegation_record_parser::DelegationRecordParser,
-    errors::{LockboxError, LockboxResult},
+    errors::{CoreError, CoreResult},
 };
 
 #[derive(Default)]
@@ -10,10 +10,10 @@ pub struct DelegationRecordParserStub {
 }
 
 impl DelegationRecordParser for DelegationRecordParserStub {
-    fn try_parse(&self, _data: &[u8]) -> LockboxResult<DelegationRecord> {
+    fn try_parse(&self, _data: &[u8]) -> CoreResult<DelegationRecord> {
         match self.next_record {
             Some(ref record) => Ok(record.clone()),
-            None => Err(LockboxError::FailedToParseDelegationRecord(
+            None => Err(CoreError::FailedToParseDelegationRecord(
                 "Test error".to_string(),
             )),
         }

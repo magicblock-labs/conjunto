@@ -35,7 +35,7 @@ Help the director route a transaction properly by computing an `Endpoint`.
   - can be created from a `TransactionAccountsSnapshot`
 
 - `Transwise` struct
-  - Internally uses `AccountChainSnapshotProvider`
+  - Internally uses `RemoteAccountFetcher`
   - Also allows conversion from solana transaction -> `Endpoint`
 
 # Notes

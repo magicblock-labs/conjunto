@@ -1,10 +1,12 @@
 use std::str::FromStr;
 
-use conjunto_core::AccountProvider;
+use conjunto_core::{
+    delegation_record::{CommitFrequency, DelegationRecord},
+    AccountProvider,
+};
 use conjunto_lockbox::{
     account_chain_snapshot::AccountChainSnapshotProvider,
     account_chain_state::AccountChainState,
-    delegation_record::{CommitFrequency, DelegationRecord},
 };
 use conjunto_providers::{
     rpc_account_provider::RpcAccountProvider,
@@ -47,7 +49,7 @@ async fn test_known_delegation() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
         .await
         .unwrap();
 
@@ -82,7 +84,7 @@ async fn test_system_account_not_delegated() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
         .await
         .unwrap();
 

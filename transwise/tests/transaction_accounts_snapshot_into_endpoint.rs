@@ -1,9 +1,6 @@
 use std::vec;
 
-use conjunto_lockbox::{
-    account_chain_snapshot::AccountChainSnapshotProvider,
-    delegation_record::DelegationRecord,
-};
+use conjunto_lockbox::account_chain_snapshot::AccountChainSnapshotProvider;
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
     accounts::{
@@ -16,6 +13,7 @@ use conjunto_test_tools::{
 use conjunto_transwise::{
     endpoint::{Endpoint, UnroutableReason},
     transaction_accounts_snapshot::TransactionAccountsSnapshot,
+    DelegationRecord,
 };
 use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
 

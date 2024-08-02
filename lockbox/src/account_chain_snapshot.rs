@@ -1,4 +1,8 @@
-use conjunto_core::AccountProvider;
+use conjunto_core::{
+    delegation_account::DelegationAccount,
+    delegation_inconsistency::DelegationInconsistency,
+    delegation_record_parser::DelegationRecordParser, AccountProvider,
+};
 use dlp::pda;
 use serde::{Deserialize, Serialize};
 use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
@@ -6,8 +10,6 @@ use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
 use crate::{
     account_chain_state::AccountChainState,
     accounts::predicates::is_owned_by_delegation_program,
-    delegation_account::DelegationAccount,
-    delegation_record_parser::DelegationRecordParser,
     errors::{LockboxError, LockboxResult},
 };
 
@@ -38,13 +40,13 @@ impl<T: AccountProvider, U: DelegationRecordParser>
 
     pub async fn try_fetch_chain_snapshot_of_pubkey(
         &self,
-        pubkey: Pubkey,
+        pubkey: &Pubkey,
     ) -> LockboxResult<AccountChainSnapshot> {
-        let delegation_pda = pda::delegation_record_pda_from_pubkey(&pubkey);
+        let delegation_pda = pda::delegation_record_pda_from_pubkey(pubkey);
         // Fetch the current chain state for revelant accounts (all at once)
         let (at_slot, mut fetched_accounts) = self
             .account_provider
-            .get_multiple_accounts(&[delegation_pda, pubkey])
+            .get_multiple_accounts(&[delegation_pda, *pubkey])
             .await?;
         // Parse the result into an AccountChainState
         self.try_parse_chain_state_of_fetched_accounts(
@@ -53,7 +55,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             &mut fetched_accounts,
         )
         .map(|chain_state| AccountChainSnapshot {
-            pubkey,
+            pubkey: *pubkey,
             at_slot,
             chain_state,
         })
@@ -61,14 +63,14 @@ impl<T: AccountProvider, U: DelegationRecordParser>
 
     fn try_parse_chain_state_of_fetched_accounts(
         &self,
-        pubkey: Pubkey,
+        pubkey: &Pubkey,
         delegation_pda: Pubkey,
         fetched_accounts: &mut Vec<Option<Account>>,
     ) -> LockboxResult<AccountChainState> {
         // If something went wrong in the fetch we stop, we should receive 2 accounts exactly every time
         if fetched_accounts.len() != 2 {
             return Err(LockboxError::InvalidFetch {
-                fetched_pubkeys: vec![pubkey, delegation_pda],
+                fetched_pubkeys: vec![*pubkey, delegation_pda],
                 fetched_accounts: fetched_accounts.clone(),
             });
         }
@@ -84,10 +86,9 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             });
         }
         // Verify the delegation account exists and is owned by the delegation program
-        match DelegationAccount::try_from_fetched_account(
+        match self.read_delegated_account_from_fetched_account(
             fetched_accounts.remove(0),
-            &self.delegation_record_parser,
-        )? {
+        ) {
             DelegationAccount::Valid(delegation_record) => {
                 Ok(AccountChainState::Delegated {
                     account: base_account,
@@ -101,6 +102,44 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                     delegation_pda,
                     delegation_inconsistencies,
                 })
+            }
+        }
+    }
+
+    fn read_delegated_account_from_fetched_account(
+        &self,
+        fetched_delegation_account: Option<Account>,
+    ) -> DelegationAccount {
+        let delegation_account = match fetched_delegation_account {
+            None => {
+                return DelegationAccount::Invalid(vec![
+                    DelegationInconsistency::AccountNotFound,
+                ])
+            }
+            Some(account) => account,
+        };
+        let mut inconsistencies = vec![];
+        if !is_owned_by_delegation_program(&delegation_account) {
+            inconsistencies.push(DelegationInconsistency::AccountInvalidOwner);
+        }
+        match self
+            .delegation_record_parser
+            .try_parse(&delegation_account.data)
+        {
+            Ok(delegation_record) => {
+                if inconsistencies.is_empty() {
+                    DelegationAccount::Valid(delegation_record)
+                } else {
+                    DelegationAccount::Invalid(inconsistencies)
+                }
+            }
+            Err(err) => {
+                inconsistencies.push(
+                    DelegationInconsistency::RecordAccountDataInvalid(
+                        err.to_string(),
+                    ),
+                );
+                DelegationAccount::Invalid(inconsistencies)
             }
         }
     }
