@@ -1,6 +1,6 @@
 use conjunto_core::{
-    delegation_account::DelegationAccount,
     delegation_inconsistency::DelegationInconsistency,
+    delegation_record::DelegationRecord,
     delegation_record_parser::DelegationRecordParser, AccountProvider,
 };
 use dlp::pda;
@@ -26,6 +26,11 @@ pub struct AccountChainSnapshotProvider<
 > {
     account_provider: T,
     delegation_record_parser: U,
+}
+
+enum AccountChainSnapshotProviderDelegation {
+    Valid(DelegationRecord),
+    Invalid(Vec<DelegationInconsistency>),
 }
 
 impl<T: AccountProvider, U: DelegationRecordParser>
@@ -89,30 +94,30 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         match self.read_delegated_account_from_fetched_account(
             fetched_accounts.remove(0),
         ) {
-            DelegationAccount::Valid(delegation_record) => {
-                Ok(AccountChainState::Delegated {
-                    account: base_account,
-                    delegation_pda,
-                    delegation_record,
-                })
-            }
-            DelegationAccount::Invalid(delegation_inconsistencies) => {
-                Ok(AccountChainState::Inconsistent {
-                    account: base_account,
-                    delegation_pda,
-                    delegation_inconsistencies,
-                })
-            }
+            AccountChainSnapshotProviderDelegation::Valid(
+                delegation_record,
+            ) => Ok(AccountChainState::Delegated {
+                account: base_account,
+                delegation_pda,
+                delegation_record,
+            }),
+            AccountChainSnapshotProviderDelegation::Invalid(
+                delegation_inconsistencies,
+            ) => Ok(AccountChainState::Inconsistent {
+                account: base_account,
+                delegation_pda,
+                delegation_inconsistencies,
+            }),
         }
     }
 
     fn read_delegated_account_from_fetched_account(
         &self,
         fetched_delegation_account: Option<Account>,
-    ) -> DelegationAccount {
+    ) -> AccountChainSnapshotProviderDelegation {
         let delegation_account = match fetched_delegation_account {
             None => {
-                return DelegationAccount::Invalid(vec![
+                return AccountChainSnapshotProviderDelegation::Invalid(vec![
                     DelegationInconsistency::AccountNotFound,
                 ])
             }
@@ -128,9 +133,13 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         {
             Ok(delegation_record) => {
                 if inconsistencies.is_empty() {
-                    DelegationAccount::Valid(delegation_record)
+                    AccountChainSnapshotProviderDelegation::Valid(
+                        delegation_record,
+                    )
                 } else {
-                    DelegationAccount::Invalid(inconsistencies)
+                    AccountChainSnapshotProviderDelegation::Invalid(
+                        inconsistencies,
+                    )
                 }
             }
             Err(err) => {
@@ -139,7 +148,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                         err.to_string(),
                     ),
                 );
-                DelegationAccount::Invalid(inconsistencies)
+                AccountChainSnapshotProviderDelegation::Invalid(inconsistencies)
             }
         }
     }

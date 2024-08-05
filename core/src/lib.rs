@@ -1,4 +1,3 @@
-pub mod delegation_account;
 pub mod delegation_inconsistency;
 pub mod delegation_record;
 pub mod delegation_record_parser;
