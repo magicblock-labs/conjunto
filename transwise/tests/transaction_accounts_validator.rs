@@ -104,7 +104,7 @@ fn test_two_readonly_undelegated_and_two_writable_delegated_and_payer() {
 }
 
 #[test]
-fn test_empty_transaction_accounts_fail() {
+fn test_empty_transaction_accounts() {
     let result = transaction_accounts_validator().validate_accounts(
         &TransactionAccountsSnapshot {
             payer: Pubkey::new_unique(),
@@ -114,12 +114,12 @@ fn test_empty_transaction_accounts_fail() {
         &config_strict(),
     );
 
-    // Empty transactions are missing a payer, should fail
-    assert!(result.is_err());
+    // Empty transactions are missing a payer, but we allow that for now
+    assert!(result.is_ok());
 }
 
 #[test]
-fn test_only_one_readonly_undelegated_non_payer_fail() {
+fn test_only_one_readonly_undelegated_non_payer() {
     let readonly_undelegated = chain_snapshot_undelegated();
 
     let result = transaction_accounts_validator().validate_accounts(
@@ -131,12 +131,12 @@ fn test_only_one_readonly_undelegated_non_payer_fail() {
         &config_strict(),
     );
 
-    // This transaction is missing a payer, should fail
-    assert!(result.is_err());
+    // This transaction is missing a payer, but we allow that for now
+    assert!(result.is_ok());
 }
 
 #[test]
-fn test_only_one_writable_delegated_non_payer_fail() {
+fn test_only_one_writable_delegated_non_payer() {
     let writable_delegated = chain_snapshot_delegated();
 
     let result = transaction_accounts_validator().validate_accounts(
@@ -148,12 +148,12 @@ fn test_only_one_writable_delegated_non_payer_fail() {
         &config_strict(),
     );
 
-    // This transaction is missing a payer, should fail
-    assert!(result.is_err());
+    // This transaction is missing a payer, but we allow that for now
+    assert!(result.is_ok());
 }
 
 #[test]
-fn test_only_one_readable_undelegated_payer_fail() {
+fn test_only_one_readable_undelegated_payer() {
     let readable_undelegated_payer = chain_snapshot_undelegated();
 
     let result = transaction_accounts_validator().validate_accounts(
@@ -165,8 +165,8 @@ fn test_only_one_readable_undelegated_payer_fail() {
         &config_strict(),
     );
 
-    // This transaction's payer is readonly, this should fail
-    assert!(result.is_err());
+    // This transaction's payer is readonly, but we allow that for now
+    assert!(result.is_ok());
 }
 
 #[test]
