@@ -19,12 +19,12 @@ Help the director route a transaction properly by computing an `Endpoint`.
 
 - `TransactionAccountsSnapshot` struct
   - readonly and writable vecs of `AccountChainSnapshot`
+  - can be fetched from a `TransactionAccountsHolder` using a `AccountChainSnapshotProvider`
 
 - `TransactionAccountsValidator` trait
   - takes a `TransactionAccountsSnapshot` and check if it can be a valid ephemeral transaction
 
 - `AccountFetcher` trait
-  - Allows fetching `TransactionAccountsSnapshot` from a `TransactionAccountsHolder`
   - Allows fetching `AccountChainSnapshot` from a `Pubkey`
 
 - `RemoteAccountFetcher`
