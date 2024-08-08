@@ -55,6 +55,14 @@ impl TransactionAccountsValidator for TransactionAccountsValidatorImpl {
             });
         }
 
+        // Check that we have at least one payer for the transaction
+        let writable_payer_pubkeys =
+            transaction_accounts.writable_payer_pubkeys();
+        let has_one_writable_payer = writable_payer_pubkeys.len() == 1;
+        if !has_one_writable_payer {
+            return Err(TranswiseError::TransactionIsMissingPayerAccount);
+        }
+
         // Transaction should work fine in other cases
         Ok(())
     }
