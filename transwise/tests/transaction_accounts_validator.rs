@@ -9,7 +9,6 @@ use conjunto_transwise::{
     transaction_accounts_snapshot::TransactionAccountsSnapshot,
     transaction_accounts_validator::{
         TransactionAccountsValidator, TransactionAccountsValidatorImpl,
-        ValidateAccountsConfig,
     },
     AccountChainSnapshotShared, CommitFrequency, DelegationRecord,
 };

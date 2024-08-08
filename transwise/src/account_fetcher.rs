@@ -1,22 +1,23 @@
 use async_trait::async_trait;
 use conjunto_lockbox::{
     account_chain_snapshot::AccountChainSnapshotProvider,
-    delegation_record_parser::DelegationRecordParserImpl, RpcProviderConfig,
+    account_chain_snapshot_shared::AccountChainSnapshotShared,
+    delegation_record_parser::DelegationRecordParserImpl,
 };
-use conjunto_providers::rpc_account_provider::RpcAccountProvider;
+use conjunto_providers::{
+    rpc_account_provider::RpcAccountProvider,
+    rpc_provider_config::RpcProviderConfig,
+};
+use solana_sdk::pubkey::Pubkey;
 
-use crate::{
-    errors::TranswiseResult,
-    transaction_accounts_holder::TransactionAccountsHolder,
-    transaction_accounts_snapshot::TransactionAccountsSnapshot,
-};
+use crate::errors::TranswiseResult;
 
 #[async_trait]
 pub trait AccountFetcher {
-    async fn fetch_transaction_accounts_snapshot(
+    async fn fetch_account_chain_snapshot(
         &self,
-        accounts_holder: &TransactionAccountsHolder,
-    ) -> TranswiseResult<TransactionAccountsSnapshot>;
+        pubkey: &Pubkey,
+    ) -> TranswiseResult<AccountChainSnapshotShared>;
 }
 
 pub struct RemoteAccountFetcher {
@@ -40,14 +41,14 @@ impl RemoteAccountFetcher {
 
 #[async_trait]
 impl AccountFetcher for RemoteAccountFetcher {
-    async fn fetch_transaction_accounts_snapshot(
+    async fn fetch_account_chain_snapshot(
         &self,
-        accounts_holder: &TransactionAccountsHolder,
-    ) -> TranswiseResult<TransactionAccountsSnapshot> {
-        TransactionAccountsSnapshot::from_accounts_holder(
-            accounts_holder,
-            &self.account_chain_snapshot_provider,
-        )
-        .await
+        pubkey: &Pubkey,
+    ) -> TranswiseResult<AccountChainSnapshotShared> {
+        Ok(self
+            .account_chain_snapshot_provider
+            .try_fetch_chain_snapshot_of_pubkey(pubkey)
+            .await?
+            .into())
     }
 }

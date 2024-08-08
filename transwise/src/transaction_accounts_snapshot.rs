@@ -10,7 +10,10 @@ use futures_util::future::{try_join, try_join_all};
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 
-use crate::errors::TranswiseResult;
+use crate::{
+    errors::TranswiseResult,
+    transaction_accounts_holder::TransactionAccountsHolder,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TransactionAccountsSnapshot {
@@ -22,10 +25,9 @@ pub struct TransactionAccountsSnapshot {
 impl TransactionAccountsSnapshot {
     pub async fn from_accounts_holder<
         T: AccountProvider,
-        U: AccountsHolder,
         V: DelegationRecordParser,
     >(
-        holder: &U,
+        holder: &TransactionAccountsHolder,
         account_chain_snapshot_provider: &AccountChainSnapshotProvider<T, V>,
     ) -> TranswiseResult<Self> {
         // Fully parallelize snapshot fetching using join(s)

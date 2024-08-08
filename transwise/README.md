@@ -25,6 +25,7 @@ Help the director route a transaction properly by computing an `Endpoint`.
 
 - `AccountFetcher` trait
   - Allows fetching `TransactionAccountsSnapshot` from a `TransactionAccountsHolder`
+  - Allows fetching `AccountChainSnapshot` from a `Pubkey`
 
 - `RemoteAccountFetcher`
   - Internally uses an `AccountChainSnapshotProvider`
