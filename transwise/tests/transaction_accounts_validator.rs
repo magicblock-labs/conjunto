@@ -100,8 +100,8 @@ fn test_empty_transaction_accounts() {
             },
         );
 
-    // Empty transactions are missing a payer, we don't allow that anymore
-    assert!(result.is_err());
+    // Empty transactions are missing a payer, we allow that for now
+    assert!(result.is_ok());
 }
 
 #[test]
@@ -117,8 +117,8 @@ fn test_only_one_readonly_undelegated_non_payer() {
             },
         );
 
-    // This transaction is missing a payer, we don't allow that anymore
-    assert!(result.is_err());
+    // This transaction is missing a payer, we allow that for now
+    assert!(result.is_ok());
 }
 
 #[test]
@@ -134,8 +134,8 @@ fn test_only_one_writable_delegated_non_payer() {
             },
         );
 
-    // This transaction is missing a payer, we don't allow that anymore
-    assert!(result.is_err());
+    // This transaction is missing a payer, we allow that for now
+    assert!(result.is_ok());
 }
 
 #[test]
@@ -151,8 +151,8 @@ fn test_only_one_readable_undelegated_payer() {
             },
         );
 
-    // This transaction's payer is readonly, we don't allow that anymore
-    assert!(result.is_err());
+    // This transaction's payer is readonly, we allow that for now
+    assert!(result.is_ok());
 }
 
 #[test]

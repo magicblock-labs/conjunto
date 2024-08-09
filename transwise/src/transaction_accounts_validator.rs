@@ -30,7 +30,6 @@ impl TransactionAccountsValidator for TransactionAccountsValidatorImpl {
                 writable_inconsistent_pubkeys,
             });
         }
-
         // Since new accounts cannot be delegated, we should not accept those in our validator as writable
         let writable_new_pubkeys = transaction_accounts.writable_new_pubkeys();
         let has_writable_new = !writable_new_pubkeys.is_empty();
@@ -39,7 +38,6 @@ impl TransactionAccountsValidator for TransactionAccountsValidatorImpl {
                 writable_new_pubkeys,
             });
         }
-
         // We need make sure that all writables are delegated
         // Except we don't worry about the payer, because it doesn't contain data, it just need to sign
         let writable_undelegated_non_payer_pubkeys =
@@ -54,15 +52,6 @@ impl TransactionAccountsValidator for TransactionAccountsValidatorImpl {
                 writable_undelegated_non_payer_pubkeys,
             });
         }
-
-        // Check that we have at least one payer for the transaction
-        let writable_payer_pubkeys =
-            transaction_accounts.writable_payer_pubkeys();
-        let has_one_writable_payer = writable_payer_pubkeys.len() == 1;
-        if !has_one_writable_payer {
-            return Err(TranswiseError::TransactionIsMissingPayerAccount);
-        }
-
         // Transaction should work fine in other cases
         Ok(())
     }
