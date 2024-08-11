@@ -2,10 +2,10 @@ use conjunto_core::{
     delegation_record_parser::DelegationRecordParser, AccountProvider,
 };
 use conjunto_lockbox::{
-    account_chain_snapshot::AccountChainSnapshotProvider,
+    account_chain_snapshot_provider::AccountChainSnapshotProvider,
     account_chain_snapshot_shared::AccountChainSnapshotShared,
 };
-use futures_util::future::{try_join, try_join_all};
+use futures_util::future::{try_join, try_join_all, TryFutureExt};
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 
@@ -34,22 +34,18 @@ impl TransactionAccountsSnapshot {
             try_join_all(holder.readonly.iter().map(|pubkey| {
                 account_chain_snapshot_provider
                     .try_fetch_chain_snapshot_of_pubkey(pubkey)
+                    .map_ok(AccountChainSnapshotShared::from)
             })),
             try_join_all(holder.writable.iter().map(|pubkey| {
                 account_chain_snapshot_provider
                     .try_fetch_chain_snapshot_of_pubkey(pubkey)
+                    .map_ok(AccountChainSnapshotShared::from)
             })),
         )
         .await?;
         Ok(Self {
-            readonly: readonly
-                .into_iter()
-                .map(AccountChainSnapshotShared::from)
-                .collect(),
-            writable: writable
-                .into_iter()
-                .map(AccountChainSnapshotShared::from)
-                .collect(),
+            readonly,
+            writable,
             payer: holder.payer,
         })
     }

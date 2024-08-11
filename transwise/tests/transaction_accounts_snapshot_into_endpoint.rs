@@ -1,6 +1,6 @@
 use std::vec;
 
-use conjunto_lockbox::account_chain_snapshot::AccountChainSnapshotProvider;
+use conjunto_lockbox::account_chain_snapshot_provider::AccountChainSnapshotProvider;
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
     accounts::{

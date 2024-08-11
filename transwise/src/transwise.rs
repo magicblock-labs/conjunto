@@ -1,6 +1,6 @@
 use conjunto_lockbox::{
-    account_chain_snapshot::AccountChainSnapshotProvider,
-    delegation_record_parser::DelegationRecordParserImpl,
+    account_chain_snapshot_provider::AccountChainSnapshotProvider,
+    delegation_record_parser_impl::DelegationRecordParserImpl,
 };
 use conjunto_providers::{
     rpc_account_provider::RpcAccountProvider,
