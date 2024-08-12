@@ -5,5 +5,3 @@ pub mod account_chain_state;
 pub mod accounts;
 pub mod delegation_record_parser_impl;
 pub mod errors;
-
-pub use conjunto_providers::rpc_provider_config::RpcProviderConfig;

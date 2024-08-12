@@ -13,5 +13,6 @@ pub use conjunto_lockbox::account_chain_snapshot_provider::AccountChainSnapshotP
 pub use conjunto_lockbox::account_chain_snapshot_shared::AccountChainSnapshotShared;
 pub use conjunto_lockbox::account_chain_state::AccountChainState;
 pub use conjunto_lockbox::delegation_record_parser_impl::DelegationRecordParserImpl;
+pub use conjunto_providers::rpc_account_provider::RpcAccountProvider;
 pub use conjunto_providers::rpc_provider_config::RpcProviderConfig;
 pub use conjunto_providers::RpcCluster;
