@@ -7,6 +7,7 @@ use conjunto_test_tools::accounts::delegated_account_ids;
 use conjunto_transwise::transwise::Transwise;
 use solana_sdk::{
     hash::Hash,
+    pubkey,
     pubkey::Pubkey,
     signature::Keypair,
     signer::Signer,
@@ -24,9 +25,7 @@ async fn main() {
     let from_kp = Keypair::new();
 
     let (delegated_id, _) = delegated_account_ids();
-    let undelegated_id =
-        Pubkey::from_str("soLXiij6o94fntzfvn2meNybhNfPBviTVuyXLVEtDJ3")
-            .unwrap();
+    let undelegated_id = pubkey!("soLXiij6o94fntzfvn2meNybhNfPBviTVuyXLVEtDJ3");
 
     let transwise = Transwise::new(RpcProviderConfig::devnet());
 

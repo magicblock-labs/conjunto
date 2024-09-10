@@ -3,6 +3,7 @@ use conjunto_core::{
     delegation_record_parser::DelegationRecordParser,
 };
 use conjunto_lockbox::delegation_record_parser_impl::DelegationRecordParserImpl;
+use solana_sdk::pubkey;
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
@@ -20,10 +21,8 @@ fn test_delegation_record_parser() {
     assert_eq!(
         record,
         DelegationRecord {
-            owner: <Pubkey as std::str::FromStr>::from_str(
-                "3vAK9JQiDsKoQNwmcfeEng4Cnv22pYuj1ASfso7U4ukF"
-            )
-            .unwrap(),
+            authority: Pubkey::default(),
+            owner: pubkey!("3vAK9JQiDsKoQNwmcfeEng4Cnv22pYuj1ASfso7U4ukF"),
             delegation_slot: 4,
             commit_frequency: CommitFrequency::Millis(30_000),
         }
