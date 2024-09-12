@@ -195,13 +195,12 @@ async fn test_delegate_delegation_not_owned_by_delegate_program() {
 }
 
 #[tokio::test]
-async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_record(
-) {
+async fn test_delegate_delegation_invalid_record() {
     let (pubkey, delegation_pda) = delegated_account_ids();
     let account_chain_snapshot_provider = setup(
         vec![
             (pubkey, account_owned_by_delegation_program()),
-            (delegation_pda, account_owned_by_system_program()),
+            (delegation_pda, account_owned_by_delegation_program()),
         ],
         None,
     );
@@ -220,7 +219,9 @@ async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_reco
                 account: account_owned_by_delegation_program(),
                 delegation_pda,
                 delegation_inconsistency:
-                    DelegationInconsistency::AccountInvalidOwner,
+                    DelegationInconsistency::RecordAccountDataInvalid(
+                        "Failed to parse account data".to_string()
+                    ),
             }
         }
     );
