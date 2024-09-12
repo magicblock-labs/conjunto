@@ -94,49 +94,37 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                 return Ok(AccountChainState::Inconsistent {
                     account,
                     delegation_pda,
-                    delegation_inconsistencies: vec![
+                    delegation_inconsistency:
                         DelegationInconsistency::AccountNotFound,
-                    ],
                 })
             }
             Some(account) => account,
         };
-        let mut delegation_inconsistencies = vec![];
         if !is_owned_by_delegation_program(&delegation_account) {
-            delegation_inconsistencies
-                .push(DelegationInconsistency::AccountInvalidOwner);
+            return Ok(AccountChainState::Inconsistent {
+                account,
+                delegation_pda,
+                delegation_inconsistency:
+                    DelegationInconsistency::AccountInvalidOwner,
+            });
         }
         match self
             .delegation_record_parser
             .try_parse(&delegation_account.data)
         {
-            Ok(delegation_record) => {
-                if delegation_inconsistencies.is_empty() {
-                    Ok(AccountChainState::Delegated {
-                        account,
-                        delegation_pda,
-                        delegation_record,
-                    })
-                } else {
-                    Ok(AccountChainState::Inconsistent {
-                        account,
-                        delegation_pda,
-                        delegation_inconsistencies,
-                    })
-                }
-            }
-            Err(err) => {
-                delegation_inconsistencies.push(
+            Ok(delegation_record) => Ok(AccountChainState::Delegated {
+                account,
+                delegation_pda,
+                delegation_record,
+            }),
+            Err(err) => Ok(AccountChainState::Inconsistent {
+                account,
+                delegation_pda,
+                delegation_inconsistency:
                     DelegationInconsistency::RecordAccountDataInvalid(
                         err.to_string(),
                     ),
-                );
-                Ok(AccountChainState::Inconsistent {
-                    account,
-                    delegation_pda,
-                    delegation_inconsistencies,
-                })
-            }
+            }),
         }
     }
 }

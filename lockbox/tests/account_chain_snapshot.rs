@@ -155,9 +155,8 @@ async fn test_delegate_missing_delegate_account() {
             chain_state: AccountChainState::Inconsistent {
                 account: account_owned_by_delegation_program(),
                 delegation_pda,
-                delegation_inconsistencies: vec![
-                    DelegationInconsistency::AccountNotFound
-                ],
+                delegation_inconsistency:
+                    DelegationInconsistency::AccountNotFound,
             }
         }
     );
@@ -188,9 +187,8 @@ async fn test_delegate_delegation_not_owned_by_delegate_program() {
             chain_state: AccountChainState::Inconsistent {
                 account: account_owned_by_delegation_program(),
                 delegation_pda,
-                delegation_inconsistencies: vec![
-                    DelegationInconsistency::AccountInvalidOwner
-                ],
+                delegation_inconsistency:
+                    DelegationInconsistency::AccountInvalidOwner,
             }
         }
     );
@@ -221,12 +219,8 @@ async fn test_delegate_delegation_not_owned_by_delegate_program_and_invalid_reco
             chain_state: AccountChainState::Inconsistent {
                 account: account_owned_by_delegation_program(),
                 delegation_pda,
-                delegation_inconsistencies: vec![
+                delegation_inconsistency:
                     DelegationInconsistency::AccountInvalidOwner,
-                    DelegationInconsistency::RecordAccountDataInvalid(
-                        "Failed to parse account data".to_string()
-                    )
-                ]
             }
         }
     );
