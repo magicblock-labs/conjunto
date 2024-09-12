@@ -1,6 +1,5 @@
 use conjunto_core::{
     delegation_inconsistency::DelegationInconsistency,
-    delegation_record::DelegationRecord,
     delegation_record_parser::DelegationRecordParser, AccountProvider,
 };
 use dlp::pda;
