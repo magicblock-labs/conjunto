@@ -41,25 +41,16 @@ impl AccountChainState {
         matches!(self, AccountChainState::NewAccount)
     }
 
-    pub fn is_delegated(&self) -> bool {
-        matches!(self, AccountChainState::Delegated { .. })
-    }
-
     pub fn is_undelegated(&self) -> bool {
         matches!(self, AccountChainState::Undelegated { .. })
     }
 
-    pub fn is_inconsistent(&self) -> bool {
-        matches!(self, AccountChainState::Inconsistent { .. })
+    pub fn is_delegated(&self) -> bool {
+        matches!(self, AccountChainState::Delegated { .. })
     }
 
-    pub fn delegation_record(&self) -> Option<&DelegationRecord> {
-        match self {
-            AccountChainState::Delegated {
-                delegation_record, ..
-            } => Some(delegation_record),
-            _ => None,
-        }
+    pub fn is_inconsistent(&self) -> bool {
+        matches!(self, AccountChainState::Inconsistent { .. })
     }
 
     pub fn account(&self) -> Option<&Account> {

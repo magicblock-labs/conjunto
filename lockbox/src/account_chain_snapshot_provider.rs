@@ -2,13 +2,12 @@ use conjunto_core::{
     delegation_inconsistency::DelegationInconsistency,
     delegation_record_parser::DelegationRecordParser, AccountProvider,
 };
-use dlp::pda;
+use dlp::{consts::DELEGATION_PROGRAM_ID, pda};
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
 use crate::{
     account_chain_snapshot::AccountChainSnapshot,
     account_chain_state::AccountChainState,
-    accounts::predicates::is_owned_by_delegation_program,
     errors::{LockboxError, LockboxResult},
 };
 
@@ -127,4 +126,8 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             }),
         }
     }
+}
+
+fn is_owned_by_delegation_program(account: &Account) -> bool {
+    account.owner == DELEGATION_PROGRAM_ID
 }

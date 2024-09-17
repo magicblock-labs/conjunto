@@ -10,7 +10,7 @@ pub enum UnroutableReason {
     },
     ContainsWritableDelegatedAndWritableUndelegated {
         writable_delegated_pubkeys: Vec<Pubkey>,
-        writable_undelegated_non_payer_pubkeys: Vec<Pubkey>,
+        writable_undelegated_non_wallet_pubkeys: Vec<Pubkey>,
     },
 }
 
@@ -90,19 +90,19 @@ impl Endpoint {
         }
 
         // At this point, we are planning to route to ephemeral,
-        // so there cannot be any writable undelegated except the payer
+        // so there cannot be any writable undelegated that are not wallets
         // If there are, we cannot route this transaction
-        let writable_undelegated_non_payer_pubkeys =
+        let writable_undelegated_non_wallet_pubkeys =
             transaction_accounts_snapshot
-                .writable_undelegated_non_payer_pubkeys();
-        let has_writable_undelegated_non_payer =
-            !writable_undelegated_non_payer_pubkeys.is_empty();
-        if has_writable_undelegated_non_payer {
+                .writable_undelegated_non_wallet_pubkeys();
+        let has_writable_undelegated_non_wallet =
+            !writable_undelegated_non_wallet_pubkeys.is_empty();
+        if has_writable_undelegated_non_wallet {
             return Endpoint::Unroutable {
                 transaction_accounts_snapshot,
                 reason: UnroutableReason::ContainsWritableDelegatedAndWritableUndelegated {
                     writable_delegated_pubkeys,
-                    writable_undelegated_non_payer_pubkeys,
+                    writable_undelegated_non_wallet_pubkeys,
                 },
             };
         }

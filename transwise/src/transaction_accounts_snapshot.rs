@@ -73,7 +73,7 @@ impl TransactionAccountsSnapshot {
             .iter()
             .filter(|chain_snapshot| {
                 !chain_snapshot.chain_state.is_delegated()
-                    && (chain_snapshot.pubkey != self.payer)
+                    && chain_snapshot.pubkey.is_on_curve()
             })
             .map(|chain_snapshot| chain_snapshot.pubkey)
             .collect()

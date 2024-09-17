@@ -14,7 +14,7 @@ pub enum TranswiseError {
     #[error("Not all writable accounts are delegated")]
     NotAllWritablesDelegated {
         writable_delegated_pubkeys: Vec<Pubkey>,
-        writable_undelegated_non_payer_pubkeys: Vec<Pubkey>,
+        writable_undelegated_non_wallet_pubkeys: Vec<Pubkey>,
     },
 
     #[error("Writables inconsistent accounts")]
