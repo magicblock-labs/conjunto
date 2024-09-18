@@ -11,19 +11,10 @@ pub enum TranswiseError {
     #[error("CoreError")]
     CoreError(#[from] conjunto_core::errors::CoreError),
 
-    #[error("Not all writable accounts are delegated")]
-    NotAllWritablesDelegated {
-        writable_delegated_pubkeys: Vec<Pubkey>,
-        writable_undelegated_non_wallet_pubkeys: Vec<Pubkey>,
+    #[error("Transaction includes non-delegated PDAs as writables")]
+    WritablesIncludeUndelegated {
+        writable_undelegated_pubkeys: Vec<Pubkey>,
     },
-
-    #[error("Writables inconsistent accounts")]
-    WritablesIncludeInconsistentAccounts {
-        writable_inconsistent_pubkeys: Vec<Pubkey>,
-    },
-
-    #[error("Writables include new accounts")]
-    WritablesIncludeNewAccounts { writable_new_pubkeys: Vec<Pubkey> },
 
     #[error("Transaction is missing payer account")]
     TransactionIsMissingPayerAccount,

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub enum DelegationInconsistency {
     AccountNotFound,
     AccountInvalidOwner,
-    BufferAccountInvalidOwner,
-    RecordAccountDataInvalid(String),
+    DelegationRecordNotFound,
+    DelegationRecordInvalidOwner,
+    DelegationRecordAccountDataInvalid(String),
 }

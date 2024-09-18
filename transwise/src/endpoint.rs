@@ -5,12 +5,9 @@ use crate::transaction_accounts_snapshot::TransactionAccountsSnapshot;
 
 #[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnroutableReason {
-    WritablesIncludeInconsistentAccounts {
-        writable_inconsistent_pubkeys: Vec<Pubkey>,
-    },
-    ContainsWritableDelegatedAndWritableUndelegated {
+    ContainsBothDelegatedAndUndelegatedWritable {
+        writable_undelegated_pubkeys: Vec<Pubkey>,
         writable_delegated_pubkeys: Vec<Pubkey>,
-        writable_undelegated_non_wallet_pubkeys: Vec<Pubkey>,
     },
 }
 
@@ -21,7 +18,6 @@ pub enum Endpoint {
     },
     Ephemeral {
         transaction_accounts_snapshot: TransactionAccountsSnapshot,
-        writable_delegated_pubkeys: Vec<Pubkey>,
     },
     Unroutable {
         transaction_accounts_snapshot: TransactionAccountsSnapshot,
@@ -64,54 +60,35 @@ impl Endpoint {
     pub fn from(
         transaction_accounts_snapshot: TransactionAccountsSnapshot,
     ) -> Endpoint {
-        // If any account is in an inconsistent delegation state, we can't do anything
-        let writable_inconsistent_pubkeys =
-            transaction_accounts_snapshot.writable_inconsistent_pubkeys();
-        let has_writable_inconsistent =
-            !writable_inconsistent_pubkeys.is_empty();
-        if has_writable_inconsistent {
-            return Endpoint::Unroutable {
-                transaction_accounts_snapshot,
-                reason:
-                    UnroutableReason::WritablesIncludeInconsistentAccounts {
-                        writable_inconsistent_pubkeys,
-                    },
-            };
-        }
-
-        // If there are no writable delegated accounts in the transaction, we can route to chain
+        let writable_undelegated_pubkeys =
+            transaction_accounts_snapshot.writable_undelegated_pubkeys();
         let writable_delegated_pubkeys =
             transaction_accounts_snapshot.writable_delegated_pubkeys();
+
+        let has_writable_undelegated = !writable_undelegated_pubkeys.is_empty();
         let has_writable_delegated = !writable_delegated_pubkeys.is_empty();
-        if !has_writable_delegated {
-            return Endpoint::Chain {
-                transaction_accounts_snapshot,
-            };
-        }
 
-        // At this point, we are planning to route to ephemeral,
-        // so there cannot be any writable undelegated that are not wallets
-        // If there are, we cannot route this transaction
-        let writable_undelegated_non_wallet_pubkeys =
-            transaction_accounts_snapshot
-                .writable_undelegated_non_wallet_pubkeys();
-        let has_writable_undelegated_non_wallet =
-            !writable_undelegated_non_wallet_pubkeys.is_empty();
-        if has_writable_undelegated_non_wallet {
-            return Endpoint::Unroutable {
+        match (has_writable_undelegated, has_writable_delegated) {
+            // If there are both undelegated PDAs and delegated PDAs writable, its not possible to route
+            (true, true) => Endpoint::Unroutable {
                 transaction_accounts_snapshot,
-                reason: UnroutableReason::ContainsWritableDelegatedAndWritableUndelegated {
+                reason: UnroutableReason::ContainsBothDelegatedAndUndelegatedWritable {
+                    writable_undelegated_pubkeys,
                     writable_delegated_pubkeys,
-                    writable_undelegated_non_wallet_pubkeys,
                 },
-            };
-        }
-
-        // Now we know that there are only delegated writables
-        // or payers that are writable
-        Endpoint::Ephemeral {
-            transaction_accounts_snapshot,
-            writable_delegated_pubkeys,
+            },
+            // If there is neither delegated nor undelegated PDAs writable, just default to chain
+            (false, false) => Endpoint::Chain {
+                transaction_accounts_snapshot,
+            },
+            // If there are only undelegated PDAs writable, its for the chain
+            (true, false) => Endpoint::Chain {
+                transaction_accounts_snapshot,
+            },
+            // If there are only delegated PDAs writable, its for the ephemeral
+            (false, true) => Endpoint::Ephemeral {
+                transaction_accounts_snapshot,
+            }
         }
     }
 }
