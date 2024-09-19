@@ -6,5 +6,5 @@ pub enum DelegationInconsistency {
     AccountInvalidOwner,
     DelegationRecordNotFound,
     DelegationRecordInvalidOwner,
-    DelegationRecordAccountDataInvalid(String),
+    DelegationRecordDataInvalid(String),
 }

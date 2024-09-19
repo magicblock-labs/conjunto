@@ -143,7 +143,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             Err(err) => Ok(AccountChainState::Undelegated {
                 account,
                 delegation_inconsistency:
-                    DelegationInconsistency::DelegationRecordAccountDataInvalid(
+                    DelegationInconsistency::DelegationRecordDataInvalid(
                         err.to_string(),
                     ),
             }),
