@@ -65,7 +65,7 @@ fn test_two_readonly_undelegated_and_two_writable_delegated_and_wallets() {
     let readonly_wallet = chain_snapshot_wallet();
     let writable_delegated1 = chain_snapshot_delegated();
     let writable_delegated2 = chain_snapshot_delegated();
-    let writable_wallet = chain_snapshot_undelegated();
+    let writable_wallet = chain_snapshot_wallet();
 
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
@@ -99,7 +99,7 @@ fn test_empty_transaction_accounts() {
             },
         );
 
-    // Empty transactions are missing a payer, we allow that for now (solana will deny the transaction tho)
+    // No undelegated writables, so it's fine (solana will deny the transaction tho, because no payer)
     assert!(result.is_ok());
 }
 
@@ -116,7 +116,7 @@ fn test_only_one_readonly_undelegated() {
             },
         );
 
-    // This transaction is missing a payer, we allow that for now (solana will deny the transaction tho)
+    // No undelegated writables, so it's fine (solana will deny the transaction tho, because no payer)
     assert!(result.is_ok());
 }
 
@@ -133,7 +133,7 @@ fn test_only_one_writable_delegated() {
             },
         );
 
-    // This transaction is missing a payer, we allow that for now (solana will deny the transaction tho)
+    // No undelegated writables, so it's fine (solana will deny the transaction tho, because no payer)
     assert!(result.is_ok());
 }
 
@@ -150,7 +150,7 @@ fn test_only_one_writable_wallet() {
             },
         );
 
-    // This transaction is missing a payer, we allow that for now (solana will deny the transaction tho)
+    // No undelegated writables, so it's fine (solana will deny the transaction tho, because no payer)
     assert!(result.is_ok());
 }
 
@@ -167,7 +167,7 @@ fn test_only_one_readable_undelegated_as_payer() {
             },
         );
 
-    // This transaction's payer is readonly, we allow that for now (solana will deny the transaction tho)
+    // No undelegated writables, so it's fine (solana will deny the transaction tho, because invalid payer)
     assert!(result.is_ok());
 }
 
@@ -189,7 +189,7 @@ fn test_only_one_writable_undelegated_as_payer_fail() {
 }
 
 #[test]
-fn test_only_one_writable_delegated_as_payer_fail() {
+fn test_only_one_writable_delegated_as_payer() {
     let writable_delegated = chain_snapshot_delegated();
 
     let result = transaction_accounts_validator()
@@ -201,8 +201,8 @@ fn test_only_one_writable_delegated_as_payer_fail() {
             },
         );
 
-    // This transaction's payer is delegated, that's not good but we allow that (solana will deny the transaction tho)
-    assert!(result.is_err());
+    // No undelegated writables, so it's fine (solana will deny the transaction tho, because invalid payer)
+    assert!(result.is_ok());
 }
 
 #[test]
@@ -218,7 +218,7 @@ fn test_only_one_writable_wallet_as_payer() {
             },
         );
 
-    // Because there is a payer a wallet, this should work
+    // Because there is a payer a wallet, this should work fine
     assert!(result.is_ok());
 }
 
@@ -241,9 +241,9 @@ fn test_one_readonly_undelegated_and_writable_wallet_as_payer() {
 }
 
 #[test]
-fn test_one_readonly_undelegated_and_one_writable_undelegated_and_wallet() {
+fn test_one_readonly_undelegated_and_one_writable_delegated_and_wallet() {
     let readonly_undelegated = chain_snapshot_undelegated();
-    let writable_undelegated = chain_snapshot_undelegated();
+    let writable_delegated = chain_snapshot_delegated();
     let writable_wallet = chain_snapshot_wallet();
 
     let result = transaction_accounts_validator()
@@ -251,7 +251,7 @@ fn test_one_readonly_undelegated_and_one_writable_undelegated_and_wallet() {
             &TransactionAccountsSnapshot {
                 payer: Pubkey::new_unique(),
                 readonly: vec![readonly_undelegated],
-                writable: vec![writable_undelegated, writable_wallet],
+                writable: vec![writable_delegated, writable_wallet],
             },
         );
 
@@ -274,12 +274,12 @@ fn test_one_readonly_undelegated_and_one_writable_undelegated_and_payer_fail() {
             },
         );
 
-    // Any writable inconsistent should fail
+    // Any writable undelegated should fail
     assert!(result.is_err());
 }
 
 #[test]
-fn test_one_readonly_undelegated_and_writable_undelegated_as_payer_fail() {
+fn test_one_readonly_undelegated_and_one_writable_undelegated_as_payer_fail() {
     let readonly_undelegated = chain_snapshot_undelegated();
     let writable_undelegated = chain_snapshot_undelegated();
 
