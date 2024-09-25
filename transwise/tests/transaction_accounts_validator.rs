@@ -4,7 +4,7 @@ use conjunto_lockbox::{
     account_chain_state::AccountChainState,
 };
 use conjunto_test_tools::accounts::{
-    account_owned_by_delegation_program, account_owned_by_system_program,
+    account_owned_by_delegation_program, account_with_data,
 };
 use conjunto_transwise::{
     transaction_accounts_snapshot::TransactionAccountsSnapshot,
@@ -13,7 +13,7 @@ use conjunto_transwise::{
     },
     AccountChainSnapshotShared, CommitFrequency, DelegationRecord,
 };
-use solana_sdk::pubkey::Pubkey;
+use solana_sdk::{pubkey::Pubkey, system_program};
 
 fn transaction_accounts_validator() -> TransactionAccountsValidatorImpl {
     TransactionAccountsValidatorImpl {}
@@ -24,7 +24,8 @@ fn chain_snapshot_wallet() -> AccountChainSnapshotShared {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::Wallet {
-            account: account_owned_by_system_program(),
+            lamports: 42,
+            owner: system_program::ID,
         },
     }
     .into()
@@ -34,7 +35,7 @@ fn chain_snapshot_undelegated() -> AccountChainSnapshotShared {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
         chain_state: AccountChainState::Undelegated {
-            account: account_owned_by_system_program(),
+            account: account_with_data(),
             delegation_inconsistency:
                 DelegationInconsistency::AccountInvalidOwner,
         },

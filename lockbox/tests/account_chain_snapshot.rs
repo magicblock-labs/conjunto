@@ -11,13 +11,13 @@ use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
     accounts::{
         account_owned_by_delegation_program, account_owned_by_system_program,
-        delegated_account_ids,
+        account_with_data, delegated_account_ids,
     },
     delegation_record_parser_stub::DelegationRecordParserStub,
 };
 use solana_sdk::{
     account::Account, clock::Slot, pubkey::Pubkey, signature::Keypair,
-    signer::Signer,
+    signer::Signer, system_program,
 };
 
 const EXPECTED_SLOT: Slot = 42;
@@ -52,9 +52,8 @@ fn setup(
 }
 
 #[tokio::test]
-async fn test_snapshot_wallet_new() {
-    let pubkey = Keypair::new().pubkey();
-    let account = account_owned_by_system_program();
+async fn test_snapshot_account_does_not_exist() {
+    let pubkey = Pubkey::new_unique();
 
     let account_chain_snapshot_provider = setup(vec![], None);
 
@@ -68,16 +67,46 @@ async fn test_snapshot_wallet_new() {
         AccountChainSnapshot {
             pubkey,
             at_slot: EXPECTED_SLOT,
-            chain_state: AccountChainState::Wallet { account }
+            chain_state: AccountChainState::Wallet {
+                lamports: 0,
+                owner: system_program::ID
+            }
         }
     );
 }
 
 #[tokio::test]
-async fn test_snapshot_wallet_exists() {
-    let pubkey = Keypair::new().pubkey();
+async fn test_snapshot_account_with_lamports() {
+    let pubkey = Pubkey::new_unique();
+
     let mut account = account_owned_by_system_program();
     account.lamports = 42;
+
+    let account_chain_snapshot_provider = setup(vec![(pubkey, account)], None);
+
+    let chain_snapshot = account_chain_snapshot_provider
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .await
+        .unwrap();
+
+    assert_eq!(
+        chain_snapshot,
+        AccountChainSnapshot {
+            pubkey,
+            at_slot: EXPECTED_SLOT,
+            chain_state: AccountChainState::Wallet {
+                lamports: 42,
+                owner: system_program::ID
+            }
+        }
+    );
+}
+
+#[tokio::test]
+async fn test_snapshot_account_with_data() {
+    let pubkey = Keypair::new().pubkey();
+
+    let account = account_with_data();
 
     let account_chain_snapshot_provider =
         setup(vec![(pubkey, account.clone())], None);
@@ -92,17 +121,22 @@ async fn test_snapshot_wallet_exists() {
         AccountChainSnapshot {
             pubkey,
             at_slot: EXPECTED_SLOT,
-            chain_state: AccountChainState::Wallet { account }
+            chain_state: AccountChainState::Undelegated {
+                account,
+                delegation_inconsistency:
+                    DelegationInconsistency::AccountInvalidOwner
+            }
         }
     );
 }
 
 #[tokio::test]
 async fn test_snapshot_delegated() {
-    let account = account_owned_by_delegation_program();
-
     let (pubkey, delegation_record_pubkey) = delegated_account_ids();
+
+    let account = account_owned_by_delegation_program();
     let delegation_record = dummy_delegation_record();
+
     let account_chain_snapshot_provider = setup(
         vec![
             (pubkey, account.clone()),
@@ -134,19 +168,20 @@ async fn test_snapshot_delegated() {
 
 #[tokio::test]
 async fn test_snapshot_account_invalid_owner() {
-    let account = account_owned_by_system_program();
-
     let (pubkey, delegation_record_pubkey) = delegated_account_ids();
+
+    let account = account_with_data();
+    let delegation_record = dummy_delegation_record();
+
     let account_chain_snapshot_provider = setup(
         vec![
             (pubkey, account.clone()),
-            // The other accounts don't matter since we don't check them if no lock is present
             (
                 delegation_record_pubkey,
                 account_owned_by_delegation_program(),
             ),
         ],
-        None,
+        Some(delegation_record.clone()),
     );
 
     let chain_snapshot = account_chain_snapshot_provider
@@ -169,44 +204,10 @@ async fn test_snapshot_account_invalid_owner() {
 }
 
 #[tokio::test]
-async fn test_snapshot_account_not_found() {
-    let (pubkey, delegation_record_pubkey) = delegated_account_ids();
-    let account_chain_snapshot_provider = setup(
-        vec![
-            // The other accounts don't matter since we don't check them if delegated
-            // account is missing
-            (
-                delegation_record_pubkey,
-                account_owned_by_delegation_program(),
-            ),
-        ],
-        None,
-    );
-
-    let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
-        .await
-        .unwrap();
-
-    assert_eq!(
-        chain_snapshot,
-        AccountChainSnapshot {
-            pubkey,
-            at_slot: EXPECTED_SLOT,
-            chain_state: AccountChainState::Undelegated {
-                account: Account::default(),
-                delegation_inconsistency:
-                    DelegationInconsistency::AccountNotFound
-            }
-        }
-    );
-}
-
-#[tokio::test]
 async fn test_snapshot_delegation_record_not_found() {
-    let account = account_owned_by_delegation_program();
-
     let (pubkey, _delegation_record_pda) = delegated_account_ids();
+
+    let account = account_owned_by_delegation_program();
 
     let account_chain_snapshot_provider =
         setup(vec![(pubkey, account.clone())], None);
@@ -232,14 +233,15 @@ async fn test_snapshot_delegation_record_not_found() {
 
 #[tokio::test]
 async fn test_snapshot_delegation_record_invalid_owner() {
-    let account = account_owned_by_delegation_program();
-
     let (pubkey, delegation_record_pubkey) = delegated_account_ids();
+
+    let account = account_owned_by_delegation_program();
     let delegation_record = dummy_delegation_record();
+
     let account_chain_snapshot_provider = setup(
         vec![
             (pubkey, account_owned_by_delegation_program()),
-            (delegation_record_pubkey, account_owned_by_system_program()),
+            (delegation_record_pubkey, account_with_data()),
         ],
         Some(delegation_record.clone()),
     );
@@ -265,9 +267,10 @@ async fn test_snapshot_delegation_record_invalid_owner() {
 
 #[tokio::test]
 async fn test_snapshot_delegation_record_data_invalid() {
+    let (pubkey, delegation_record_pubkey) = delegated_account_ids();
+
     let account = account_owned_by_delegation_program();
 
-    let (pubkey, delegation_record_pubkey) = delegated_account_ids();
     let account_chain_snapshot_provider = setup(
         vec![
             (pubkey, account_owned_by_delegation_program()),

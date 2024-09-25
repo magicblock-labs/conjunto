@@ -4,7 +4,7 @@ use conjunto_lockbox::account_chain_snapshot_provider::AccountChainSnapshotProvi
 use conjunto_test_tools::{
     account_provider_stub::AccountProviderStub,
     accounts::{
-        account_owned_by_delegation_program, account_owned_by_system_program,
+        account_owned_by_delegation_program, account_with_data,
         delegated_account_ids,
     },
     delegation_record_parser_stub::DelegationRecordParserStub,
@@ -46,37 +46,20 @@ fn dummy_delegation_record_with_owner(owner: Pubkey) -> DelegationRecord {
     }
 }
 
-fn dummy_pda() -> Pubkey {
-    loop {
-        let pubkey = Pubkey::new_unique();
-        if !pubkey.is_on_curve() {
-            return pubkey;
-        }
-    }
-}
-
-fn dummy_wallet() -> Pubkey {
-    loop {
-        let pubkey = Pubkey::new_unique();
-        if pubkey.is_on_curve() {
-            return pubkey;
-        }
-    }
-}
-
 #[tokio::test]
 async fn test_one_undelegated_readonly_and_one_delegated_writable_and_payer() {
+    let readonly_undelegated = Pubkey::new_unique();
     let (writable_delegated, delegation_record) = delegated_account_ids();
+    let writable_wallet = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
+            (readonly_undelegated, account_with_data()),
             (writable_delegated, account_owned_by_delegation_program()),
             (delegation_record, account_owned_by_delegation_program()),
         ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
-
-    let readonly_undelegated = dummy_pda();
-    let writable_wallet = dummy_wallet();
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![readonly_undelegated],
@@ -117,16 +100,17 @@ async fn test_one_undelegated_readonly_and_one_delegated_writable_and_payer() {
 #[tokio::test]
 async fn test_one_writable_delegated_and_one_writable_undelegated() {
     let (writable_delegated, delegation_record) = delegated_account_ids();
-    let writable_undelegated = dummy_pda();
+    let writable_undelegated = Pubkey::new_unique();
+    let writable_wallet = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_delegated, account_owned_by_delegation_program()),
             (delegation_record, account_owned_by_delegation_program()),
-            (writable_undelegated, account_owned_by_system_program()),
+            (writable_undelegated, account_with_data()),
         ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
-    let writable_wallet = dummy_wallet();
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
@@ -176,6 +160,8 @@ async fn test_one_writable_delegated_and_one_writable_undelegated() {
 #[tokio::test]
 async fn test_one_writable_inconsistent_with_missing_delegation_account() {
     let (writable_undelegated, _) = delegated_account_ids();
+    let writable_wallet = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_undelegated, account_owned_by_delegation_program()),
@@ -183,7 +169,6 @@ async fn test_one_writable_inconsistent_with_missing_delegation_account() {
         ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
-    let writable_wallet = dummy_wallet();
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
@@ -222,6 +207,8 @@ async fn test_one_writable_inconsistent_with_missing_delegation_account() {
 #[tokio::test]
 async fn test_one_writable_inconsistent_with_invalid_delegation_record() {
     let (writable_undelegated, delegation_record) = delegated_account_ids();
+    let writable_wallet = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_undelegated, account_owned_by_delegation_program()),
@@ -229,7 +216,6 @@ async fn test_one_writable_inconsistent_with_invalid_delegation_record() {
         ],
         None, // invalid delegation record for delegated account
     );
-    let writable_wallet = dummy_wallet();
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
@@ -267,13 +253,13 @@ async fn test_one_writable_inconsistent_with_invalid_delegation_record() {
 
 #[tokio::test]
 async fn test_one_writable_undelegated_with_writable_wallet() {
+    let writable_undelegated = Pubkey::new_unique();
+    let writable_wallet = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
-        vec![],
+        vec![(writable_undelegated, account_with_data())],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
-
-    let writable_undelegated = dummy_pda();
-    let writable_wallet = dummy_wallet();
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
@@ -315,9 +301,10 @@ async fn test_one_writable_undelegated_as_payer() {
     //       write to one account (same as payer) and we don't expect a
     //       transaction like this to make sense inside the ephemeral validator.
     //       That is the main reason we send it to chain
-    let writable_undelegated = dummy_pda();
+    let writable_undelegated = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
-        vec![(writable_undelegated, account_owned_by_system_program())],
+        vec![(writable_undelegated, account_with_data())],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
 
@@ -355,12 +342,13 @@ async fn test_one_writable_undelegated_as_payer() {
 #[tokio::test]
 async fn test_one_writable_undelegated_as_payer_and_one_writable_delegated() {
     let (writable_delegated, delegation_record) = delegated_account_ids();
-    let writable_undelegated = dummy_pda();
+    let writable_undelegated = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_delegated, account_owned_by_delegation_program()),
             (delegation_record, account_owned_by_delegation_program()),
-            (writable_undelegated, account_owned_by_system_program()),
+            (writable_undelegated, account_with_data()),
         ],
         Some(dummy_delegation_record_with_owner(writable_delegated)),
     );
@@ -406,14 +394,17 @@ async fn test_one_writable_undelegated_as_payer_and_one_writable_delegated() {
 
 #[tokio::test]
 async fn test_two_readonly_undelegateds() {
+    let readonly1_undelegated = Pubkey::new_unique();
+    let readonly2_undelegated = Pubkey::new_unique();
+    let writable_payer = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
-        vec![],
+        vec![
+            (readonly1_undelegated, account_with_data()),
+            (readonly2_undelegated, account_with_data()),
+        ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
-
-    let readonly1_undelegated = dummy_pda();
-    let readonly2_undelegated = dummy_pda();
-    let writable_payer = dummy_wallet();
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![readonly1_undelegated, readonly2_undelegated],
@@ -453,14 +444,19 @@ async fn test_two_readonly_undelegateds() {
 
 #[tokio::test]
 async fn test_two_readonly_undelegated_and_one_writable_undelegated() {
-    let writable_undelegated = dummy_pda();
+    let readonly1_undelegated = Pubkey::new_unique();
+    let readonly2_undelegated = Pubkey::new_unique();
+    let writable_undelegated = Pubkey::new_unique();
+    let writable_wallet = Pubkey::new_unique();
+
     let chain_snapshot_provider = setup_chain_snapshot_provider(
-        vec![(writable_undelegated, account_owned_by_system_program())],
+        vec![
+            (readonly1_undelegated, account_with_data()),
+            (readonly2_undelegated, account_with_data()),
+            (writable_undelegated, account_with_data()),
+        ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
-    let readonly1_undelegated = dummy_pda();
-    let readonly2_undelegated = dummy_pda();
-    let writable_wallet = dummy_wallet();
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![readonly1_undelegated, readonly2_undelegated],
