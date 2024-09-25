@@ -28,7 +28,7 @@ impl AccountProvider for AccountProviderStub {
         &self,
         pubkey: &Pubkey,
     ) -> CoreResult<(Slot, Option<Account>)> {
-        Ok((self.at_slot, self.get(&pubkey)))
+        Ok((self.at_slot, self.get(pubkey)))
     }
 
     async fn get_multiple_accounts(

@@ -80,7 +80,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         // Check if the base account is locked by the delegation program
         if !is_owned_by_delegation_program(&account) {
             // If the account is  not locked and does not have any data, it's a wallet
-            if account.data.len() <= 0 {
+            if account.data.is_empty() {
                 return AccountChainState::Wallet {
                     lamports: account.lamports,
                     owner: account.owner,

@@ -196,7 +196,7 @@ fn test_only_one_writable_delegated_as_payer() {
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
-                payer: writable_delegated.pubkey.clone(),
+                payer: writable_delegated.pubkey,
                 readonly: vec![],
                 writable: vec![writable_delegated],
             },
@@ -213,7 +213,7 @@ fn test_only_one_writable_wallet_as_payer() {
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
-                payer: writable_wallet.pubkey.clone(),
+                payer: writable_wallet.pubkey,
                 readonly: vec![],
                 writable: vec![writable_wallet],
             },
@@ -231,7 +231,7 @@ fn test_one_readonly_undelegated_and_writable_wallet_as_payer() {
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
-                payer: writable_wallet.pubkey.clone(),
+                payer: writable_wallet.pubkey,
                 readonly: vec![readonly_undelegated],
                 writable: vec![writable_wallet],
             },
@@ -305,7 +305,7 @@ fn test_one_writable_undelegated_and_writable_wallet_as_payer_fail() {
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
-                payer: writable_wallet.pubkey.clone(),
+                payer: writable_wallet.pubkey,
                 readonly: vec![],
                 writable: vec![writable_undelegated, writable_wallet],
             },
@@ -327,7 +327,7 @@ fn test_one_of_each_valid_type() {
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
-                payer: writable_wallet.pubkey.clone(),
+                payer: writable_wallet.pubkey,
                 readonly: vec![
                     readonly_undelegated,
                     readonly_delegated,
