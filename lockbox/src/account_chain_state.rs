@@ -7,10 +7,11 @@ use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum AccountChainState {
-    /// The wallet account is an account that has no data
+    /// The wallet account is an account that has no data (optionally lamports)
     /// - It can be used as a writable in the ephemeral validator
     /// - It should never be allocated in the ephemeral validator
     /// - It can only be used for lamports transfers!
+    /// - Its lamport balance must be escrowed to exist in the ephemeral validator
     Wallet { lamports: u64, owner: Pubkey },
     /// The account is not delegated and contains data
     /// - It should never be used as writable in the ephemeral validator
