@@ -69,7 +69,7 @@ impl Endpoint {
         let has_writable_delegated = !writable_delegated_pubkeys.is_empty();
 
         match (has_writable_undelegated, has_writable_delegated) {
-            // If there are both undelegated PDAs and delegated PDAs writable, its not possible to route
+            // If there are both undelegated and delegated writable, its not possible to route
             (true, true) => Endpoint::Unroutable {
                 transaction_accounts_snapshot,
                 reason: UnroutableReason::ContainsBothDelegatedAndUndelegatedWritable {
@@ -77,15 +77,15 @@ impl Endpoint {
                     writable_delegated_pubkeys,
                 },
             },
-            // If there is neither delegated nor undelegated PDAs writable, just default to chain
+            // If there is neither delegated nor undelegated writable, just default to chain
             (false, false) => Endpoint::Chain {
                 transaction_accounts_snapshot,
             },
-            // If there are only undelegated PDAs writable, its for the chain
+            // If there are only undelegated writable, its for the chain
             (true, false) => Endpoint::Chain {
                 transaction_accounts_snapshot,
             },
-            // If there are only delegated PDAs writable, its for the ephemeral
+            // If there are only delegated writable, its for the ephemeral
             (false, true) => Endpoint::Ephemeral {
                 transaction_accounts_snapshot,
             }

@@ -20,7 +20,7 @@ impl TransactionAccountsValidator for TransactionAccountsValidatorImpl {
         &self,
         transaction_accounts: &TransactionAccountsSnapshot,
     ) -> TranswiseResult<()> {
-        // We need make sure that none of the writables are non-delegated regular PDAs
+        // We need make sure that none of the writables are undelegated accounts
         let writable_undelegated_pubkeys =
             transaction_accounts.writable_undelegated_pubkeys();
         let has_writable_undelegated = !writable_undelegated_pubkeys.is_empty();
