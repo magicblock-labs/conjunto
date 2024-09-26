@@ -20,16 +20,18 @@ impl TransactionAccountsValidator for TransactionAccountsValidatorImpl {
         &self,
         transaction_accounts: &TransactionAccountsSnapshot,
     ) -> TranswiseResult<()> {
-        // We need make sure that none of the writables are undelegated accounts
-        let writable_undelegated_pubkeys =
-            transaction_accounts.writable_undelegated_pubkeys();
-        let has_writable_undelegated = !writable_undelegated_pubkeys.is_empty();
-        if has_writable_undelegated {
-            let writable_undelegated_pubkeys =
-                transaction_accounts.writable_undelegated_pubkeys();
-            return Err(TranswiseError::WritablesIncludeUndelegated {
-                writable_undelegated_pubkeys,
-            });
+        // We need make sure that none of the writables are data accounts
+        let writable_data_pubkeys =
+            transaction_accounts.writable_data_pubkeys();
+        let has_writable_data = !writable_data_pubkeys.is_empty();
+        if has_writable_data {
+            let writable_data_pubkeys =
+                transaction_accounts.writable_data_pubkeys();
+            return Err(
+                TranswiseError::TransactionIncludeDataAccountsAsWritable {
+                    writable_data_pubkeys,
+                },
+            );
         }
         // Transaction should work fine in other cases
         Ok(())

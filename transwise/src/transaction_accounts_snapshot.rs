@@ -50,12 +50,10 @@ impl TransactionAccountsSnapshot {
         })
     }
 
-    pub fn writable_undelegated_pubkeys(&self) -> Vec<Pubkey> {
+    pub fn writable_data_pubkeys(&self) -> Vec<Pubkey> {
         self.writable
             .iter()
-            .filter(|chain_snapshot| {
-                chain_snapshot.chain_state.is_undelegated()
-            })
+            .filter(|chain_snapshot| chain_snapshot.chain_state.is_data())
             .map(|chain_snapshot| chain_snapshot.pubkey)
             .collect()
     }

@@ -11,9 +11,9 @@ pub enum TranswiseError {
     #[error("CoreError")]
     CoreError(#[from] conjunto_core::errors::CoreError),
 
-    #[error("Transaction includes undelegated account(s) as writables")]
-    WritablesIncludeUndelegated {
-        writable_undelegated_pubkeys: Vec<Pubkey>,
+    #[error("Transaction includes non-delegated data account(s) as writables")]
+    TransactionIncludeDataAccountsAsWritable {
+        writable_data_pubkeys: Vec<Pubkey>,
     },
 
     #[error("Transaction is missing payer account")]

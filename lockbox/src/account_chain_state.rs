@@ -13,10 +13,10 @@ pub enum AccountChainState {
     /// - It can only be used for lamports transfers!
     /// - Its lamport balance must be escrowed to exist in the ephemeral validator
     Wallet { lamports: u64, owner: Pubkey },
-    /// The account is not delegated and contains data
+    /// The account is not delegated and contains arbitrary data
     /// - It should never be used as writable in the ephemeral validator
     /// - It can be used as a readonly in the ephemeral validator
-    Undelegated {
+    Data {
         account: Account,
         delegation_inconsistency: DelegationInconsistency,
     },
@@ -33,8 +33,8 @@ impl AccountChainState {
     pub fn is_wallet(&self) -> bool {
         matches!(self, AccountChainState::Wallet { .. })
     }
-    pub fn is_undelegated(&self) -> bool {
-        matches!(self, AccountChainState::Undelegated { .. })
+    pub fn is_data(&self) -> bool {
+        matches!(self, AccountChainState::Data { .. })
     }
     pub fn is_delegated(&self) -> bool {
         matches!(self, AccountChainState::Delegated { .. })
@@ -42,7 +42,7 @@ impl AccountChainState {
     pub fn account(&self) -> Option<&Account> {
         match self {
             AccountChainState::Wallet { .. } => None,
-            AccountChainState::Undelegated { account, .. } => Some(account),
+            AccountChainState::Data { account, .. } => Some(account),
             AccountChainState::Delegated { account, .. } => Some(account),
         }
     }

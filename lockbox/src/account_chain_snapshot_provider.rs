@@ -79,16 +79,16 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         };
         // Check if the base account is locked by the delegation program
         if !is_owned_by_delegation_program(&account) {
-            // If the account is  not locked and does not have any data, it's a wallet
+            // If the account is not locked and does not have any data, it's a wallet
             if account.data.is_empty() {
                 return AccountChainState::Wallet {
                     lamports: account.lamports,
                     owner: account.owner,
                 };
             }
-            // If the account is no locked and does have data, it's undelegated
+            // If the account is no locked and does have data, it's just a data account
             else {
-                return AccountChainState::Undelegated {
+                return AccountChainState::Data {
                     account,
                     delegation_inconsistency:
                         DelegationInconsistency::AccountInvalidOwner,
@@ -98,7 +98,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         // Check if the delegation record exists
         let delegation_record_account = match delegation_record_account {
             None => {
-                return AccountChainState::Undelegated {
+                return AccountChainState::Data {
                     account,
                     delegation_inconsistency:
                         DelegationInconsistency::DelegationRecordNotFound,
@@ -108,7 +108,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         };
         // Check if the delegation record is owned by the delegation program
         if !is_owned_by_delegation_program(&delegation_record_account) {
-            return AccountChainState::Undelegated {
+            return AccountChainState::Data {
                 account,
                 delegation_inconsistency:
                     DelegationInconsistency::DelegationRecordInvalidOwner,
@@ -119,7 +119,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
             .delegation_record_parser
             .try_parse(&delegation_record_account.data)
         {
-            Err(err) => AccountChainState::Undelegated {
+            Err(err) => AccountChainState::Data {
                 account,
                 delegation_inconsistency:
                     DelegationInconsistency::DelegationRecordDataInvalid(

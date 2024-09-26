@@ -121,7 +121,7 @@ async fn test_snapshot_account_with_data() {
         AccountChainSnapshot {
             pubkey,
             at_slot: EXPECTED_SLOT,
-            chain_state: AccountChainState::Undelegated {
+            chain_state: AccountChainState::Data {
                 account,
                 delegation_inconsistency:
                     DelegationInconsistency::AccountInvalidOwner
@@ -194,7 +194,7 @@ async fn test_snapshot_account_invalid_owner() {
         AccountChainSnapshot {
             pubkey,
             at_slot: EXPECTED_SLOT,
-            chain_state: AccountChainState::Undelegated {
+            chain_state: AccountChainState::Data {
                 account,
                 delegation_inconsistency:
                     DelegationInconsistency::AccountInvalidOwner,
@@ -222,7 +222,7 @@ async fn test_snapshot_delegation_record_not_found() {
         AccountChainSnapshot {
             pubkey,
             at_slot: EXPECTED_SLOT,
-            chain_state: AccountChainState::Undelegated {
+            chain_state: AccountChainState::Data {
                 account,
                 delegation_inconsistency:
                     DelegationInconsistency::DelegationRecordNotFound,
@@ -256,7 +256,7 @@ async fn test_snapshot_delegation_record_invalid_owner() {
         AccountChainSnapshot {
             pubkey,
             at_slot: EXPECTED_SLOT,
-            chain_state: AccountChainState::Undelegated {
+            chain_state: AccountChainState::Data {
                 account,
                 delegation_inconsistency:
                     DelegationInconsistency::DelegationRecordInvalidOwner,
@@ -292,7 +292,7 @@ async fn test_snapshot_delegation_record_data_invalid() {
         AccountChainSnapshot {
             pubkey,
             at_slot: EXPECTED_SLOT,
-            chain_state: AccountChainState::Undelegated {
+            chain_state: AccountChainState::Data {
                 account,
                 delegation_inconsistency:
                     DelegationInconsistency::DelegationRecordDataInvalid(

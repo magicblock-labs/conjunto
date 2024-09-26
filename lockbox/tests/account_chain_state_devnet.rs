@@ -65,7 +65,7 @@ async fn test_known_delegation() {
 }
 
 #[tokio::test]
-async fn test_delegation_program_data_undelegated() {
+async fn test_delegation_program_as_data() {
     // NOTE: this test depends on devnet being up
     let rpc_account_provider =
         RpcAccountProvider::new(RpcProviderConfig::devnet());
@@ -91,7 +91,7 @@ async fn test_delegation_program_data_undelegated() {
     assert!(chain_snapshot.at_slot >= at_slot);
     assert_eq!(
         chain_snapshot.chain_state,
-        AccountChainState::Undelegated {
+        AccountChainState::Data {
             account: account.unwrap(),
             delegation_inconsistency:
                 DelegationInconsistency::AccountInvalidOwner,

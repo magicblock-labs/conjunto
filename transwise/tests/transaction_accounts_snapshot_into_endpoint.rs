@@ -47,14 +47,14 @@ fn dummy_delegation_record_with_owner(owner: Pubkey) -> DelegationRecord {
 }
 
 #[tokio::test]
-async fn test_one_undelegated_readonly_and_one_delegated_writable_and_payer() {
-    let readonly_undelegated = Pubkey::new_unique();
+async fn test_one_data_readonly_and_one_delegated_writable_and_payer() {
+    let readonly_data = Pubkey::new_unique();
     let (writable_delegated, delegation_record) = delegated_account_ids();
     let writable_wallet = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
-            (readonly_undelegated, account_with_data()),
+            (readonly_data, account_with_data()),
             (writable_delegated, account_owned_by_delegation_program()),
             (delegation_record, account_owned_by_delegation_program()),
         ],
@@ -62,7 +62,7 @@ async fn test_one_undelegated_readonly_and_one_delegated_writable_and_payer() {
     );
 
     let acc_holder = TransactionAccountsHolder {
-        readonly: vec![readonly_undelegated],
+        readonly: vec![readonly_data],
         writable: vec![writable_delegated, writable_wallet],
         payer: writable_wallet,
     };
@@ -77,11 +77,11 @@ async fn test_one_undelegated_readonly_and_one_delegated_writable_and_payer() {
     assert_eq!(acc_snapshot.readonly.len(), 1);
     assert_eq!(acc_snapshot.writable.len(), 2);
 
-    assert_eq!(acc_snapshot.readonly[0].pubkey, readonly_undelegated);
+    assert_eq!(acc_snapshot.readonly[0].pubkey, readonly_data);
     assert_eq!(acc_snapshot.writable[0].pubkey, writable_delegated);
     assert_eq!(acc_snapshot.writable[1].pubkey, writable_wallet);
 
-    assert!(acc_snapshot.readonly[0].chain_state.is_undelegated());
+    assert!(acc_snapshot.readonly[0].chain_state.is_data());
     assert!(acc_snapshot.writable[0].chain_state.is_delegated());
     assert!(acc_snapshot.writable[1].chain_state.is_wallet());
 
@@ -98,27 +98,23 @@ async fn test_one_undelegated_readonly_and_one_delegated_writable_and_payer() {
 }
 
 #[tokio::test]
-async fn test_one_writable_delegated_and_one_writable_undelegated() {
+async fn test_one_writable_delegated_and_one_writable_data() {
     let (writable_delegated, delegation_record) = delegated_account_ids();
-    let writable_undelegated = Pubkey::new_unique();
+    let writable_data = Pubkey::new_unique();
     let writable_wallet = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_delegated, account_owned_by_delegation_program()),
             (delegation_record, account_owned_by_delegation_program()),
-            (writable_undelegated, account_with_data()),
+            (writable_data, account_with_data()),
         ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
-        writable: vec![
-            writable_delegated,
-            writable_undelegated,
-            writable_wallet,
-        ],
+        writable: vec![writable_delegated, writable_data, writable_wallet],
         payer: writable_wallet,
     };
 
@@ -133,11 +129,11 @@ async fn test_one_writable_delegated_and_one_writable_undelegated() {
     assert_eq!(acc_snapshot.writable.len(), 3);
 
     assert_eq!(acc_snapshot.writable[0].pubkey, writable_delegated);
-    assert_eq!(acc_snapshot.writable[1].pubkey, writable_undelegated);
+    assert_eq!(acc_snapshot.writable[1].pubkey, writable_data);
     assert_eq!(acc_snapshot.writable[2].pubkey, writable_wallet);
 
     assert!(acc_snapshot.writable[0].chain_state.is_delegated());
-    assert!(acc_snapshot.writable[1].chain_state.is_undelegated());
+    assert!(acc_snapshot.writable[1].chain_state.is_data());
     assert!(acc_snapshot.writable[2].chain_state.is_wallet());
 
     assert_eq!(acc_snapshot.payer, writable_wallet);
@@ -149,8 +145,8 @@ async fn test_one_writable_delegated_and_one_writable_undelegated() {
         Endpoint::Unroutable {
             transaction_accounts_snapshot: acc_snapshot,
             reason:
-                UnroutableReason::ContainsBothDelegatedAndUndelegatedWritable {
-                    writable_undelegated_pubkeys: vec![writable_undelegated],
+                UnroutableReason::ContainsBothDataAndDelegatedAccountsAsWritable {
+                    writable_data_pubkeys: vec![writable_data],
                     writable_delegated_pubkeys: vec![writable_delegated],
                 }
         }
@@ -159,12 +155,12 @@ async fn test_one_writable_delegated_and_one_writable_undelegated() {
 
 #[tokio::test]
 async fn test_one_writable_inconsistent_with_missing_delegation_account() {
-    let (writable_undelegated, _) = delegated_account_ids();
+    let (writable_data, _) = delegated_account_ids();
     let writable_wallet = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
-            (writable_undelegated, account_owned_by_delegation_program()),
+            (writable_data, account_owned_by_delegation_program()),
             // Missing delegation account
         ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
@@ -172,7 +168,7 @@ async fn test_one_writable_inconsistent_with_missing_delegation_account() {
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
-        writable: vec![writable_undelegated, writable_wallet],
+        writable: vec![writable_data, writable_wallet],
         payer: writable_wallet,
     };
 
@@ -186,10 +182,10 @@ async fn test_one_writable_inconsistent_with_missing_delegation_account() {
     assert_eq!(acc_snapshot.readonly.len(), 0);
     assert_eq!(acc_snapshot.writable.len(), 2);
 
-    assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated);
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_data);
     assert_eq!(acc_snapshot.writable[1].pubkey, writable_wallet);
 
-    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
+    assert!(acc_snapshot.writable[0].chain_state.is_data());
     assert!(acc_snapshot.writable[1].chain_state.is_wallet());
 
     assert_eq!(acc_snapshot.payer, writable_wallet);
@@ -206,12 +202,12 @@ async fn test_one_writable_inconsistent_with_missing_delegation_account() {
 
 #[tokio::test]
 async fn test_one_writable_inconsistent_with_invalid_delegation_record() {
-    let (writable_undelegated, delegation_record) = delegated_account_ids();
+    let (writable_data, delegation_record) = delegated_account_ids();
     let writable_wallet = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
-            (writable_undelegated, account_owned_by_delegation_program()),
+            (writable_data, account_owned_by_delegation_program()),
             (delegation_record, account_owned_by_delegation_program()),
         ],
         None, // invalid delegation record for delegated account
@@ -219,7 +215,7 @@ async fn test_one_writable_inconsistent_with_invalid_delegation_record() {
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
-        writable: vec![writable_undelegated, writable_wallet],
+        writable: vec![writable_data, writable_wallet],
         payer: writable_wallet,
     };
 
@@ -233,10 +229,10 @@ async fn test_one_writable_inconsistent_with_invalid_delegation_record() {
     assert_eq!(acc_snapshot.readonly.len(), 0);
     assert_eq!(acc_snapshot.writable.len(), 2);
 
-    assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated);
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_data);
     assert_eq!(acc_snapshot.writable[1].pubkey, writable_wallet);
 
-    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
+    assert!(acc_snapshot.writable[0].chain_state.is_data());
     assert!(acc_snapshot.writable[1].chain_state.is_wallet());
 
     assert_eq!(acc_snapshot.payer, writable_wallet);
@@ -252,18 +248,18 @@ async fn test_one_writable_inconsistent_with_invalid_delegation_record() {
 }
 
 #[tokio::test]
-async fn test_one_writable_undelegated_with_writable_wallet() {
-    let writable_undelegated = Pubkey::new_unique();
+async fn test_one_writable_data_with_writable_wallet() {
+    let writable_data = Pubkey::new_unique();
     let writable_wallet = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
-        vec![(writable_undelegated, account_with_data())],
+        vec![(writable_data, account_with_data())],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
-        writable: vec![writable_undelegated, writable_wallet],
+        writable: vec![writable_data, writable_wallet],
         payer: writable_wallet,
     };
 
@@ -277,10 +273,10 @@ async fn test_one_writable_undelegated_with_writable_wallet() {
     assert_eq!(acc_snapshot.readonly.len(), 0);
     assert_eq!(acc_snapshot.writable.len(), 2);
 
-    assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated);
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_data);
     assert_eq!(acc_snapshot.writable[1].pubkey, writable_wallet);
 
-    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
+    assert!(acc_snapshot.writable[0].chain_state.is_data());
     assert!(acc_snapshot.writable[1].chain_state.is_wallet());
 
     assert_eq!(acc_snapshot.payer, writable_wallet);
@@ -296,22 +292,22 @@ async fn test_one_writable_undelegated_with_writable_wallet() {
 }
 
 #[tokio::test]
-async fn test_one_writable_undelegated_as_payer() {
+async fn test_one_writable_data_as_payer() {
     // NOTE: it is very rare to encounter a transaction which would only have
     //       write to one account (same as payer) and we don't expect a
     //       transaction like this to make sense inside the ephemeral validator.
     //       That is the main reason we send it to chain
-    let writable_undelegated = Pubkey::new_unique();
+    let writable_data = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
-        vec![(writable_undelegated, account_with_data())],
+        vec![(writable_data, account_with_data())],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
-        writable: vec![writable_undelegated],
-        payer: writable_undelegated,
+        writable: vec![writable_data],
+        payer: writable_data,
     };
 
     let acc_snapshot = TransactionAccountsSnapshot::from_accounts_holder(
@@ -324,10 +320,10 @@ async fn test_one_writable_undelegated_as_payer() {
     assert_eq!(acc_snapshot.readonly.len(), 0);
     assert_eq!(acc_snapshot.writable.len(), 1);
 
-    assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated);
-    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_data);
+    assert!(acc_snapshot.writable[0].chain_state.is_data());
 
-    assert_eq!(acc_snapshot.payer, writable_undelegated);
+    assert_eq!(acc_snapshot.payer, writable_data);
 
     let endpoint = Endpoint::from(acc_snapshot.clone());
 
@@ -340,23 +336,23 @@ async fn test_one_writable_undelegated_as_payer() {
 }
 
 #[tokio::test]
-async fn test_one_writable_undelegated_as_payer_and_one_writable_delegated() {
+async fn test_one_writable_data_as_payer_and_one_writable_delegated() {
     let (writable_delegated, delegation_record) = delegated_account_ids();
-    let writable_undelegated = Pubkey::new_unique();
+    let writable_data = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
             (writable_delegated, account_owned_by_delegation_program()),
             (delegation_record, account_owned_by_delegation_program()),
-            (writable_undelegated, account_with_data()),
+            (writable_data, account_with_data()),
         ],
         Some(dummy_delegation_record_with_owner(writable_delegated)),
     );
 
     let acc_holder = TransactionAccountsHolder {
         readonly: vec![],
-        writable: vec![writable_undelegated, writable_delegated],
-        payer: writable_undelegated,
+        writable: vec![writable_delegated, writable_data],
+        payer: writable_data,
     };
 
     let acc_snapshot = TransactionAccountsSnapshot::from_accounts_holder(
@@ -369,13 +365,13 @@ async fn test_one_writable_undelegated_as_payer_and_one_writable_delegated() {
     assert_eq!(acc_snapshot.readonly.len(), 0);
     assert_eq!(acc_snapshot.writable.len(), 2);
 
-    assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated);
-    assert_eq!(acc_snapshot.writable[1].pubkey, writable_delegated);
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_delegated);
+    assert_eq!(acc_snapshot.writable[1].pubkey, writable_data);
 
-    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
-    assert!(acc_snapshot.writable[1].chain_state.is_delegated());
+    assert!(acc_snapshot.writable[0].chain_state.is_delegated());
+    assert!(acc_snapshot.writable[1].chain_state.is_data());
 
-    assert_eq!(acc_snapshot.payer, writable_undelegated);
+    assert_eq!(acc_snapshot.payer, writable_data);
 
     let endpoint = Endpoint::from(acc_snapshot.clone());
 
@@ -384,8 +380,8 @@ async fn test_one_writable_undelegated_as_payer_and_one_writable_delegated() {
         Endpoint::Unroutable {
             transaction_accounts_snapshot: acc_snapshot,
             reason:
-                UnroutableReason::ContainsBothDelegatedAndUndelegatedWritable {
-                    writable_undelegated_pubkeys: vec![writable_undelegated],
+                UnroutableReason::ContainsBothDataAndDelegatedAccountsAsWritable {
+                    writable_data_pubkeys: vec![writable_data],
                     writable_delegated_pubkeys: vec![writable_delegated],
                 }
         }
@@ -393,23 +389,23 @@ async fn test_one_writable_undelegated_as_payer_and_one_writable_delegated() {
 }
 
 #[tokio::test]
-async fn test_two_readonly_undelegateds() {
-    let readonly1_undelegated = Pubkey::new_unique();
-    let readonly2_undelegated = Pubkey::new_unique();
-    let writable_payer = Pubkey::new_unique();
+async fn test_two_readonly_datas_and_payer() {
+    let readonly1_data = Pubkey::new_unique();
+    let readonly2_data = Pubkey::new_unique();
+    let writable_wallet = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
-            (readonly1_undelegated, account_with_data()),
-            (readonly2_undelegated, account_with_data()),
+            (readonly1_data, account_with_data()),
+            (readonly2_data, account_with_data()),
         ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
 
     let acc_holder = TransactionAccountsHolder {
-        readonly: vec![readonly1_undelegated, readonly2_undelegated],
-        writable: vec![writable_payer],
-        payer: writable_payer,
+        readonly: vec![readonly1_data, readonly2_data],
+        writable: vec![writable_wallet],
+        payer: writable_wallet,
     };
 
     let acc_snapshot = TransactionAccountsSnapshot::from_accounts_holder(
@@ -422,15 +418,15 @@ async fn test_two_readonly_undelegateds() {
     assert_eq!(acc_snapshot.readonly.len(), 2);
     assert_eq!(acc_snapshot.writable.len(), 1);
 
-    assert_eq!(acc_snapshot.readonly[0].pubkey, readonly1_undelegated);
-    assert_eq!(acc_snapshot.readonly[1].pubkey, readonly2_undelegated);
-    assert_eq!(acc_snapshot.writable[0].pubkey, writable_payer);
+    assert_eq!(acc_snapshot.readonly[0].pubkey, readonly1_data);
+    assert_eq!(acc_snapshot.readonly[1].pubkey, readonly2_data);
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_wallet);
 
-    assert!(acc_snapshot.readonly[0].chain_state.is_undelegated());
-    assert!(acc_snapshot.readonly[1].chain_state.is_undelegated());
+    assert!(acc_snapshot.readonly[0].chain_state.is_data());
+    assert!(acc_snapshot.readonly[1].chain_state.is_data());
     assert!(acc_snapshot.writable[0].chain_state.is_wallet());
 
-    assert_eq!(acc_snapshot.payer, writable_payer);
+    assert_eq!(acc_snapshot.payer, writable_wallet);
 
     let endpoint = Endpoint::from(acc_snapshot.clone());
 
@@ -443,24 +439,24 @@ async fn test_two_readonly_undelegateds() {
 }
 
 #[tokio::test]
-async fn test_two_readonly_undelegated_and_one_writable_undelegated() {
-    let readonly1_undelegated = Pubkey::new_unique();
-    let readonly2_undelegated = Pubkey::new_unique();
-    let writable_undelegated = Pubkey::new_unique();
+async fn test_two_readonly_data_and_one_writable_data() {
+    let readonly1_data = Pubkey::new_unique();
+    let readonly2_data = Pubkey::new_unique();
+    let writable_data = Pubkey::new_unique();
     let writable_wallet = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
         vec![
-            (readonly1_undelegated, account_with_data()),
-            (readonly2_undelegated, account_with_data()),
-            (writable_undelegated, account_with_data()),
+            (readonly1_data, account_with_data()),
+            (readonly2_data, account_with_data()),
+            (writable_data, account_with_data()),
         ],
         Some(dummy_delegation_record_with_owner(Pubkey::new_unique())),
     );
 
     let acc_holder = TransactionAccountsHolder {
-        readonly: vec![readonly1_undelegated, readonly2_undelegated],
-        writable: vec![writable_undelegated, writable_wallet],
+        readonly: vec![readonly1_data, readonly2_data],
+        writable: vec![writable_data, writable_wallet],
         payer: writable_wallet,
     };
 
@@ -474,14 +470,14 @@ async fn test_two_readonly_undelegated_and_one_writable_undelegated() {
     assert_eq!(acc_snapshot.readonly.len(), 2);
     assert_eq!(acc_snapshot.writable.len(), 2);
 
-    assert_eq!(acc_snapshot.readonly[0].pubkey, readonly1_undelegated);
-    assert_eq!(acc_snapshot.readonly[1].pubkey, readonly2_undelegated);
-    assert_eq!(acc_snapshot.writable[0].pubkey, writable_undelegated);
+    assert_eq!(acc_snapshot.readonly[0].pubkey, readonly1_data);
+    assert_eq!(acc_snapshot.readonly[1].pubkey, readonly2_data);
+    assert_eq!(acc_snapshot.writable[0].pubkey, writable_data);
     assert_eq!(acc_snapshot.writable[1].pubkey, writable_wallet);
 
-    assert!(acc_snapshot.readonly[0].chain_state.is_undelegated());
-    assert!(acc_snapshot.readonly[1].chain_state.is_undelegated());
-    assert!(acc_snapshot.writable[0].chain_state.is_undelegated());
+    assert!(acc_snapshot.readonly[0].chain_state.is_data());
+    assert!(acc_snapshot.readonly[1].chain_state.is_data());
+    assert!(acc_snapshot.writable[0].chain_state.is_data());
     assert!(acc_snapshot.writable[1].chain_state.is_wallet());
 
     assert_eq!(acc_snapshot.payer, writable_wallet);
