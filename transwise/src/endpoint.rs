@@ -5,8 +5,8 @@ use crate::transaction_accounts_snapshot::TransactionAccountsSnapshot;
 
 #[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnroutableReason {
-    ContainsBothDataAndDelegatedAccountsAsWritable {
-        writable_data_pubkeys: Vec<Pubkey>,
+    ContainsBothUndelegatedAndDelegatedAccountsAsWritable {
+        writable_undelegated_pubkeys: Vec<Pubkey>,
         writable_delegated_pubkeys: Vec<Pubkey>,
     },
 }
@@ -60,20 +60,20 @@ impl Endpoint {
     pub fn from(
         transaction_accounts_snapshot: TransactionAccountsSnapshot,
     ) -> Endpoint {
-        let writable_data_pubkeys =
-            transaction_accounts_snapshot.writable_data_pubkeys();
+        let writable_undelegated_pubkeys =
+            transaction_accounts_snapshot.writable_undelegated_pubkeys();
         let writable_delegated_pubkeys =
             transaction_accounts_snapshot.writable_delegated_pubkeys();
 
-        let has_writable_data = !writable_data_pubkeys.is_empty();
+        let has_writable_undelegated = !writable_undelegated_pubkeys.is_empty();
         let has_writable_delegated = !writable_delegated_pubkeys.is_empty();
 
-        match (has_writable_data, has_writable_delegated) {
+        match (has_writable_undelegated, has_writable_delegated) {
             // If there are both data and delegated accounts as writable, its not possible to route
             (true, true) => Endpoint::Unroutable {
                 transaction_accounts_snapshot,
-                reason: UnroutableReason::ContainsBothDataAndDelegatedAccountsAsWritable {
-                    writable_data_pubkeys,
+                reason: UnroutableReason::ContainsBothUndelegatedAndDelegatedAccountsAsWritable {
+                    writable_undelegated_pubkeys,
                     writable_delegated_pubkeys,
                 },
             },

@@ -91,7 +91,7 @@ async fn test_delegation_program_as_data() {
     assert!(chain_snapshot.at_slot >= at_slot);
     assert_eq!(
         chain_snapshot.chain_state,
-        AccountChainState::Data {
+        AccountChainState::Undelegated {
             account: account.unwrap(),
             delegation_inconsistency:
                 DelegationInconsistency::AccountInvalidOwner,

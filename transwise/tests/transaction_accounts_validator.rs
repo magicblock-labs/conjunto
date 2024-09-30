@@ -30,11 +30,11 @@ fn chain_snapshot_wallet() -> AccountChainSnapshotShared {
     }
     .into()
 }
-fn chain_snapshot_data() -> AccountChainSnapshotShared {
+fn chain_snapshot_undelegated() -> AccountChainSnapshotShared {
     AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
-        chain_state: AccountChainState::Data {
+        chain_state: AccountChainState::Undelegated {
             account: account_with_data(),
             delegation_inconsistency:
                 DelegationInconsistency::AccountInvalidOwner,
@@ -60,9 +60,9 @@ fn chain_snapshot_delegated() -> AccountChainSnapshotShared {
 }
 
 #[test]
-fn test_two_readonly_data_and_two_writable_delegated_and_wallets() {
-    let readonly_data1 = chain_snapshot_data();
-    let readonly_data2 = chain_snapshot_data();
+fn test_two_readonly_undelegated_and_two_writable_delegated_and_wallets() {
+    let readonly_undelegated1 = chain_snapshot_undelegated();
+    let readonly_undelegated2 = chain_snapshot_undelegated();
     let readonly_wallet = chain_snapshot_wallet();
     let writable_delegated1 = chain_snapshot_delegated();
     let writable_delegated2 = chain_snapshot_delegated();
@@ -72,7 +72,11 @@ fn test_two_readonly_data_and_two_writable_delegated_and_wallets() {
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
                 payer: writable_wallet.pubkey,
-                readonly: vec![readonly_data1, readonly_data2, readonly_wallet],
+                readonly: vec![
+                    readonly_undelegated1,
+                    readonly_undelegated2,
+                    readonly_wallet,
+                ],
                 writable: vec![
                     writable_delegated1,
                     writable_delegated2,
@@ -101,14 +105,14 @@ fn test_empty_transaction_accounts() {
 }
 
 #[test]
-fn test_only_one_readonly_data() {
-    let readonly_data = chain_snapshot_data();
+fn test_only_one_readonly_undelegated() {
+    let readonly_undelegated = chain_snapshot_undelegated();
 
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
                 payer: Pubkey::new_unique(),
-                readonly: vec![readonly_data],
+                readonly: vec![readonly_undelegated],
                 writable: vec![],
             },
         );
@@ -152,14 +156,14 @@ fn test_only_one_writable_wallet() {
 }
 
 #[test]
-fn test_only_one_readable_data_as_payer() {
-    let readable_data = chain_snapshot_data();
+fn test_only_one_readable_undelegated_as_payer() {
+    let readable_undelegated = chain_snapshot_undelegated();
 
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
-                payer: readable_data.pubkey,
-                readonly: vec![readable_data],
+                payer: readable_undelegated.pubkey,
+                readonly: vec![readable_undelegated],
                 writable: vec![],
             },
         );
@@ -169,15 +173,15 @@ fn test_only_one_readable_data_as_payer() {
 }
 
 #[test]
-fn test_only_one_writable_data_as_payer_fail() {
-    let writable_data = chain_snapshot_data();
+fn test_only_one_writable_undelegated_as_payer_fail() {
+    let writable_undelegated = chain_snapshot_undelegated();
 
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
-                payer: writable_data.pubkey,
+                payer: writable_undelegated.pubkey,
                 readonly: vec![],
-                writable: vec![writable_data],
+                writable: vec![writable_undelegated],
             },
         );
 
@@ -220,15 +224,15 @@ fn test_only_one_writable_wallet_as_payer() {
 }
 
 #[test]
-fn test_one_readonly_data_and_writable_wallet_as_payer() {
-    let readonly_data = chain_snapshot_data();
+fn test_one_readonly_undelegated_and_writable_wallet_as_payer() {
+    let readonly_undelegated = chain_snapshot_undelegated();
     let writable_wallet = chain_snapshot_wallet();
 
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
                 payer: writable_wallet.pubkey,
-                readonly: vec![readonly_data],
+                readonly: vec![readonly_undelegated],
                 writable: vec![writable_wallet],
             },
         );
@@ -238,8 +242,8 @@ fn test_one_readonly_data_and_writable_wallet_as_payer() {
 }
 
 #[test]
-fn test_one_readonly_data_and_one_writable_delegated_and_wallet() {
-    let readonly_data = chain_snapshot_data();
+fn test_one_readonly_undelegated_and_one_writable_delegated_and_wallet() {
+    let readonly_undelegated = chain_snapshot_undelegated();
     let writable_delegated = chain_snapshot_delegated();
     let writable_wallet = chain_snapshot_wallet();
 
@@ -247,7 +251,7 @@ fn test_one_readonly_data_and_one_writable_delegated_and_wallet() {
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
                 payer: Pubkey::new_unique(),
-                readonly: vec![readonly_data],
+                readonly: vec![readonly_undelegated],
                 writable: vec![writable_delegated, writable_wallet],
             },
         );
@@ -257,17 +261,17 @@ fn test_one_readonly_data_and_one_writable_delegated_and_wallet() {
 }
 
 #[test]
-fn test_one_readonly_data_and_one_writable_data_and_payer_fail() {
-    let readonly_data = chain_snapshot_data();
-    let writable_data = chain_snapshot_data();
+fn test_one_readonly_undelegated_and_one_writable_undelegated_and_payer_fail() {
+    let readonly_undelegated = chain_snapshot_undelegated();
+    let writable_undelegated = chain_snapshot_undelegated();
     let writable_wallet = chain_snapshot_wallet();
 
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
                 payer: Pubkey::new_unique(),
-                readonly: vec![readonly_data],
-                writable: vec![writable_data, writable_wallet],
+                readonly: vec![readonly_undelegated],
+                writable: vec![writable_undelegated, writable_wallet],
             },
         );
 
@@ -276,16 +280,16 @@ fn test_one_readonly_data_and_one_writable_data_and_payer_fail() {
 }
 
 #[test]
-fn test_one_readonly_data_and_one_writable_data_as_payer_fail() {
-    let readonly_data = chain_snapshot_data();
-    let writable_data = chain_snapshot_data();
+fn test_one_readonly_undelegated_and_one_writable_undelegated_as_payer_fail() {
+    let readonly_undelegated = chain_snapshot_undelegated();
+    let writable_undelegated = chain_snapshot_undelegated();
 
     let result = transaction_accounts_validator()
         .validate_ephemeral_transaction_accounts(
             &TransactionAccountsSnapshot {
-                payer: writable_data.pubkey,
-                readonly: vec![readonly_data],
-                writable: vec![writable_data],
+                payer: writable_undelegated.pubkey,
+                readonly: vec![readonly_undelegated],
+                writable: vec![writable_undelegated],
             },
         );
 
@@ -294,8 +298,8 @@ fn test_one_readonly_data_and_one_writable_data_as_payer_fail() {
 }
 
 #[test]
-fn test_one_writable_data_and_writable_wallet_as_payer_fail() {
-    let writable_data = chain_snapshot_data();
+fn test_one_writable_undelegated_and_writable_wallet_as_payer_fail() {
+    let writable_undelegated = chain_snapshot_undelegated();
     let writable_wallet = chain_snapshot_wallet();
 
     let result = transaction_accounts_validator()
@@ -303,7 +307,7 @@ fn test_one_writable_data_and_writable_wallet_as_payer_fail() {
             &TransactionAccountsSnapshot {
                 payer: writable_wallet.pubkey,
                 readonly: vec![],
-                writable: vec![writable_data, writable_wallet],
+                writable: vec![writable_undelegated, writable_wallet],
             },
         );
 
@@ -313,7 +317,7 @@ fn test_one_writable_data_and_writable_wallet_as_payer_fail() {
 
 #[test]
 fn test_one_of_each_valid_type() {
-    let readonly_data = chain_snapshot_data();
+    let readonly_undelegated = chain_snapshot_undelegated();
     let readonly_delegated = chain_snapshot_delegated();
     let readonly_wallet = chain_snapshot_wallet();
 
@@ -325,7 +329,7 @@ fn test_one_of_each_valid_type() {
             &TransactionAccountsSnapshot {
                 payer: writable_wallet.pubkey,
                 readonly: vec![
-                    readonly_data,
+                    readonly_undelegated,
                     readonly_delegated,
                     readonly_wallet,
                 ],
