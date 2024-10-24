@@ -23,7 +23,7 @@ fn chain_snapshot_wallet() -> AccountChainSnapshotShared {
     AccountChainSnapshot {
         pubkey: Pubkey::new_unique(),
         at_slot: 42,
-        chain_state: AccountChainState::Wallet {
+        chain_state: AccountChainState::FeePayer {
             lamports: 42,
             owner: system_program::ID,
         },
