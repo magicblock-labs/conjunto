@@ -32,7 +32,7 @@ pub enum AccountChainState {
 }
 
 impl AccountChainState {
-    pub fn is_wallet(&self) -> bool {
+    pub fn is_feepayer(&self) -> bool {
         matches!(self, AccountChainState::FeePayer { .. })
     }
     pub fn is_undelegated(&self) -> bool {
