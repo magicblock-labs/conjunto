@@ -39,6 +39,8 @@ pub struct DelegationRecord {
     pub owner: Pubkey,
     /// The slot at which the delegation was created
     pub delegation_slot: u64,
+    /// The lamports at the time of delegation or from the last state finalization, stored as lamports can be received even if the account is delegated
+    pub lamports: u64,
     /// The frequency at which to commit the account state of the ephemeral validator back to the chain.
     pub commit_frequency: CommitFrequency,
 }
