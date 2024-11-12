@@ -132,7 +132,16 @@ impl<T: AccountProvider, U: DelegationRecordParser>
                     ),
             },
             Ok(delegation_record) => AccountChainState::Delegated {
-                account,
+                account: Account {
+                    // Maintain backwards compatibility with the old delegation record format
+                    // TODO: remove this once we are confident that all users have migrated to the new format
+                    lamports: if delegation_record.lamports != 0 {
+                        delegation_record.lamports
+                    } else {
+                        account.lamports
+                    },
+                    ..account
+                },
                 delegation_record,
             },
         }
