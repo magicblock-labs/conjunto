@@ -42,7 +42,7 @@ fn dummy_delegation_record_with_owner(owner: Pubkey) -> DelegationRecord {
         authority: Pubkey::new_unique(),
         owner,
         delegation_slot: 0,
-        lamports: 0,
+        lamports: 1000,
         commit_frequency: CommitFrequency::Millis(1_000),
     }
 }
