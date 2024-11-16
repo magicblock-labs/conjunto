@@ -15,7 +15,9 @@ use conjunto_transwise::{
     transaction_accounts_snapshot::TransactionAccountsSnapshot,
     CommitFrequency, DelegationRecord,
 };
-use solana_sdk::{account::Account, clock::Slot, pubkey::Pubkey};
+use solana_sdk::{
+    account::Account, clock::Slot, pubkey::Pubkey, system_program,
+};
 
 const EXPECTED_SLOT: Slot = 42;
 
@@ -49,7 +51,8 @@ fn dummy_delegation_record_with_owner(owner: Pubkey) -> DelegationRecord {
 
 #[tokio::test]
 async fn test_one_undelegated_readonly_and_one_delegated_writable_and_payer() {
-    let readonly_data = Pubkey::new_unique();
+    let readonly_data =
+        Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
     let (writable_delegated, delegation_record) = delegated_account_ids();
     let writable_feepayer = Pubkey::new_unique();
 
@@ -101,7 +104,8 @@ async fn test_one_undelegated_readonly_and_one_delegated_writable_and_payer() {
 #[tokio::test]
 async fn test_one_writable_delegated_and_one_writable_undelegated() {
     let (writable_delegated, delegation_record) = delegated_account_ids();
-    let writable_undelegated = Pubkey::new_unique();
+    let writable_undelegated =
+        Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
     let writable_feepayer = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
@@ -254,7 +258,8 @@ async fn test_one_writable_inconsistent_with_invalid_delegation_record() {
 
 #[tokio::test]
 async fn test_one_writable_undelegated_with_writable_feepayer() {
-    let writable_undelegated = Pubkey::new_unique();
+    let writable_undelegated =
+        Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
     let writable_feepayer = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
@@ -395,8 +400,10 @@ async fn test_one_writable_undelegated_as_payer_and_one_writable_delegated() {
 
 #[tokio::test]
 async fn test_two_readonly_datas_and_payer() {
-    let readonly1_data = Pubkey::new_unique();
-    let readonly2_data = Pubkey::new_unique();
+    let readonly1_data =
+        Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
+    let readonly2_data =
+        Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
     let writable_feepayer = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
@@ -445,9 +452,12 @@ async fn test_two_readonly_datas_and_payer() {
 
 #[tokio::test]
 async fn test_two_readonly_undelegated_and_one_writable_undelegated() {
-    let readonly1_data = Pubkey::new_unique();
-    let readonly2_data = Pubkey::new_unique();
-    let writable_undelegated = Pubkey::new_unique();
+    let readonly1_data =
+        Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
+    let readonly2_data =
+        Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
+    let writable_undelegated =
+        Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
     let writable_feepayer = Pubkey::new_unique();
 
     let chain_snapshot_provider = setup_chain_snapshot_provider(
