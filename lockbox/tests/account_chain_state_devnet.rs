@@ -36,8 +36,10 @@ async fn test_known_delegation() {
 
     let pubkey = pubkey!("8k2V7EzQtNg38Gi9HK5ZtQYp1YpGKNGrMcuGa737gZX4");
 
-    let (at_slot, account) =
-        rpc_account_provider.get_account(&pubkey).await.unwrap();
+    let (at_slot, account) = rpc_account_provider
+        .get_account(&pubkey, None)
+        .await
+        .unwrap();
 
     let delegation_record = dummy_delegation_record();
 
@@ -50,7 +52,7 @@ async fn test_known_delegation() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
@@ -73,8 +75,10 @@ async fn test_delegation_program_as_data() {
 
     let pubkey = get_program_data_address(&DELEGATION_PROGRAM_ID);
 
-    let (at_slot, account) =
-        rpc_account_provider.get_account(&pubkey).await.unwrap();
+    let (at_slot, account) = rpc_account_provider
+        .get_account(&pubkey, None)
+        .await
+        .unwrap();
 
     let delegation_record_parser = DelegationRecordParserStub::default();
 
@@ -84,7 +88,7 @@ async fn test_delegation_program_as_data() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 

@@ -59,7 +59,7 @@ async fn test_on_curve_snapshot_account_does_not_exist() {
     let account_chain_snapshot_provider = setup(vec![], None);
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
@@ -103,7 +103,7 @@ async fn test_pda_snapshot_account_does_not_exist() {
 
 #[tokio::test]
 async fn test_snapshot_account_with_lamports() {
-    let pubkey = Pubkey::new_unique();
+    let pubkey = Keypair::new().pubkey();
 
     let mut account = account_owned_by_system_program();
     account.lamports = 42;
@@ -111,7 +111,7 @@ async fn test_snapshot_account_with_lamports() {
     let account_chain_snapshot_provider = setup(vec![(pubkey, account)], None);
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
@@ -138,7 +138,7 @@ async fn test_snapshot_account_with_data() {
         setup(vec![(pubkey, account.clone())], None);
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
@@ -175,7 +175,7 @@ async fn test_snapshot_delegated() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
@@ -211,7 +211,7 @@ async fn test_snapshot_account_invalid_owner() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
@@ -239,7 +239,7 @@ async fn test_snapshot_delegation_record_not_found() {
         setup(vec![(pubkey, account.clone())], None);
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
@@ -273,7 +273,7 @@ async fn test_snapshot_delegation_record_invalid_owner() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
@@ -309,7 +309,7 @@ async fn test_snapshot_delegation_record_data_invalid() {
     );
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
