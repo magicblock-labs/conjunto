@@ -83,7 +83,7 @@ async fn test_pda_snapshot_account_does_not_exist() {
     let account_chain_snapshot_provider = setup(vec![], None);
 
     let chain_snapshot = account_chain_snapshot_provider
-        .try_fetch_chain_snapshot_of_pubkey(&pubkey)
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
         .await
         .unwrap();
 
