@@ -54,7 +54,7 @@ fn setup(
 
 #[tokio::test]
 async fn test_on_curve_snapshot_account_does_not_exist() {
-    let pubkey = Pubkey::new_unique();
+    let pubkey = Keypair::new().pubkey();
 
     let account_chain_snapshot_provider = setup(vec![], None);
 

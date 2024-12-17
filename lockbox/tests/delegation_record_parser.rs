@@ -3,7 +3,7 @@ use conjunto_core::{
     delegation_record_parser::DelegationRecordParser,
 };
 use conjunto_lockbox::delegation_record_parser_impl::DelegationRecordParserImpl;
-use dlp::state::account::Discriminator;
+use dlp::state::account::AccountWithDiscriminator;
 use solana_sdk::pubkey;
 
 #[test]
