@@ -15,4 +15,7 @@ impl AccountChainSnapshot {
     pub fn ephemeral_balance_pda(pubkey: &Pubkey) -> Pubkey {
         ephemeral_balance_pda_from_payer(pubkey, 0)
     }
+    pub fn ephemeral_balance_pda_owner() -> Pubkey {
+        dlp::ID
+    }
 }
