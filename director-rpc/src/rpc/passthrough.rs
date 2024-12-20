@@ -12,7 +12,7 @@ use solana_rpc_client_api::response::{
     RpcConfirmedTransactionStatusWithSignature, RpcContactInfo, RpcIdentity,
     RpcInflationGovernor, RpcInflationRate, RpcInflationReward,
     RpcKeyedAccount, RpcLeaderSchedule, RpcPerfSample, RpcPrioritizationFee,
-    RpcSimulateTransactionResult, RpcSnapshotSlotInfo, RpcStakeActivation,
+    RpcSimulateTransactionResult, RpcSnapshotSlotInfo,
     RpcSupply, RpcTokenAccountBalance, RpcVersionInfo, RpcVoteAccountStatus,
 };
 use solana_sdk::{
@@ -150,7 +150,6 @@ pub fn register_passthrough_methods(
     passthrough!("getSlot", Slot);
     passthrough!("getSlotLeader", String);
     passthrough!("getSlotLeaders", Vec<String>);
-    passthrough!("getStakeActivation", RpcStakeActivation);
     passthrough!("getStakeMinimumDelegation", RpcResponse<u64>);
     passthrough!("getSupply", RpcResponse<RpcSupply>);
     passthrough!("getTokenAccountBalance", RpcResponse<UiTokenAmount>);
