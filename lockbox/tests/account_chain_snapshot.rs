@@ -27,6 +27,7 @@ fn dummy_delegation_record() -> DelegationRecord {
         authority: Pubkey::new_unique(),
         owner: Pubkey::new_unique(),
         delegation_slot: 0,
+        lamports: 0,
         commit_frequency: CommitFrequency::Millis(1_000),
     }
 }
@@ -52,8 +53,8 @@ fn setup(
 }
 
 #[tokio::test]
-async fn test_snapshot_account_does_not_exist() {
-    let pubkey = Pubkey::new_unique();
+async fn test_on_curve_snapshot_account_does_not_exist() {
+    let pubkey = Keypair::new().pubkey();
 
     let account_chain_snapshot_provider = setup(vec![], None);
 
@@ -70,6 +71,31 @@ async fn test_snapshot_account_does_not_exist() {
             chain_state: AccountChainState::FeePayer {
                 lamports: 0,
                 owner: system_program::ID
+            }
+        }
+    );
+}
+
+#[tokio::test]
+async fn test_pda_snapshot_account_does_not_exist() {
+    let pubkey = Pubkey::find_program_address(&[&[0]], &system_program::ID).0;
+
+    let account_chain_snapshot_provider = setup(vec![], None);
+
+    let chain_snapshot = account_chain_snapshot_provider
+        .try_fetch_chain_snapshot_of_pubkey(&pubkey, None)
+        .await
+        .unwrap();
+
+    assert_eq!(
+        chain_snapshot,
+        AccountChainSnapshot {
+            pubkey,
+            at_slot: EXPECTED_SLOT,
+            chain_state: AccountChainState::Undelegated {
+                account: Account::new(0, 0, &system_program::ID),
+                delegation_inconsistency:
+                    DelegationInconsistency::DelegationRecordNotFound,
             }
         }
     );

@@ -36,7 +36,8 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         pubkey: &Pubkey,
         min_context_slot: Option<Slot>,
     ) -> LockboxResult<AccountChainSnapshot> {
-        let delegation_pda = pda::delegation_record_pda_from_pubkey(pubkey);
+        let delegation_pda =
+            pda::delegation_record_pda_from_delegated_account(pubkey);
         // Fetch the current chain state for revelant accounts (all at once)
         let (at_slot, mut fetched_accounts) = self
             .account_provider
@@ -75,9 +76,17 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         // Check if the base account exists
         let account = match account {
             None => {
-                return AccountChainState::FeePayer {
-                    lamports: 0,
-                    owner: system_program::ID,
+                return if address.is_on_curve() {
+                    AccountChainState::FeePayer {
+                        lamports: 0,
+                        owner: system_program::ID,
+                    }
+                } else {
+                    AccountChainState::Undelegated {
+                        account: Account::new(0, 0, &system_program::ID),
+                        delegation_inconsistency:
+                            DelegationInconsistency::DelegationRecordNotFound,
+                    }
                 }
             }
             Some(account) => account,
@@ -85,23 +94,23 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         // Check if the base account is locked by the delegation program
         if !is_owned_by_delegation_program(&account) {
             // If the account is not locked, does not have any data, is on-curve and is system program owned, it's a fee-payer
-            if account.data.is_empty()
+            return if account.data.is_empty()
                 && system_program::check_id(&account.owner)
                 && address.is_on_curve()
             {
-                return AccountChainState::FeePayer {
+                AccountChainState::FeePayer {
                     lamports: account.lamports,
                     owner: account.owner,
-                };
+                }
             }
             // If the account is no locked and does not meet the criteria above, it's undelegated
             else {
-                return AccountChainState::Undelegated {
+                AccountChainState::Undelegated {
                     account,
                     delegation_inconsistency:
                         DelegationInconsistency::AccountInvalidOwner,
-                };
-            }
+                }
+            };
         }
         // Check if the delegation record exists
         let delegation_record_account = match delegation_record_account {
