@@ -33,7 +33,6 @@ fn parse_delegation_record(data: &[u8]) -> CoreResult<DelegationRecord> {
         authority: state.authority,
         owner: state.owner,
         delegation_slot: state.delegation_slot,
-        lamports: state.lamports,
         commit_frequency: CommitFrequency::Millis(state.commit_frequency_ms),
         lamports: state.lamports,
     })
