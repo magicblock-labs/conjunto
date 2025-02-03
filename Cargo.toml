@@ -53,12 +53,12 @@ log = "0.4.21"
 paste = "1.0"
 serde = "1.0.201"
 serde_json = "1.0.117"
-solana-account-decoder = { version = "=2.1.7" }
-solana-rpc-client = { version = "=2.1.7" }
-solana-rpc-client-api = { version = "=2.1.7" }
-solana-sdk = { version = "=2.1.7" }
-solana-transaction-status = { version = "=2.1.7" }
-solana-zk-token-sdk = { version = "=2.1.7" }
+solana-account-decoder = { version = "=2.1.11" }
+solana-rpc-client = { version = "=2.1.11" }
+solana-rpc-client-api = { version = "=2.1.11" }
+solana-sdk = { version = "=2.1.11" }
+solana-transaction-status = { version = "=2.1.11" }
+solana-zk-token-sdk = { version = "=2.1.11" }
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
 thiserror = "1.0.60"
 tokio = { version = "1.37.0", features = ["macros", "io-util"] }
