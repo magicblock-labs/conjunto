@@ -28,6 +28,7 @@ fn test_delegation_record_parser() {
             authority,
             owner,
             delegation_slot: 4,
+            lamports: 1,
             commit_frequency: CommitFrequency::Millis(30_000),
             lamports: 500,
         }

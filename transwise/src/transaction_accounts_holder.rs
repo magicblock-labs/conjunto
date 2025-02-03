@@ -43,7 +43,7 @@ impl TryFrom<&VersionedTransaction> for TransactionAccountsHolder {
             .ok_or(TranswiseError::TransactionIsMissingPayerAccount)?;
 
         for (idx, pubkey) in static_accounts.iter().enumerate() {
-            if tx.message.is_maybe_writable(idx) {
+            if tx.message.is_maybe_writable(idx, None) {
                 writable.push(*pubkey);
             } else {
                 readonly.push(*pubkey);

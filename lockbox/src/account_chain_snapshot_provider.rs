@@ -36,8 +36,7 @@ impl<T: AccountProvider, U: DelegationRecordParser>
         pubkey: &Pubkey,
         min_context_slot: Option<Slot>,
     ) -> LockboxResult<AccountChainSnapshot> {
-        let delegation_pda =
-            pda::delegation_record_pda_from_delegated_account(pubkey);
+        let delegation_pda = pda::delegation_record_pda_from_delegated_account(pubkey);
         // Fetch the current chain state for revelant accounts (all at once)
         let (at_slot, mut fetched_accounts) = self
             .account_provider

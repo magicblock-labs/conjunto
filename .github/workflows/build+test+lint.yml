@@ -22,13 +22,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: conjunto
 
-      - name: Checkout Delegation Program
-        uses: actions/checkout@v4
-        with:
-          repository: magicblock-labs/delegation-program
-          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-          path: delegation-program
-          ref: main
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CARGO_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -43,7 +42,10 @@ jobs:
         run: du -h -d1 conjunto/target || true
 
       - name: Cargo Build
-        run: make ci-build
+        run: |
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_ed25519
+          make ci-build
         shell: bash
         working-directory: conjunto
 
