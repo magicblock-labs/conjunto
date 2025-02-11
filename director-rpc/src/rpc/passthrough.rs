@@ -38,8 +38,8 @@ type BlockCommitmentArray = [u64; MAX_LOCKOUT_HISTORY + 1];
 // -----------------
 // register_passthrough_methods
 // -----------------
-async fn passthrough_impl<'a, R: DeserializeOwned>(
-    method: &'a str,
+async fn passthrough_impl<R: DeserializeOwned>(
+    method: &str,
     params: Params<'static>,
     rpc: &DirectorRpc,
 ) -> Result<R, ErrorObjectOwned> {
@@ -60,6 +60,7 @@ async fn passthrough_impl<'a, R: DeserializeOwned>(
         },
     }
 }
+
 
 pub fn register_passthrough_methods(
     module: &mut RpcModule<DirectorRpc>,
