@@ -12,8 +12,8 @@ use solana_rpc_client_api::response::{
     RpcConfirmedTransactionStatusWithSignature, RpcContactInfo, RpcIdentity,
     RpcInflationGovernor, RpcInflationRate, RpcInflationReward,
     RpcKeyedAccount, RpcLeaderSchedule, RpcPerfSample, RpcPrioritizationFee,
-    RpcSimulateTransactionResult, RpcSnapshotSlotInfo,
-    RpcSupply, RpcTokenAccountBalance, RpcVersionInfo, RpcVoteAccountStatus,
+    RpcSimulateTransactionResult, RpcSnapshotSlotInfo, RpcSupply,
+    RpcTokenAccountBalance, RpcVersionInfo, RpcVoteAccountStatus,
 };
 use solana_sdk::{
     clock::{Slot, UnixTimestamp},

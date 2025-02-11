@@ -28,7 +28,7 @@ jobs:
           repository: magicblock-labs/delegation-program
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
           path: delegation-program
-          ref: main
+          ref: solana-upgrade # TODO revert to master
 
       - uses: Swatinem/rust-cache@v2
         with:

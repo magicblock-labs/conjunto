@@ -15,9 +15,12 @@ use conjunto_transwise::{
     transaction_accounts_snapshot::TransactionAccountsSnapshot,
     CommitFrequency, DelegationRecord,
 };
-use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::{
-    account::Account, clock::Slot, pubkey::Pubkey, system_program,
+    account::Account,
+    clock::Slot,
+    pubkey::Pubkey,
+    signature::{Keypair, Signer},
+    system_program,
 };
 
 const EXPECTED_SLOT: Slot = 42;
