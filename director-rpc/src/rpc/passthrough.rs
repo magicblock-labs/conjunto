@@ -12,8 +12,8 @@ use solana_rpc_client_api::response::{
     RpcConfirmedTransactionStatusWithSignature, RpcContactInfo, RpcIdentity,
     RpcInflationGovernor, RpcInflationRate, RpcInflationReward,
     RpcKeyedAccount, RpcLeaderSchedule, RpcPerfSample, RpcPrioritizationFee,
-    RpcSimulateTransactionResult, RpcSnapshotSlotInfo, RpcStakeActivation,
-    RpcSupply, RpcTokenAccountBalance, RpcVersionInfo, RpcVoteAccountStatus,
+    RpcSimulateTransactionResult, RpcSnapshotSlotInfo, RpcSupply,
+    RpcTokenAccountBalance, RpcVersionInfo, RpcVoteAccountStatus,
 };
 use solana_sdk::{
     clock::{Slot, UnixTimestamp},
@@ -38,8 +38,8 @@ type BlockCommitmentArray = [u64; MAX_LOCKOUT_HISTORY + 1];
 // -----------------
 // register_passthrough_methods
 // -----------------
-async fn passthrough_impl<'a, R: DeserializeOwned>(
-    method: &'a str,
+async fn passthrough_impl<R: DeserializeOwned>(
+    method: &str,
     params: Params<'static>,
     rpc: &DirectorRpc,
 ) -> Result<R, ErrorObjectOwned> {
@@ -60,6 +60,7 @@ async fn passthrough_impl<'a, R: DeserializeOwned>(
         },
     }
 }
+
 
 pub fn register_passthrough_methods(
     module: &mut RpcModule<DirectorRpc>,
@@ -150,7 +151,6 @@ pub fn register_passthrough_methods(
     passthrough!("getSlot", Slot);
     passthrough!("getSlotLeader", String);
     passthrough!("getSlotLeaders", Vec<String>);
-    passthrough!("getStakeActivation", RpcStakeActivation);
     passthrough!("getStakeMinimumDelegation", RpcResponse<u64>);
     passthrough!("getSupply", RpcResponse<RpcSupply>);
     passthrough!("getTokenAccountBalance", RpcResponse<UiTokenAmount>);

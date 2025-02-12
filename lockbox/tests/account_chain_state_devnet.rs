@@ -14,8 +14,7 @@ use conjunto_providers::{
 use conjunto_test_tools::delegation_record_parser_stub::DelegationRecordParserStub;
 use dlp::consts::DELEGATION_PROGRAM_ID;
 use solana_sdk::{
-    bpf_loader_upgradeable::get_program_data_address,
-    {pubkey, pubkey::Pubkey},
+    bpf_loader_upgradeable::get_program_data_address, pubkey, pubkey::Pubkey,
 };
 
 fn dummy_delegation_record() -> DelegationRecord {
