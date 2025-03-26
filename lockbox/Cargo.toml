@@ -14,7 +14,7 @@ conjunto-addresses = { workspace = true }
 conjunto-core = { workspace = true }
 conjunto-providers = { workspace = true }
 magicblock-delegation-program = { workspace = true }
-serde = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
 solana-rpc-client = { workspace = true }
 solana-rpc-client-api = { workspace = true }
 solana-sdk = { workspace = true }
