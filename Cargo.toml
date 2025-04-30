@@ -42,7 +42,8 @@ conjunto-guidepoint = { path = "guidepoint" }
 conjunto-providers = { path = "providers" }
 conjunto-test-tools = { path = "test-tools" }
 conjunto-transwise = { path = "transwise" }
-magicblock-delegation-program = { path = "../delegation-program" }
+magicblock-delegation-program = { git = "https://github.com/magicblock-labs/delegation-program.git", rev = "4af7f1c" }
+
 env_logger = "0.11.3"
 futures-util = "0.3.30"
 # Needed for (not yet working CORS)

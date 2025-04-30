@@ -22,14 +22,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: conjunto
 
-      - name: Checkout Delegation Program
-        uses: actions/checkout@v4
-        with:
-          repository: magicblock-labs/delegation-program
-          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-          path: delegation-program
-          ref: main
-
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: 'conjunto-build_test_lint-cache-bust-000'
